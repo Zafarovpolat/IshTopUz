@@ -47,8 +47,8 @@ export function Header() {
             ))}
           </nav>
           <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
-              <Button variant="ghost">{"Войти"}</Button>
-              <Button asChild>
+              <Button variant="ghost" className="max-w-[120px]">{"Войти"}</Button>
+              <Button asChild className="max-w-[150px]">
                   <Link href="#contact">{"Регистрация"}</Link>
               </Button>
           </div>

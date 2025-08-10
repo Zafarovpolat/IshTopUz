@@ -45,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className={`${inter.variable} scroll-smooth`}>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased bg-background text-foreground has-[div[aria-modal=true]]:overflow-hidden">
         <Header />
         <main>{children}</main>
         <Footer />
