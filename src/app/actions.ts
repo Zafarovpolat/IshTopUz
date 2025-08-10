@@ -4,6 +4,8 @@ import { z } from "zod";
 import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from "@/lib/schema";
 import type { LeadState, SurveyState } from "@/lib/schema";
 import { redirect } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>
@@ -18,14 +20,11 @@ export async function submitLead(
     };
   }
   
-  // Here you would typically save to a database like Firebase Firestore
   try {
-    console.log("New Lead Submitted:", {
+    await addDoc(collection(db, "leads"), {
       ...validatedFields.data,
-      timestamp: new Date(),
+      submittedAt: Timestamp.now(),
     });
-
-    // On success, redirect to the survey page with the role
   } catch (e) {
     console.error("Failed to submit lead:", e);
     return {
@@ -55,10 +54,10 @@ export async function submitSurvey(
   }
 
   try {
-    console.log("New Survey Submitted:", {
+    await addDoc(collection(db, "surveys"), {
       role: role,
       ...validatedFields.data,
-      timestamp: new Date(),
+      submittedAt: Timestamp.now(),
     });
 
     return { success: true, message: "Спасибо за ваш отзыв!" };
