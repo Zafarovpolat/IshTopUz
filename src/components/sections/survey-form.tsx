@@ -175,7 +175,7 @@ export function SurveyForm() {
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
                             {questions.map((q) => (
                                 <FormField
                                     key={q.id}
