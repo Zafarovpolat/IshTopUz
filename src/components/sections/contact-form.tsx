@@ -45,13 +45,7 @@ export function ContactFormSection() {
   const onSubmit = (data: LeadFormValues) => {
     startTransition(async () => {
       const result = await submitLead(data);
-      if (result.success) {
-        toast({
-          title: "Заявка успешно отправлена!",
-          description: result.message,
-        });
-        form.reset();
-      } else {
+      if (result?.success === false) {
         toast({
           variant: "destructive",
           title: "Ошибка отправки",
