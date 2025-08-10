@@ -33,7 +33,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-4 lg:px-8">
           <div className="flex items-center flex-1">
             <Link href="#home">
               <Logo />
@@ -70,7 +70,7 @@ export function Header() {
           aria-modal="true" 
           data-state={isMenuOpen ? 'open' : 'closed'}
         >
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
           <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
@@ -86,7 +86,7 @@ export function Header() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-xl font-medium text-foreground"
+                  className="text-lg font-medium text-foreground"
                   onClick={closeMenu}
                 >
                   {link.label}
