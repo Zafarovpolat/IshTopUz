@@ -5,14 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-
-const Logo = () => {
-  return (
-    <h1 className="text-2xl font-bold text-foreground">
-      IshTop<span className="text-primary">.Uz</span>
-    </h1>
-  );
-};
+import { Logo } from './logo';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

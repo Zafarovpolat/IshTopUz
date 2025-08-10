@@ -2,12 +2,7 @@
 
 import { Mail, Send } from 'lucide-react';
 import Link from 'next/link';
-
-const Logo = () => (
-    <h1 className="text-2xl font-bold text-foreground">
-        IshTop<span className="text-primary">.Uz</span>
-    </h1>
-);
+import { Logo } from './logo';
 
 export function Footer() {
 
