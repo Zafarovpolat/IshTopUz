@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from "@/lib/schema";
 import type { LeadState, SurveyState } from "@/lib/schema";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 

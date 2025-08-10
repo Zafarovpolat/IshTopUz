@@ -55,11 +55,11 @@ export function ContactFormSection() {
         if(result.redirectUrl) {
           router.push(result.redirectUrl);
         }
-      } else if (result?.success === false) {
+      } else {
         toast({
           variant: "destructive",
           title: "Ошибка отправки",
-          description: result.message || "Проверьте введенные данные и попробуйте еще раз.",
+          description: result?.message || "Проверьте введенные данные и попробуйте еще раз.",
         });
       }
     });

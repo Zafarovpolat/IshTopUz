@@ -16,7 +16,16 @@ export type LeadState = {
   message?: string | null;
   success: boolean;
   redirectUrl?: string;
-} | void;
+} | {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    role?: string[];
+  };
+  message?: string | null;
+  success: boolean;
+  redirectUrl?: never;
+};
 
 
 export const surveyFreelancerSchema = z.object({
