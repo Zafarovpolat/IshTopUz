@@ -6,15 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const Logo = () => (
-  <h1 className="text-2xl font-bold">
-    <span className="text-primary">IshTop</span>
-    <span className="text-accent">.Uz</span>
+  <h1 className="text-2xl font-bold text-foreground">
+    IshTop<span className="text-primary">.Uz</span>
   </h1>
 );
 
 const navLinks = [
   { href: '#home', label: 'Home' },
   { href: '#benefits', label: 'Features' },
+  { href: '#faq', label: 'FAQ' },
   { href: '#contact', label: 'Contact' },
 ];
 
@@ -25,7 +25,7 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="#home" onClick={closeMenu}>
           <Logo />
