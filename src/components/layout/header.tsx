@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const Logo = () => {
   return (
@@ -15,6 +16,8 @@ const Logo = () => {
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
   const navLinks = [
     { href: '#home', label: "Главная" },
@@ -30,12 +33,16 @@ export function Header() {
     setIsMenuOpen(false);
   };
 
+  const getLinkHref = (href: string) => {
+    return isHomePage ? href : `/${href}`;
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center flex-1">
-            <Link href="#home">
+            <Link href={getLinkHref('#home')}>
               <Logo />
             </Link>
           </div>
@@ -43,7 +50,7 @@ export function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.label}
-                href={link.href}
+                href={getLinkHref(link.href)}
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary whitespace-nowrap"
               >
                 {link.label}
@@ -75,7 +82,7 @@ export function Header() {
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
           <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-4 sm:px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
             <div className="flex items-center justify-between">
-               <Link href="#home" onClick={closeMenu}>
+               <Link href={getLinkHref('#home')} onClick={closeMenu}>
                   <Logo />
                </Link>
               <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={"Закрыть меню"}>
@@ -87,7 +94,7 @@ export function Header() {
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
-                  href={link.href}
+                  href={getLinkHref(link.href)}
                   className="text-lg font-medium text-foreground"
                   onClick={closeMenu}
                 >
