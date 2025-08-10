@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section 
       id="home" 
-      className="relative flex items-center justify-center w-full min-h-screen bg-cover bg-center bg-no-repeat"
+      className="relative flex items-center justify-center w-full min-h-[calc(100vh-4rem)] bg-cover bg-center bg-no-repeat"
       style={{backgroundImage: "url('https://placehold.co/1920x1080.png')"}}
       data-ai-hint="office background"
     >
