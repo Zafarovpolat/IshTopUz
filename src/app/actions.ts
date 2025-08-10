@@ -57,6 +57,7 @@ export async function submitSurvey(
   }
 
   try {
+    // We are not returning this data to the client, so Timestamp is fine here.
     await addDoc(collection(db, "surveys"), {
       role: role,
       ...validatedFields.data,
