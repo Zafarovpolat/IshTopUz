@@ -37,12 +37,12 @@ export function Hero() {
         </div>
         <div className="relative mx-auto h-full w-full max-w-lg lg:max-w-none">
           <Image
-            src="https://placehold.co/600x600.png"
+            src="https://placehold.co/600x400.png"
             alt={t.imageAlt}
             width={600}
-            height={600}
-            className="rounded-full shadow-2xl"
-            data-ai-hint="team collaboration"
+            height={400}
+            className="rounded-lg shadow-2xl"
+            data-ai-hint="freelancer computer"
           />
         </div>
       </div>

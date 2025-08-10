@@ -111,7 +111,7 @@ export const translations = {
       nav: {
         home: "Главная",
         why: "Почему IshTop.Uz",
-        faq: "ЧАВО",
+        faq: "FAQ",
         contact: "Контакты",
       },
       login: "Войти",
@@ -120,8 +120,8 @@ export const translations = {
       closeMenu: "Закрыть меню",
     },
     hero: {
-      title: "Как должна работать работа.",
-      subtitle: "Забудьте старые правила. Вы можете нанять лучших. Прямо сейчас. Прямо здесь.",
+      title: "Работа, как она должна быть.",
+      subtitle: "Нанимайте лучших специалистов и находите интересные проекты. Быстро и безопасно.",
       getStarted: "Начать",
       trustedBy: "Нам доверяют",
       imageAlt: "Фрилансеры сотрудничают",
@@ -157,16 +157,16 @@ export const translations = {
         a5: "В настоящее время мы находимся на стадии бета-тестирования. Подпишитесь на нашу рассылку, чтобы получать эксклюзивные обновления и первыми узнать, когда мы официально запустимся!",
     },
     contact: {
-        title: "Присоединяйтесь к бета-тестированию",
-        subtitle: "Узнайте первыми о запуске IshTop.Uz. Подпишитесь для получения эксклюзивного доступа.",
+        title: "Присоединяйтесь к бета-тесту",
+        subtitle: "Оставьте свою заявку и будьте в числе первых, кто получит доступ к платформе IshTop.Uz.",
         form: {
             name: {
                 label: "Полное имя",
-                placeholder: "например, Иван Иванов",
+                placeholder: "Иван Иванов",
             },
             email: {
                 label: "Адрес электронной почты",
-                placeholder: "например, you@example.com",
+                placeholder: "you@example.com",
             },
             role: {
                 label: "Я...",
@@ -269,11 +269,11 @@ export const translations = {
         form: {
             name: {
                 label: "To'liq ism",
-                placeholder: "masalan, John Doe",
+                placeholder: "John Doe",
             },
             email: {
                 label: "Elektron pochta manzili",
-                placeholder: "masalan, you@example.com",
+                placeholder: "you@example.com",
             },
             role: {
                 label: "Men...",
