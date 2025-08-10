@@ -25,25 +25,25 @@ export function Footer() {
                 <div>
                     <h3 className="font-semibold text-foreground">{"Заказчикам"}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Как нанять"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Биржа талантов"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Каталог проектов"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Нанять в UZ"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Как нанять"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Биржа талантов"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Каталог проектов"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Нанять в UZ"}</Link></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="font-semibold text-foreground">{"Фрилансерам"}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Как заработать"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Найти работу"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Связаться с клиентами"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Как заработать"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Найти работу"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Связаться с клиентами"}</Link></li>
                     </ul>
                 </div>
                 <div>
                     <h3 className="font-semibold text-foreground">{"Компания"}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"О нас"}</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{"Контакты"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"О нас"}</Link></li>
+                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Контакты"}</Link></li>
                         <li><Link href="https://t.me/IshTopUz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                             <Send className="h-4 w-4" /> Telegram
                             </Link>
@@ -59,8 +59,8 @@ export function Footer() {
         <div className="mt-8 border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} IshTop.Uz — {"Все права защищены."}</p>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <Link href="#" className="hover:text-primary">{"Условия использования"}</Link>
-            <Link href="#" className="hover:text-primary">{"Политика конфиденциальности"}</Link>
+            <Link href="/terms-of-use" className="hover:text-primary">{"Условия использования"}</Link>
+            <Link href="/privacy-policy" className="hover:text-primary">{"Политика конфиденциальности"}</Link>
           </div>
         </div>
       </div>

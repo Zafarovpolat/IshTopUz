@@ -33,7 +33,7 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-4 lg:px-8">
+        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center flex-1">
             <Link href="#home">
               <Logo />
@@ -51,9 +51,11 @@ export function Header() {
             ))}
           </nav>
           <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
-              <Button variant="ghost" className="max-w-[120px]">{"Войти"}</Button>
-              <Button asChild className="max-w-[150px]">
-                  <Link href="#contact">{"Регистрация"}</Link>
+              <Button asChild variant="ghost" className="max-w-[120px] text-base">
+                  <Link href="/404">{"Войти"}</Link>
+              </Button>
+              <Button asChild className="max-w-[150px] text-base">
+                  <Link href="/404">{"Регистрация"}</Link>
               </Button>
           </div>
           <div className="flex items-center lg:hidden">
@@ -94,10 +96,10 @@ export function Header() {
               ))}
               <div className='flex flex-col gap-4 mt-auto'>
                 <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground text-base" onClick={closeMenu}>
-                    <Link href="#">{"Войти"}</Link>
+                    <Link href="/404">{"Войти"}</Link>
                 </Button>
                 <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base" onClick={closeMenu}>
-                    <Link href="#contact">{"Регистрация"}</Link>
+                    <Link href="/404">{"Регистрация"}</Link>
                 </Button>
               </div>
             </div>
