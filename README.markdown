@@ -51,7 +51,7 @@ The project is in the MVP development stage, aiming to validate demand and launc
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/ishtopuz/ishtop.git
+   git clone https://github.com/Zafarovpolat/IshTopUz.git
    cd ishtop
    ```
 2. Install dependencies:
@@ -100,7 +100,7 @@ Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) and use ESLint/Prettier 
 - **Email**: info@ishtop.uz
 - **Telegram**: @IshTopUz
 - **Website**: [Insert Landing Page URL]
-- **Issues**: Report bugs or suggest features in the [Issues](https://github.com/ishtopuz/ishtop/issues) section.
+- **Issues**: Report bugs or suggest features in the [Issues](https://github.com/Zafarovpolat/IshTopUz/issues) section.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
