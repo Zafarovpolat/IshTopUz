@@ -122,7 +122,7 @@ export function ContactFormSection() {
                   )}
                 />
                 <Button type="submit" className="w-full text-base" size="lg" disabled={isPending}>
-                  {isPending ? "Отправка..." : "получить доступ"}
+                  {isPending ? "Отправка..." : "Получить Доступ"}
                 </Button>
               </form>
             </Form>
