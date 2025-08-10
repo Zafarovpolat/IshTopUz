@@ -18,11 +18,11 @@ export function Hero() {
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
             {"Работа, как она должна быть"}
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-300">
+          <p className="mt-6 text-base leading-7 text-gray-300 sm:text-lg sm:leading-8">
             {"Забудьте о старых правилах. Вы можете нанимать лучших специалистов. Прямо сейчас. Прямо здесь."}
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg" className="shadow-lg transition-transform hover:scale-105">
+            <Button asChild size="lg" className="shadow-lg transition-transform hover:scale-105 text-base">
               <Link href="#contact">{"Начать"}</Link>
             </Button>
           </div>

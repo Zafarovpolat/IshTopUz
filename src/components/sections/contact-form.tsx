@@ -67,7 +67,7 @@ export function ContactFormSection() {
         <Card className="mx-auto max-w-2xl shadow-lg border-border/20">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{"Присоединяйтесь к бета-тесту"}</CardTitle>
-            <CardDescription className="mt-2 text-lg text-muted-foreground">
+            <CardDescription className="mt-2 text-base sm:text-lg text-muted-foreground">
               {"Будьте в числе первых, кто получит доступ к платформе."}
             </CardDescription>
           </CardHeader>
@@ -121,7 +121,7 @@ export function ContactFormSection() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" size="lg" disabled={isPending}>
+                <Button type="submit" className="w-full text-base" size="lg" disabled={isPending}>
                   {isPending ? "Отправка..." : "Получить доступ к бета-версии"}
                 </Button>
               </form>

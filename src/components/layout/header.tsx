@@ -93,10 +93,10 @@ export function Header() {
                 </Link>
               ))}
               <div className='flex flex-col gap-4 mt-auto'>
-                <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground" onClick={closeMenu}>
+                <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground text-base" onClick={closeMenu}>
                     <Link href="#">{"Войти"}</Link>
                 </Button>
-                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={closeMenu}>
+                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base" onClick={closeMenu}>
                     <Link href="#contact">{"Регистрация"}</Link>
                 </Button>
               </div>

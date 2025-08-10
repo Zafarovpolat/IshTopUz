@@ -12,11 +12,11 @@ export function Cta() {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             {"Готовы начать свой путь во фрилансе?"}
           </h2>
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-foreground/80">
+          <p className="mx-auto mt-6 max-w-xl text-base leading-7 sm:text-lg sm:leading-8 text-primary-foreground/80">
             {"Присоединяйтесь к IshTop.Uz! Запишитесь на бета-тестирование, чтобы начать зарабатывать или находить лучших исполнителей в Узбекистане."}
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg" variant="secondary" className="shadow-md transition-transform hover:scale-105">
+            <Button asChild size="lg" variant="secondary" className="shadow-md transition-transform hover:scale-105 text-base">
               <Link href="#contact">{"Зарегистрироваться"}</Link>
             </Button>
           </div>
