@@ -1,9 +1,10 @@
-'use server';
-import { z } from 'zod';
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from '@/lib/schema';
-import type { LeadState, SurveyState } from '@/lib/schema';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+"use server";
+
+import { z } from "zod";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from "@/lib/schema";
+import type { LeadState, SurveyState } from "@/lib/schema";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>
@@ -21,7 +22,6 @@ export async function submitLead(
   try {
     const docRef = await addDoc(collection(db, 'leads'), {
       ...validatedFields.data,
-      submittedAt: Timestamp.now(),
     });
     return {
       success: true,
@@ -61,7 +61,6 @@ export async function submitSurvey(
     await addDoc(collection(db, 'surveys'), {
       role,
       ...validatedFields.data,
-      submittedAt: Timestamp.now(),
     });
     return { success: true, message: 'Спасибо за ваш отзыв!' };
   } catch (error: any) {

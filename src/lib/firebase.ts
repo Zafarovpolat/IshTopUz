@@ -1,18 +1,27 @@
-// @/lib/firebase.ts
-import { initializeApp } from "firebase/app";
+// Import the functions you need from the SDKs you need
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-export const firebaseConfig = {
-  projectId: "ishtop-landing",
-  appId: "1:895516153164:web:e17e28fa7eb259683e2be9",
-  storageBucket: "ishtop-landing.firebasestorage.app",
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: "ishtop-landing.firebaseapp.com",
-  measurementId: "",
-  messagingSenderId: "895516153164",
+// Your web app's Firebase configuration
+// For more information on how to get this, visit:
+// https://firebase.google.com/docs/web/setup#available-libraries
+const firebaseConfig = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+
 const db = getFirestore(app);
 
 export { app, db };
