@@ -52,7 +52,7 @@ export function ContactFormSection() {
           title: "Успешно!",
           description: result.message,
         });
-        if(result.redirectUrl) {
+        if (result.redirectUrl) {
           router.push(result.redirectUrl);
         }
       } else {
