@@ -1,31 +1,39 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Globe, Lock, Wallet } from 'lucide-react';
-
-const benefits = [
-  {
-    icon: Lock,
-    title: "Payment Guarantee",
-    description: "Escrow accounts for secure transactions, ensuring your funds are safe until the work is approved."
-  },
-  {
-    icon: Wallet,
-    title: "Low Commission",
-    description: "We charge only 5%, significantly lower than the 10-20% on other platforms. More earnings for you."
-  },
-  {
-    icon: Globe,
-    title: "Localization",
-    description: "A platform built for Uzbekistan, with support for Uzbek, Russian, and English, plus seamless Telegram integration."
-  }
-];
+import { useContext } from 'react';
+import { LanguageContext } from '@/context/language-context';
+import { translations } from '@/lib/i18n';
 
 export function Benefits() {
+  const { language } = useContext(LanguageContext);
+  const t = translations[language].benefits;
+
+  const benefits = [
+    {
+      icon: Lock,
+      title: t.paymentGuarantee.title,
+      description: t.paymentGuarantee.description
+    },
+    {
+      icon: Wallet,
+      title: t.lowCommission.title,
+      description: t.lowCommission.description
+    },
+    {
+      icon: Globe,
+      title: t.localization.title,
+      description: t.localization.description
+    }
+  ];
+
   return (
     <section id="benefits" className="w-full bg-secondary/50 py-24 sm:py-32">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Why Choose IshTop.Uz?</h2>
-          <p className="mt-4 text-lg text-muted-foreground">The best features for freelancers and clients in Uzbekistan.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t.title}</h2>
+          <p className="mt-4 text-lg text-muted-foreground">{t.subtitle}</p>
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {benefits.map((benefit) => (

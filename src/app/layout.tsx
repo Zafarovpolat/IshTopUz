@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google';
+import { LanguageProvider } from '@/context/language-context';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -12,11 +13,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'IshTop.Uz — Your Freelance Marketplace in Uzbekistan',
-  description: 'Secure transactions, 5% commission, seamless payments via HUMO and Payme. Join the beta for Uzbekistan\'s first freelance marketplace.',
+  title: 'IshTop.Uz — Ваша фриланс-биржа в Узбекистане',
+  description: 'Безопасные сделки, комиссия 5%, удобные платежи через HUMO и Payme. Присоединяйтесь к бета-тестированию первой фриланс-биржи в Узбекистане.',
   openGraph: {
-    title: 'IshTop.Uz — Your Freelance Marketplace in Uzbekistan',
-    description: 'Join the beta for Uzbekistan\'s first freelance marketplace.',
+    title: 'IshTop.Uz — Ваша фриланс-биржа в Узбекистане',
+    description: 'Присоединяйтесь к бета-тестированию первой фриланс-биржи в Узбекистане.',
     url: 'https://ishtop.uz',
     siteName: 'IshTop.Uz',
     images: [
@@ -24,16 +25,16 @@ export const metadata: Metadata = {
         url: 'https://placehold.co/1200x630.png',
         width: 1200,
         height: 630,
-        alt: 'IshTop.Uz - Freelance Marketplace in Uzbekistan',
+        alt: 'IshTop.Uz - Фриланс-биржа в Узбекистане',
       },
     ],
-    locale: 'en_US',
+    locale: 'ru_RU',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IshTop.Uz — Your Freelance Marketplace in Uzbekistan',
-    description: 'Secure transactions, 5% commission, seamless payments via HUMO and Payme.',
+    title: 'IshTop.Uz — Ваша фриланс-биржа в Узбекистане',
+    description: 'Безопасные сделки, комиссия 5%, удобные платежи через HUMO и Payme.',
     images: ['https://placehold.co/1200x630.png'],
   },
 };
@@ -44,12 +45,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} scroll-smooth`}>
+    <html lang="ru" className={`${inter.variable} scroll-smooth`}>
       <body className="font-sans antialiased bg-background text-foreground">
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <Toaster />
+        <LanguageProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <Toaster />
+        </LanguageProvider>
       </body>
     </html>
   );

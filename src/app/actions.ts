@@ -12,7 +12,7 @@ export async function submitLead(
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Validation failed. Please correct the errors and try again.",
+      message: "Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.",
       success: false,
     };
   }
@@ -24,12 +24,12 @@ export async function submitLead(
       timestamp: new Date(),
     });
 
-    return { success: true, message: "Thank you for joining the beta program!" };
+    return { success: true, message: "Спасибо за присоединение к бета-программе!" };
   } catch (e) {
     console.error("Failed to submit lead:", e);
     return {
       success: false,
-      message: "Something went wrong on our end. Please try again later.",
+      message: "Что-то пошло не так на нашей стороне. Пожалуйста, повторите попытку позже.",
     };
   }
 }

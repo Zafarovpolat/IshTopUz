@@ -1,5 +1,10 @@
+"use client";
+
 import { Mail, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useContext } from 'react';
+import { LanguageContext } from '@/context/language-context';
+import { translations } from '@/lib/i18n';
 
 const Logo = () => (
     <h1 className="text-2xl font-bold text-foreground">
@@ -8,6 +13,9 @@ const Logo = () => (
 );
 
 export function Footer() {
+  const { language } = useContext(LanguageContext);
+  const t = translations[language].footer;
+
   return (
     <footer className="w-full bg-secondary/50">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
@@ -15,37 +23,37 @@ export function Footer() {
             <div className="flex flex-col items-start gap-4">
                 <Logo />
                 <p className="max-w-sm text-sm text-muted-foreground">
-                Uzbekistan’s first freelance marketplace designed for secure and efficient collaboration.
+                {t.description}
                 </p>
             </div>
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-2">
                 <div>
-                    <h3 className="font-semibold text-foreground">For Clients</h3>
+                    <h3 className="font-semibold text-foreground">{t.forClients.title}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">How to Hire</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Talent Marketplace</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Project Catalog</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Hire in UZ</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forClients.howToHire}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forClients.talentMarketplace}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forClients.projectCatalog}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forClients.hireInUz}</Link></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 className="font-semibold text-foreground">For Freelancers</h3>
+                    <h3 className="font-semibold text-foreground">{t.forFreelancers.title}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">How to Earn</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Find Work</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Connect with Clients</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forFreelancers.howToEarn}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forFreelancers.findWork}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.forFreelancers.connect}</Link></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 className="font-semibold text-foreground">Company</h3>
+                    <h3 className="font-semibold text-foreground">{t.company.title}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">About Us</Link></li>
-                        <li><Link href="#" className="text-muted-foreground hover:text-foreground">Contact</Link></li>
-                        <li><Link href="https://t.me/IshTopUz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.company.about}</Link></li>
+                        <li><Link href="#" className="text-muted-foreground hover:text-primary">{t.company.contact}</Link></li>
+                        <li><Link href="https://t.me/IshTopUz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                             <Send className="h-4 w-4" /> Telegram
                             </Link>
                         </li>
-                        <li><Link href="mailto:info@ishtop.uz" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                        <li><Link href="mailto:info@ishtop.uz" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                             <Mail className="h-4 w-4" /> Email
                             </Link>
                         </li>
@@ -54,10 +62,10 @@ export function Footer() {
             </div>
         </div>
         <div className="mt-8 border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} IshTop.Uz — All Rights Reserved.</p>
+          <p>&copy; {new Date().getFullYear()} IshTop.Uz — {t.rights}</p>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <Link href="#" className="hover:text-foreground">Terms of Service</Link>
-            <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
+            <Link href="#" className="hover:text-primary">{t.terms}</Link>
+            <Link href="#" className="hover:text-primary">{t.privacy}</Link>
           </div>
         </div>
       </div>

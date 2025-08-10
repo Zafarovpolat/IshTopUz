@@ -1,9 +1,10 @@
 import { z } from "zod";
 
+// This can be expanded with language-specific messages
 export const leadSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(["Freelancer", "Client"], { required_error: "Please select a role." }),
+  name: z.string().min(2, { message: "Имя должно содержать не менее 2 символов." }),
+  email: z.string().email({ message: "Пожалуйста, введите действительный адрес электронной почты." }),
+  role: z.enum(["Freelancer", "Client"], { required_error: "Пожалуйста, выберите роль." }),
 });
 
 export type LeadState = {
