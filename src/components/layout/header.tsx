@@ -34,7 +34,7 @@ export function Header() {
             <Logo />
           </Link>
         </div>
-        <nav className="hidden items-center justify-center gap-6 md:flex flex-1">
+        <nav className="hidden items-center justify-center gap-6 lg:flex flex-1">
           {navLinks.map((link) => (
             <Link
               key={link.label}
@@ -45,13 +45,13 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center justify-end gap-2 md:flex flex-1">
+        <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
             <Button variant="ghost">{"Войти"}</Button>
             <Button asChild>
                 <Link href="#contact">{"Регистрация"}</Link>
             </Button>
         </div>
-        <div className="flex items-center md:hidden">
+        <div className="flex items-center lg:hidden">
           <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={"Переключить меню"}>
             <span className="sr-only">{"Переключить меню"}</span>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -59,9 +59,9 @@ export function Header() {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden">
-           <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" onClick={closeMenu}></div>
-          <nav className="fixed right-0 top-0 z-50 flex h-full w-4/5 max-w-sm flex-col bg-background p-6 shadow-lg">
+        <div className="lg:hidden">
+           <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={closeMenu}></div>
+          <nav className="fixed inset-0 z-50 flex flex-col bg-background p-6">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
                   <Logo />
@@ -71,12 +71,12 @@ export function Header() {
                 <span className="sr-only">{"Закрыть меню"}</span>
               </Button>
             </div>
-            <div className="mt-8 flex flex-col gap-6">
+            <div className="mt-8 flex flex-col gap-6 text-center">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-lg font-medium text-foreground"
+                  className="text-2xl font-medium text-foreground"
                   onClick={closeMenu}
                 >
                   {link.label}
