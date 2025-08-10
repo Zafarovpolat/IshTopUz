@@ -9,7 +9,7 @@ export function Hero() {
     <section 
       id="home" 
       className="relative flex items-center justify-center w-full min-h-[calc(100vh-4rem)] bg-cover bg-center bg-no-repeat"
-      style={{backgroundImage: "url('/hero-background.jpeg')"}}
+      style={{backgroundImage: "url('https://i.yapx.ru/aOTV9.png')"}}
     >
       <div className="absolute inset-0 bg-black/50" />
       <div className="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
