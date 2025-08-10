@@ -71,7 +71,7 @@ export function Header() {
         </div>
       </header>
       {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out" aria-modal="true">
+        <div className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100" aria-modal="true" data-state={isMenuOpen ? 'open' : 'closed'}>
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
           <nav className="fixed inset-0 z-50 flex flex-col bg-white/90 px-6 py-3">
             <div className="flex items-center justify-between">
