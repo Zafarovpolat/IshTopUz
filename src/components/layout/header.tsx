@@ -27,40 +27,42 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center flex-1">
-          <Link href="#home" onClick={closeMenu}>
-            <Logo />
-          </Link>
-        </div>
-        <nav className="hidden items-center justify-center gap-6 lg:flex flex-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary whitespace-nowrap"
-            >
-              {link.label}
+    <>
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center flex-1">
+            <Link href="#home">
+              <Logo />
             </Link>
-          ))}
-        </nav>
-        <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
-            <Button variant="ghost">{"Войти"}</Button>
-            <Button asChild>
-                <Link href="#contact">{"Регистрация"}</Link>
+          </div>
+          <nav className="hidden items-center justify-center gap-6 lg:flex flex-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary whitespace-nowrap"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
+              <Button variant="ghost">{"Войти"}</Button>
+              <Button asChild>
+                  <Link href="#contact">{"Регистрация"}</Link>
+              </Button>
+          </div>
+          <div className="flex items-center lg:hidden">
+            <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={"Переключить меню"}>
+              <span className="sr-only">{"Переключить меню"}</span>
+              <Menu className="h-6 w-6" />
             </Button>
+          </div>
         </div>
-        <div className="flex items-center lg:hidden">
-          <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={"Переключить меню"}>
-            <span className="sr-only">{"Переключить меню"}</span>
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
-        </div>
-      </div>
+      </header>
       {isMenuOpen && (
-        <div className="lg:hidden">
-           <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={closeMenu}></div>
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
           <nav className="fixed inset-0 z-50 flex flex-col bg-background p-6">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
@@ -94,6 +96,6 @@ export function Header() {
           </nav>
         </div>
       )}
-    </header>
+    </>
   );
 }
