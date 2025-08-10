@@ -16,15 +16,6 @@ export type LeadState = {
   message?: string | null;
   success: boolean;
   redirectUrl?: string;
-} | {
-  errors?: {
-    name?: string[];
-    email?: string[];
-    role?: string[];
-  };
-  message?: string | null;
-  success: boolean;
-  redirectUrl?: never;
 };
 
 
