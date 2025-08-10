@@ -2,29 +2,24 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Globe, Lock, Wallet } from 'lucide-react';
-import { useContext } from 'react';
-import { LanguageContext } from '@/context/language-context';
-import { translations } from '@/lib/i18n';
 
 export function Benefits() {
-  const { language } = useContext(LanguageContext);
-  const t = translations[language].benefits;
 
   const benefits = [
     {
       icon: Lock,
-      title: t.paymentGuarantee.title,
-      description: t.paymentGuarantee.description
+      title: "Гарантия оплаты",
+      description: "Безопасные сделки через escrow-счета. Ваши средства в безопасности до полного утверждения работы."
     },
     {
       icon: Wallet,
-      title: t.lowCommission.title,
-      description: t.lowCommission.description
+      title: "Низкая комиссия",
+      description: "Наша комиссия — всего 5%, что значительно ниже 10-20% на других платформах. Ваш заработок остается с вами."
     },
     {
       icon: Globe,
-      title: t.localization.title,
-      description: t.localization.description
+      title: "Локализация для Узбекистана",
+      description: "Платформа, созданная для рынка Узбекистана с поддержкой узбекского, русского и английского языков и удобной интеграцией с Telegram."
     }
   ];
 
@@ -32,8 +27,8 @@ export function Benefits() {
     <section id="benefits" className="w-full bg-secondary/50 py-24 sm:py-32">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t.title}</h2>
-          <p className="mt-4 text-lg text-muted-foreground">{t.subtitle}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{"Почему выбирают IshTop.Uz?"}</h2>
+          <p className="mt-4 text-lg text-muted-foreground">{"Лучшие возможности для фрилансеров и заказчиков в Узбекистане."}</p>
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {benefits.map((benefit) => (

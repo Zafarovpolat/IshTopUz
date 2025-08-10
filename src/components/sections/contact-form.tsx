@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useTransition, useContext } from "react";
+import { useTransition } from "react";
 import type { z } from "zod";
 
 import { submitLead } from "@/app/actions";
@@ -26,16 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { LanguageContext } from '@/context/language-context';
-import { translations } from '@/lib/i18n';
 
 type LeadFormValues = z.infer<typeof leadSchema>;
 
 export function ContactFormSection() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { language } = useContext(LanguageContext);
-  const t = translations[language].contact;
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
@@ -51,15 +47,15 @@ export function ContactFormSection() {
       const result = await submitLead(data);
       if (result.success) {
         toast({
-          title: t.toast.successTitle,
+          title: "Заявка успешно отправлена!",
           description: result.message,
         });
         form.reset();
       } else {
         toast({
           variant: "destructive",
-          title: t.toast.failTitle,
-          description: result.message || t.toast.failDescription,
+          title: "Ошибка отправки",
+          description: result.message || "Проверьте введенные данные и попробуйте еще раз.",
         });
       }
     });
@@ -70,9 +66,9 @@ export function ContactFormSection() {
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Card className="mx-auto max-w-2xl shadow-lg border-border/20">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t.title}</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{"Присоединяйтесь к бета-тесту"}</CardTitle>
             <CardDescription className="mt-2 text-lg text-muted-foreground">
-              {t.subtitle}
+              {"Будьте в числе первых, кто получит доступ к платформе."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -83,9 +79,9 @@ export function ContactFormSection() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.form.name.label}</FormLabel>
+                      <FormLabel>{"Полное имя"}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t.form.name.placeholder} {...field} />
+                        <Input placeholder={"Иван Иванов"} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -96,9 +92,9 @@ export function ContactFormSection() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.form.email.label}</FormLabel>
+                      <FormLabel>{"Адрес электронной почты"}</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder={t.form.email.placeholder} {...field} />
+                        <Input type="email" placeholder={"you@example.com"} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -109,16 +105,16 @@ export function ContactFormSection() {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.form.role.label}</FormLabel>
+                      <FormLabel>{"Я..."}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t.form.role.placeholder} />
+                            <SelectValue placeholder={"Выберите вашу роль"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Freelancer">{t.form.role.freelancer}</SelectItem>
-                          <SelectItem value="Client">{t.form.role.client}</SelectItem>
+                          <SelectItem value="Freelancer">{"Фрилансер"}</SelectItem>
+                          <SelectItem value="Client">{"Заказчик"}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -126,7 +122,7 @@ export function ContactFormSection() {
                   )}
                 />
                 <Button type="submit" className="w-full" size="lg" disabled={isPending}>
-                  {isPending ? t.form.submitting : t.form.submit}
+                  {isPending ? "Отправка..." : "Получить доступ к бета-версии"}
                 </Button>
               </form>
             </Form>

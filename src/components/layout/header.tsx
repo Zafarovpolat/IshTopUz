@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import { LanguageContext } from '@/context/language-context';
-import { translations } from '@/lib/i18n';
-import LanguageSwitcher from './language-switcher';
 
 const Logo = () => {
-  const { language } = useContext(LanguageContext);
-  const t = translations[language].header;
-
   return (
     <h1 className="text-2xl font-bold text-foreground">
       IshTop<span className="text-primary">.Uz</span>
@@ -21,14 +15,12 @@ const Logo = () => {
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { language } = useContext(LanguageContext);
-  const t = translations[language].header;
 
   const navLinks = [
-    { href: '#home', label: t.nav.home },
-    { href: '#benefits', label: t.nav.why },
-    { href: '#faq', label: t.nav.faq },
-    { href: '#contact', label: t.nav.contact },
+    { href: '#home', label: "Главная" },
+    { href: '#benefits', label: "Почему IshTop.Uz" },
+    { href: '#faq', label: "FAQ" },
+    { href: '#contact', label: "Контакты" },
   ];
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -52,16 +44,14 @@ export function Header() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-            <LanguageSwitcher />
-            <Button variant="ghost">{t.login}</Button>
+            <Button variant="ghost">{"Войти"}</Button>
             <Button asChild>
-                <Link href="#contact">{t.signup}</Link>
+                <Link href="#contact">{"Регистрация"}</Link>
             </Button>
         </div>
         <div className="flex items-center md:hidden">
-          <LanguageSwitcher />
-          <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={t.toggleMenu}>
-            <span className="sr-only">{t.toggleMenu}</span>
+          <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={"Переключить меню"}>
+            <span className="sr-only">{"Переключить меню"}</span>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
@@ -74,9 +64,9 @@ export function Header() {
                <Link href="#home" onClick={closeMenu}>
                   <Logo />
                </Link>
-              <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={t.closeMenu}>
+              <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={"Закрыть меню"}>
                 <X className="h-6 w-6" />
-                <span className="sr-only">{t.closeMenu}</span>
+                <span className="sr-only">{"Закрыть меню"}</span>
               </Button>
             </div>
             <div className="mt-8 flex flex-col gap-6">
@@ -92,10 +82,10 @@ export function Header() {
               ))}
               <div className='flex flex-col gap-4 mt-auto'>
                 <Button asChild size="lg" variant="ghost" onClick={closeMenu}>
-                    <Link href="#">{t.login}</Link>
+                    <Link href="#">{"Войти"}</Link>
                 </Button>
                 <Button asChild size="lg" onClick={closeMenu}>
-                    <Link href="#contact">{t.signup}</Link>
+                    <Link href="#contact">{"Регистрация"}</Link>
                 </Button>
               </div>
             </div>

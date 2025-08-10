@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google';
-import { LanguageProvider } from '@/context/language-context';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,12 +46,10 @@ export default function RootLayout({
   return (
     <html lang="ru" className={`${inter.variable} scroll-smooth`}>
       <body className="font-sans antialiased bg-background text-foreground">
-        <LanguageProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <Toaster />
-        </LanguageProvider>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+        <Toaster />
       </body>
     </html>
   );

@@ -6,34 +6,29 @@ import {
     AccordionItem,
     AccordionTrigger,
   } from "@/components/ui/accordion";
-import { useContext } from 'react';
-import { LanguageContext } from '@/context/language-context';
-import { translations } from '@/lib/i18n';
   
 export function Faq() {
-    const { language } = useContext(LanguageContext);
-    const t = translations[language].faq;
 
     const faqs = [
         {
-          question: t.q1,
-          answer: t.a1,
+          question: "Что такое IshTop.Uz?",
+          answer: "IshTop.Uz — это первая фриланс-биржа в Узбекистане, созданная для объединения талантливых фрилансеров и заказчиков для безопасной и эффективной работы над проектами.",
         },
         {
-          question: t.q2,
-          answer: t.a2,
+          question: "Как работает гарантия оплаты?",
+          answer: "Мы используем систему escrow. Оплата заказчика надежно хранится на специальном счете и переводится фрилансеру только после того, как работа будет выполнена и одобрена заказчиком.",
         },
         {
-            question: t.q3,
-            answer: t.a3,
+            question: "Какая комиссия на платформе?",
+            answer: "IshTop.Uz взимает фиксированную комиссию 5% со всех транзакций. Это значительно ниже, чем на других международных площадках, что позволяет вам зарабатывать больше.",
         },
         {
-          question: t.q4,
-          answer: t.a4,
+          question: "Какие способы оплаты поддерживаются?",
+          answer: "Платформа поддерживает популярные в Узбекистане платежные системы, включая HUMO и Payme, для максимального удобства.",
         },
         {
-          question: t.q5,
-          answer: t.a5,
+          question: "Когда платформа будет запущена?",
+          answer: "Сейчас мы на этапе бета-тестирования. Подпишитесь на нашу рассылку, чтобы первыми получать новости и узнать о официальном запуске!",
         },
       ];
 
@@ -42,8 +37,8 @@ export function Faq() {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <div className="mb-12 text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t.title}</h2>
-                <p className="mt-4 text-lg text-muted-foreground">{t.subtitle}</p>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">FAQ</h2>
+                <p className="mt-4 text-lg text-muted-foreground">{"Здесь вы найдете ответы на популярные вопросы о IshTop.Uz."}</p>
             </div>
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, i) => (
