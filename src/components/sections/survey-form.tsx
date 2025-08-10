@@ -190,7 +190,7 @@ export function SurveyForm() {
                                     )}
                                 />
                             ))}
-                            <Button type="submit" className="w-full text-base mt-8" size="lg" disabled={isPending}>
+                            <Button type="submit" className="w-full text-base" size="lg" disabled={isPending}>
                                 {isPending ? "Отправка..." : "Отправить ответы"}
                             </Button>
                         </form>
