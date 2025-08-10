@@ -30,17 +30,17 @@ import {
   
   export function Faq() {
     return (
-      <section id="faq" className="w-full py-24 sm:py-32">
+      <section id="faq" className="w-full bg-background py-24 sm:py-32">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <div className="mb-12 text-center">
-                <h2 className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Frequently Asked Questions</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Frequently Asked Questions</h2>
                 <p className="mt-4 text-lg text-muted-foreground">Find answers to common questions about IshTop.Uz.</p>
             </div>
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, i) => (
                 <AccordionItem key={i} value={`item-${i + 1}`}>
-                  <AccordionTrigger className="text-left text-lg font-semibold hover:no-underline">
+                  <AccordionTrigger className="text-left text-lg font-medium hover:no-underline">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-base text-muted-foreground">

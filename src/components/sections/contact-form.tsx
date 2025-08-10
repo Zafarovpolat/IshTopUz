@@ -62,12 +62,12 @@ export function ContactFormSection() {
   };
 
   return (
-    <section id="contact" className="w-full bg-white py-24 sm:py-32">
+    <section id="contact" className="w-full bg-background py-24 sm:py-32">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Card className="mx-auto max-w-2xl shadow-2xl border-primary/20">
+        <Card className="mx-auto max-w-2xl shadow-lg border-border/20">
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Join the Beta</CardTitle>
-            <CardDescription className="mt-2 text-lg">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Join the Beta</CardTitle>
+            <CardDescription className="mt-2 text-lg text-muted-foreground">
               Be the first to know when IshTop.Uz launches. Sign up for exclusive access.
             </CardDescription>
           </CardHeader>

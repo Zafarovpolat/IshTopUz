@@ -13,7 +13,7 @@ const Logo = () => (
 
 const navLinks = [
   { href: '#home', label: 'Home' },
-  { href: '#benefits', label: 'Features' },
+  { href: '#benefits', label: 'Why IshTop.Uz' },
   { href: '#faq', label: 'FAQ' },
   { href: '#contact', label: 'Contact' },
 ];
@@ -25,12 +25,12 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="#home" onClick={closeMenu}>
           <Logo />
         </Link>
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
@@ -41,10 +41,11 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-4 md:flex">
-          <Button asChild>
-            <Link href="#contact">Join Now</Link>
-          </Button>
+        <div className="hidden items-center gap-2 md:flex">
+            <Button variant="ghost">Log In</Button>
+            <Button asChild>
+                <Link href="#contact">Sign Up</Link>
+            </Button>
         </div>
         <div className="flex items-center md:hidden">
           <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Toggle menu">
@@ -77,9 +78,14 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              <Button asChild size="lg" className="mt-4" onClick={closeMenu}>
-                <Link href="#contact">Join Now</Link>
-              </Button>
+              <div className='flex flex-col gap-4 mt-4'>
+                <Button asChild size="lg" variant="ghost" onClick={closeMenu}>
+                    <Link href="#">Log In</Link>
+                </Button>
+                <Button asChild size="lg" onClick={closeMenu}>
+                    <Link href="#contact">Sign Up</Link>
+                </Button>
+              </div>
             </div>
           </nav>
         </div>
