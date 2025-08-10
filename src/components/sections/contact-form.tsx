@@ -62,7 +62,7 @@ export function ContactFormSection() {
   };
 
   return (
-    <section id="contact" className="w-full bg-background py-24 sm:py-32">
+    <section id="contact" className="w-full bg-background py-16 sm:py-24">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Card className="mx-auto max-w-2xl shadow-lg border-border/20">
           <CardHeader className="text-center">

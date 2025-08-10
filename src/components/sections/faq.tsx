@@ -33,7 +33,7 @@ export function Faq() {
       ];
 
     return (
-      <section id="faq" className="w-full bg-background py-24 sm:py-32">
+      <section id="faq" className="w-full bg-background py-16 sm:py-24">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <div className="mb-12 text-center">
