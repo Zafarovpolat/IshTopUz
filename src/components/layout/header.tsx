@@ -25,15 +25,9 @@ export function Header() {
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-    if (!isMenuOpen) {
-      document.body.classList.add("has-[div[aria-modal=true]]:overflow-hidden");
-    } else {
-      document.body.classList.remove("has-[div[aria-modal=true]]:overflow-hidden");
-    }
   };
   const closeMenu = () => {
     setIsMenuOpen(false);
-    document.body.classList.remove("has-[div[aria-modal=true]]:overflow-hidden");
   };
 
   return (
@@ -71,7 +65,11 @@ export function Header() {
         </div>
       </header>
       {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100" aria-modal="true" data-state={isMenuOpen ? 'open' : 'closed'}>
+        <div 
+          className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100" 
+          aria-modal="true" 
+          data-state={isMenuOpen ? 'open' : 'closed'}
+        >
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
           <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
             <div className="flex items-center justify-between">
@@ -88,7 +86,7 @@ export function Header() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-2xl font-medium text-foreground"
+                  className="text-xl font-medium text-foreground"
                   onClick={closeMenu}
                 >
                   {link.label}
