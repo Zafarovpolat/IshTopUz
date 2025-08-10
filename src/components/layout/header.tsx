@@ -73,7 +73,7 @@ export function Header() {
       {isMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out" aria-modal="true">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
-          <nav className="fixed inset-0 z-50 flex flex-col bg-transparent px-6 py-3">
+          <nav className="fixed inset-0 z-50 flex flex-col bg-white/90 px-6 py-3">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
                   <Logo />
@@ -83,22 +83,22 @@ export function Header() {
                 <span className="sr-only">{"Закрыть меню"}</span>
               </Button>
             </div>
-            <div className="mt-8 flex flex-col gap-6 text-center self-center max-w-[360px] m-auto">
+            <div className="flex flex-col gap-6 text-center self-center max-w-[360px] m-auto">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-2xl font-medium text-white"
+                  className="text-2xl font-medium text-black"
                   onClick={closeMenu}
                 >
                   {link.label}
                 </Link>
               ))}
               <div className='flex flex-col gap-4 mt-auto'>
-                <Button asChild size="lg" variant="ghost" className="text-white hover:bg-white/10 hover:text-white" onClick={closeMenu}>
+                <Button asChild size="lg" variant="ghost" className="text-black hover:bg-black/10 hover:text-black" onClick={closeMenu}>
                     <Link href="#">{"Войти"}</Link>
                 </Button>
-                <Button asChild size="lg" className="bg-white text-black hover:bg-white/90" onClick={closeMenu}>
+                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={closeMenu}>
                     <Link href="#contact">{"Регистрация"}</Link>
                 </Button>
               </div>
