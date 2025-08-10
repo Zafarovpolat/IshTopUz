@@ -32,12 +32,11 @@ export async function submitLead(
       message: "Что-то пошло не так на нашей стороне. Пожалуйста, повторите попытку позже.",
     };
   }
-
-  redirect(`/survey?role=${validatedFields.data.role}`);
   
   return {
     success: true,
     message: "Форма успешно отправлена! Перенаправляем...",
+    redirectUrl: `/survey?role=${validatedFields.data.role}`
   };
 }
 

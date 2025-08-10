@@ -15,6 +15,7 @@ export type LeadState = {
   };
   message?: string | null;
   success: boolean;
+  redirectUrl?: string;
 } | void;
 
 

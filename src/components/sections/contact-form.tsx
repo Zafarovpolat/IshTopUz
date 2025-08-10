@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useTransition } from "react";
 import type { z } from "zod";
+import { useRouter } from "next/navigation";
 
 import { submitLead } from "@/app/actions";
 import { leadSchema } from "@/lib/schema";
@@ -32,6 +33,7 @@ type LeadFormValues = z.infer<typeof leadSchema>;
 export function ContactFormSection() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
@@ -45,7 +47,15 @@ export function ContactFormSection() {
   const onSubmit = (data: LeadFormValues) => {
     startTransition(async () => {
       const result = await submitLead(data);
-      if (result?.success === false) {
+      if (result?.success) {
+        toast({
+          title: "Успешно!",
+          description: result.message,
+        });
+        if(result.redirectUrl) {
+          router.push(result.redirectUrl);
+        }
+      } else if (result?.success === false) {
         toast({
           variant: "destructive",
           title: "Ошибка отправки",
