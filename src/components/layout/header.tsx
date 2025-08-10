@@ -59,6 +59,7 @@ export function Header() {
             </Button>
         </div>
         <div className="flex items-center md:hidden">
+          <LanguageSwitcher />
           <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label={t.toggleMenu}>
             <span className="sr-only">{t.toggleMenu}</span>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -89,10 +90,7 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-               <div className='flex justify-center my-4'>
-                <LanguageSwitcher />
-              </div>
-              <div className='flex flex-col gap-4 mt-4'>
+              <div className='flex flex-col gap-4 mt-auto'>
                 <Button asChild size="lg" variant="ghost" onClick={closeMenu}>
                     <Link href="#">{t.login}</Link>
                 </Button>

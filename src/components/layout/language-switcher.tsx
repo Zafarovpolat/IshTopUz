@@ -4,33 +4,43 @@ import { useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { LanguageContext } from '@/context/language-context';
 import { Language } from '@/lib/i18n';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
+import { Globe } from 'lucide-react';
 
-const languages: { code: Language, name: string }[] = [
-    { code: 'ru', name: 'RU' },
-    { code: 'en', name: 'EN' },
-    { code: 'uz', name: 'UZ' },
+const languages: { code: Language, name: string, nativeName: string }[] = [
+    { code: 'ru', name: 'RU', nativeName: 'Русский' },
+    { code: 'en', name: 'EN', nativeName: 'English' },
+    { code: 'uz', name: 'UZ', nativeName: 'O‘zbekcha' },
 ];
 
 export default function LanguageSwitcher() {
   const { language, setLanguage } = useContext(LanguageContext);
+  const currentLanguage = languages.find(lang => lang.code === language);
 
   return (
-    <div className="flex items-center gap-1 rounded-full border bg-background p-1">
-      {languages.map((lang) => (
-        <Button
-          key={lang.code}
-          variant={language === lang.code ? 'secondary' : 'ghost'}
-          size="sm"
-          className={`rounded-full px-3 py-1 text-sm font-medium ${
-            language === lang.code
-              ? 'bg-primary text-primary-foreground'
-              : 'text-muted-foreground'
-          }`}
-          onClick={() => setLanguage(lang.code)}
-        >
-          {lang.name}
-        </Button>
-      ))}
-    </div>
+    <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="gap-2">
+                <Globe className="h-5 w-5 text-muted-foreground" />
+                <span className="text-muted-foreground">{currentLanguage?.name}</span>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+            {languages.map((lang) => (
+                <DropdownMenuItem 
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className="cursor-pointer"
+                >
+                    {lang.nativeName}
+                </DropdownMenuItem>
+            ))}
+        </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

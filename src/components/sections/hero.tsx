@@ -26,22 +26,14 @@ export function Hero() {
               <Link href="#contact">{t.getStarted}</Link>
             </Button>
           </div>
-          <div className="mt-10">
-            <p className="font-semibold text-muted-foreground">{t.trustedBy}</p>
-            <div className="mt-4 flex flex-wrap justify-center lg:justify-start items-center gap-x-8 gap-y-4 text-muted-foreground">
-                <span className="font-bold text-xl">Logoipsum</span>
-                <span className="font-bold text-xl">Logoipsum</span>
-                <span className="font-bold text-xl">Logoipsum</span>
-            </div>
-          </div>
         </div>
         <div className="relative mx-auto h-full w-full max-w-lg lg:max-w-none">
           <Image
-            src="https://placehold.co/600x400.png"
+            src="https://placehold.co/600x600.png"
             alt={t.imageAlt}
             width={600}
-            height={400}
-            className="rounded-lg shadow-2xl"
+            height={600}
+            className="rounded-full shadow-2xl"
             data-ai-hint="freelancer computer"
           />
         </div>

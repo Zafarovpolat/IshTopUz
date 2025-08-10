@@ -55,11 +55,11 @@ export const translations = {
         form: {
             name: {
                 label: "Full Name",
-                placeholder: "e.g. John Doe",
+                placeholder: "John Doe",
             },
             email: {
                 label: "Email Address",
-                placeholder: "e.g. you@example.com",
+                placeholder: "you@example.com",
             },
             role: {
                 label: "I am a...",
@@ -120,45 +120,45 @@ export const translations = {
       closeMenu: "Закрыть меню",
     },
     hero: {
-      title: "Работа, как она должна быть.",
-      subtitle: "Нанимайте лучших специалистов и находите интересные проекты. Быстро и безопасно.",
+      title: "Работа, как она должна быть",
+      subtitle: "Забудьте о старых правилах. Вы можете нанимать лучших специалистов. Прямо сейчас. Прямо здесь.",
       getStarted: "Начать",
       trustedBy: "Нам доверяют",
-      imageAlt: "Фрилансеры сотрудничают",
+      imageAlt: "Фрилансеры за работой",
     },
     benefits: {
         title: "Почему выбирают IshTop.Uz?",
-        subtitle: "Лучшие возможности для фрилансеров и клиентов в Узбекистане.",
+        subtitle: "Лучшие возможности для фрилансеров и заказчиков в Узбекистане.",
         paymentGuarantee: {
             title: "Гарантия оплаты",
-            description: "Эскроу-счета для безопасных транзакций, гарантирующие сохранность ваших средств до утверждения работы."
+            description: "Безопасные сделки через escrow-счета. Ваши средства в безопасности до полного утверждения работы."
         },
         lowCommission: {
             title: "Низкая комиссия",
-            description: "Мы берем всего 5%, что значительно ниже 10-20% на других платформах. Больше заработка для вас."
+            description: "Наша комиссия — всего 5%, что значительно ниже 10-20% на других платформах. Ваш заработок остается с вами."
         },
         localization: {
-            title: "Локализация",
-            description: "Платформа, созданная для Узбекистана, с поддержкой узбекского, русского и английского языков, а также бесшовной интеграцией с Telegram."
+            title: "Локализация для Узбекистана",
+            description: "Платформа, созданная для рынка Узбекистана с поддержкой узбекского, русского и английского языков и удобной интеграцией с Telegram."
         }
     },
     faq: {
         title: "Часто задаваемые вопросы",
-        subtitle: "Найдите ответы на часто задаваемые вопросы о IshTop.Uz.",
+        subtitle: "Здесь вы найдете ответы на популярные вопросы о IshTop.Uz.",
         q1: "Что такое IshTop.Uz?",
-        a1: "IshTop.Uz - это первая фриланс-биржа в Узбекистане, созданная для связи талантливых фрилансеров с клиентами для безопасного и эффективного сотрудничества по проектам.",
+        a1: "IshTop.Uz — это первая фриланс-биржа в Узбекистане, созданная для объединения талантливых фрилансеров и заказчиков для безопасной и эффективной работы над проектами.",
         q2: "Как работает гарантия оплаты?",
-        a2: "Мы используем систему эскроу. Оплата клиента надежно хранится на счете и переводится фрилансеру только после того, как работа будет выполнена и одобрена клиентом.",
-        q3: "Какая комиссия?",
-        a3: "IshTop.Uz взимает фиксированную комиссию в размере 5% со всех транзакций, что значительно ниже, чем на большинстве других международных платформ. Это означает, что большая часть ваших доходов остается у вас.",
+        a2: "Мы используем систему escrow. Оплата заказчика надежно хранится на специальном счете и переводится фрилансеру только после того, как работа будет выполнена и одобрена заказчиком.",
+        q3: "Какая комиссия на платформе?",
+        a3: "IshTop.Uz взимает фиксированную комиссию 5% со всех транзакций. Это значительно ниже, чем на других международных площадках, что позволяет вам зарабатывать больше.",
         q4: "Какие способы оплаты поддерживаются?",
-        a4: "Платформа будет поддерживать популярные местные платежные системы, включая HUMO и Payme, для бесперебойных и удобных транзакций.",
-        q5: "Когда запустится платформа?",
-        a5: "В настоящее время мы находимся на стадии бета-тестирования. Подпишитесь на нашу рассылку, чтобы получать эксклюзивные обновления и первыми узнать, когда мы официально запустимся!",
+        a4: "Платформа поддерживает популярные в Узбекистане платежные системы, включая HUMO и Payme, для максимального удобства.",
+        q5: "Когда платформа будет запущена?",
+        a5: "Сейчас мы на этапе бета-тестирования. Подпишитесь на нашу рассылку, чтобы первыми получать новости и узнать о официальном запуске!",
     },
     contact: {
         title: "Присоединяйтесь к бета-тесту",
-        subtitle: "Оставьте свою заявку и будьте в числе первых, кто получит доступ к платформе IshTop.Uz.",
+        subtitle: "Будьте в числе первых, кто получит доступ к платформе.",
         form: {
             name: {
                 label: "Полное имя",
@@ -172,33 +172,33 @@ export const translations = {
                 label: "Я...",
                 placeholder: "Выберите вашу роль",
                 freelancer: "Фрилансер",
-                client: "Клиент",
+                client: "Заказчик",
             },
             submit: "Получить доступ к бета-версии",
             submitting: "Отправка...",
         },
         toast: {
-            successTitle: "Отправка прошла успешно!",
+            successTitle: "Заявка успешно отправлена!",
             failTitle: "Ошибка отправки",
-            failDescription: "Пожалуйста, проверьте введенные данные и попробуйте снова.",
+            failDescription: "Проверьте введенные данные и попробуйте еще раз.",
         }
     },
     cta: {
-        title: "Готовы начать свой путь фрилансера?",
-        subtitle: "Присоединяйтесь к IshTop.Uz! Запишитесь на бета-тестирование и начните зарабатывать или находить лучших специалистов в Узбекистане.",
-        button: "Зарегистрироваться сейчас",
+        title: "Готовы начать свой путь во фрилансе?",
+        subtitle: "Присоединяйтесь к IshTop.Uz! Запишитесь на бета-тестирование, чтобы начать зарабатывать или находить лучших исполнителей в Узбекистане.",
+        button: "Зарегистрироваться",
     },
     footer: {
-        description: "Первая в Узбекистане фриланс-биржа, созданная для безопасного и эффективного сотрудничества.",
+        description: "Первая в Узбекистане фриланс-биржа для безопасного и эффективного сотрудничества.",
         forClients: {
-            title: "Для клиентов",
+            title: "Заказчикам",
             howToHire: "Как нанять",
             talentMarketplace: "Биржа талантов",
             projectCatalog: "Каталог проектов",
             hireInUz: "Нанять в UZ",
         },
         forFreelancers: {
-            title: "Для фрилансеров",
+            title: "Фрилансерам",
             howToEarn: "Как заработать",
             findWork: "Найти работу",
             connect: "Связаться с клиентами",
@@ -234,79 +234,79 @@ export const translations = {
       imageAlt: "Frilanserlar hamkorlik qilmoqda",
     },
     benefits: {
-        title: "Nima uchun IshTop.Uz'ni tanlash kerak?",
-        subtitle: "O'zbekistondagi frilanserlar va mijozlar uchun eng yaxshi xususiyatlar.",
+        title: "Nima uchun IshTop.Uz'ni tanlaysiz?",
+        subtitle: "O'zbekistondagi frilanserlar va mijozlar uchun eng yaxshi imkoniyatlar.",
         paymentGuarantee: {
             title: "To'lov kafolati",
-            description: "Xavfsiz tranzaktsiyalar uchun eskrou-hisob raqamlari, ish tasdiqlanmaguncha mablag'laringiz xavfsizligini ta'minlaydi."
+            description: "Xavfsiz tranzaksiyalar uchun eskrou-hisob raqamlari. Ish tasdiqlanmaguncha mablag'laringiz xavfsiz saqlanadi."
         },
         lowCommission: {
-            title: "Kam komissiya",
-            description: "Biz faqat 5% haq olamiz, bu boshqa platformalardagi 10-20% dan ancha past. Siz uchun ko'proq daromad."
+            title: "Past komissiya",
+            description: "Bizning komissiyamiz atigi 5%, bu boshqa platformalardagi 10-20% dan ancha past. Daromadingiz o'zingizda qoladi."
         },
         localization: {
-            title: "Lokalizatsiya",
-            description: "O'zbekiston uchun yaratilgan platforma, o'zbek, rus va ingliz tillarini qo'llab-quvvatlaydi, shuningdek Telegram bilan uzluksiz integratsiya."
+            title: "O'zbekiston uchun lokalizatsiya",
+            description: "O'zbekiston bozori uchun yaratilgan, o'zbek, rus va ingliz tillarini qo'llab-quvvatlaydigan va Telegram bilan qulay integratsiyalashgan platforma."
         }
     },
     faq: {
         title: "Tez-tez so'raladigan savollar",
-        subtitle: "IshTop.Uz haqida umumiy savollarga javob toping.",
+        subtitle: "Bu yerda IshTop.Uz haqidagi mashhur savollarga javob topasiz.",
         q1: "IshTop.Uz nima?",
-        a1: "IshTop.Uz - O'zbekistondagi birinchi frilans birjasi bo'lib, iqtidorli frilanserlarni mijozlar bilan xavfsiz va samarali loyiha hamkorligi uchun bog'lashga mo'ljallangan.",
+        a1: "IshTop.Uz - bu O'zbekistondagi birinchi frilans birjasi bo'lib, iqtidorli frilanserlar va buyurtmachilarni loyihalar ustida xavfsiz va samarali ishlash uchun birlashtiradi.",
         q2: "To'lov kafolati qanday ishlaydi?",
-        a2: "Biz eskrou tizimidan foydalanamiz. Mijozning to'lovi hisobda xavfsiz saqlanadi va faqat ish tugallanib, mijoz tomonidan tasdiqlangandan so'ng frilanserga o'tkaziladi.",
-        q3: "Komissiya to'lovi qancha?",
-        a3: "IshTop.Uz barcha tranzaktsiyalardan 5% tekis komissiya oladi, bu boshqa xalqaro platformalarga qaraganda ancha past. Bu sizning daromadingizning ko'proq qismi o'zingizda qolishini anglatadi.",
+        a2: "Biz eskrou tizimidan foydalanamiz. Buyurtmachining to'lovi maxsus hisobda ishonchli saqlanadi va ish bajarilib, buyurtmachi tomonidan tasdiqlangandan so'ng frilanserga o'tkaziladi.",
+        q3: "Platformadagi komissiya qancha?",
+        a3: "IshTop.Uz barcha tranzaktsiyalardan 5% miqdorida belgilangan komissiya undiradi. Bu boshqa xalqaro maydonchalarga qaraganda ancha past, bu esa sizga ko'proq daromad olish imkonini beradi.",
         q4: "Qaysi to'lov usullari qo'llab-quvvatlanadi?",
-        a4: "Platforma uzluksiz va qulay tranzaktsiyalar uchun HUMO va Payme kabi mashhur mahalliy to'lov tizimlarini qo'llab-quvvatlaydi.",
-        q5: "Platforma qachon ishga tushadi?",
-        a5: "Hozirda biz beta-sinov bosqichidamiz. Eksklyuziv yangilanishlarni olish va rasmiy ravishda ishga tushganimizda birinchi bo'lib bilish uchun bizning axborot byulletenimizga yoziling!",
+        a4: "Platforma maksimal qulaylik uchun O'zbekistonda ommabop bo'lgan HUMO va Payme kabi to'lov tizimlarini qo'llab-quvvatlaydi.",
+        q5: "Platforma qachon ishga tushiriladi?",
+        a5: "Hozirda biz beta-sinov bosqichidamiz. Yangiliklarni birinchilardan bo'lib olish va rasmiy ishga tushirish haqida bilish uchun bizning xabarnomamizga obuna bo'ling!",
     },
     contact: {
-        title: "Beta-versiyaga qo'shiling",
-        subtitle: "IshTop.Uz ishga tushganda birinchilardan bo'lib xabardor bo'ling. Eksklyuziv kirish uchun ro'yxatdan o'ting.",
+        title: "Beta-testga qo'shiling",
+        subtitle: "Platformaga kirish huquqini birinchilardan bo'lib qo'lga kiritadiganlar qatorida bo'ling.",
         form: {
             name: {
-                label: "To'liq ism",
+                label: "To'liq ismingiz",
                 placeholder: "John Doe",
             },
             email: {
-                label: "Elektron pochta manzili",
+                label: "Elektron pochta manzilingiz",
                 placeholder: "you@example.com",
             },
             role: {
                 label: "Men...",
-                placeholder: "O'z rolingizni tanlang",
+                placeholder: "Rolingizni tanlang",
                 freelancer: "Frilanser",
-                client: "Mijoz",
+                client: "Buyurtmachi",
             },
             submit: "Beta-versiyaga kirish",
             submitting: "Yuborilmoqda...",
         },
         toast: {
-            successTitle: "Muvaffaqiyatli yuborildi!",
+            successTitle: "Arizangiz muvaffaqiyatli yuborildi!",
             failTitle: "Yuborishda xatolik",
-            failDescription: "Iltimos, kiritgan ma'lumotlaringizni tekshiring va qaytadan urinib ko'ring.",
+            failDescription: "Kiritilgan ma'lumotlarni tekshirib, qayta urinib ko'ring.",
         }
     },
     cta: {
-        title: "Frilanserlik sayohatingizni boshlashga tayyormisiz?",
-        subtitle: "IshTop.Uz'ga qo'shiling! Beta-sinovdan o'tish uchun ro'yxatdan o'ting va O'zbekistonda daromad olish yoki eng yaxshi iste'dodlarni topishni boshlang.",
-        button: "Hozir ro'yxatdan o'ting",
+        title: "Frilansdagi yo'lingizni boshlashga tayyormisiz?",
+        subtitle: "IshTop.Uz'ga qo'shiling! Daromad topishni yoki O'zbekistondagi eng yaxshi ijrochilarni topishni boshlash uchun beta-sinovdan o'ting.",
+        button: "Ro'yxatdan o'tish",
     },
     footer: {
-        description: "O'zbekistonning birinchi frilans birjasi xavfsiz va samarali hamkorlik uchun mo'ljallangan.",
+        description: "O'zbekistondagi birinchi frilans birjasi xavfsiz va samarali hamkorlik uchun.",
         forClients: {
-            title: "Mijozlar uchun",
-            howToHire: "Qanday yollash kerak",
-            talentMarketplace: "Iste'dodlar bozori",
+            title: "Buyurtmachilarga",
+            howToHire: "Qanday yollash",
+            talentMarketplace: "Iste'dodlar birjasi",
             projectCatalog: "Loyihalar katalogi",
             hireInUz: "O'zbekistonda yollash",
         },
         forFreelancers: {
-            title: "Frilanserlar uchun",
-            howToEarn: "Qanday pul ishlash kerak",
+            title: "Frilanserlarga",
+            howToEarn: "Qanday pul ishlash",
             findWork: "Ish topish",
             connect: "Mijozlar bilan bog'lanish",
         },
@@ -316,7 +316,7 @@ export const translations = {
             contact: "Kontaktlar",
         },
         rights: "Barcha huquqlar himoyalangan.",
-        terms: "Xizmat ko'rsatish shartlari",
+        terms: "Foydalanish shartlari",
         privacy: "Maxfiylik siyosati",
     }
   },
