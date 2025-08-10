@@ -34,6 +34,11 @@ export async function submitLead(
   }
 
   redirect(`/survey?role=${validatedFields.data.role}`);
+  
+  return {
+    success: true,
+    message: "Форма успешно отправлена! Перенаправляем...",
+  };
 }
 
 export async function submitSurvey(
