@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section 
       id="home" 
-      className="relative flex items-center justify-center w-full min-h-[calc(100vh-4rem)] bg-cover bg-center bg-no-repeat"
+      className="relative flex items-center justify-center w-full min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-3.5rem)] bg-cover bg-center bg-no-repeat"
       style={{backgroundImage: "url('https://i.yapx.ru/aOTzC.jpg')"}}
     >
       <div className="absolute inset-0 bg-black/50" />
