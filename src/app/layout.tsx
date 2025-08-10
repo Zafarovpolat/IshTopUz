@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: 'IshTop.Uz',
     images: [
       {
-        url: 'https://placehold.co/1200x630.png',
+        url: 'https://i.yapx.ru/aOXky.png',
         width: 1200,
         height: 630,
         alt: 'IshTop.Uz - Фриланс-биржа в Узбекистане',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'IshTop.Uz — Ваша фриланс-биржа в Узбекистане',
     description: 'Безопасные сделки, комиссия 5%, удобные платежи через HUMO и Payme.',
-    images: ['https://placehold.co/1200x630.png'],
+    images: ['https://i.yapx.ru/aOXky.png'],
   },
 };
 
