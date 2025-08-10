@@ -23,8 +23,18 @@ export function Header() {
     { href: '#contact', label: "Контакты" },
   ];
   
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const closeMenu = () => setIsMenuOpen(false);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+    if (!isMenuOpen) {
+      document.body.classList.add("has-[div[aria-modal=true]]:overflow-hidden");
+    } else {
+      document.body.classList.remove("has-[div[aria-modal=true]]:overflow-hidden");
+    }
+  };
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    document.body.classList.remove("has-[div[aria-modal=true]]:overflow-hidden");
+  };
 
   return (
     <>
@@ -61,9 +71,9 @@ export function Header() {
         </div>
       </header>
       {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
+        <div className="lg:hidden fixed inset-0 z-50" aria-modal="true">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={closeMenu} />
-          <nav className="fixed inset-0 z-50 flex flex-col bg-background p-6">
+          <nav className="fixed inset-0 z-50 flex flex-col bg-background px-6 py-3">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
                   <Logo />
