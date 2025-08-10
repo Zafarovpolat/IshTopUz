@@ -1,10 +1,40 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-// This can be expanded with language-specific messages
 export const leadSchema = z.object({
-  name: z.string().min(2, { message: "Имя должно содержать не менее 2 символов." }),
-  email: z.string().email({ message: "Пожалуйста, введите действительный адрес электронной почты." }),
-  role: z.enum(["Freelancer", "Client"], { required_error: "Пожалуйста, выберите роль." }),
+  name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
+  email: z.string().email('Неверный формат email'),
+  role: z.enum(['Freelancer', 'Client'], { message: 'Выберите роль: Фрилансер или Заказчик' }),
+});
+
+export const surveyFreelancerSchema = z.object({
+  name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
+  email: z.string().email('Неверный формат email'),
+  leadId: z.string().optional(), // ID записи из leads
+  profession: z.string().optional(),
+  experience: z.string().optional(),
+  platforms: z.array(z.string()).optional(),
+  paymentIssues: z.string().optional(),
+  localPaymentSystems: z.string().optional(),
+  commissionAgreement: z.string().optional(),
+  useTelegram: z.string().optional(),
+  desiredFeatures: z.string().optional(),
+  betaTest: z.string().optional(),
+});
+
+export const surveyClientSchema = z.object({
+  name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
+  email: z.string().email('Неверный формат email'),
+  leadId: z.string().optional(), // ID записи из leads
+  services: z.array(z.string()).optional(),
+  businessType: z.string().optional(),
+  platforms: z.array(z.string()).optional(),
+  qualityIssues: z.string().optional(),
+  localPaymentSystems: z.string().optional(),
+  commissionAttractiveness: z.string().optional(),
+  useSocials: z.string().optional(),
+  verificationValue: z.string().optional(),
+  hiringDifficulties: z.string().optional(),
+  betaTest: z.string().optional(),
 });
 
 export type LeadState = {
@@ -18,40 +48,10 @@ export type LeadState = {
   redirectUrl?: string;
 };
 
-
-export const surveyFreelancerSchema = z.object({
-    profession: z.string({required_error: "Пожалуйста, выберите профессию."}),
-    experience: z.string({required_error: "Пожалуйста, выберите ваш опыт."}),
-    platforms: z.array(z.string()).refine((value) => value.some((item) => item), {
-      message: "Необходимо выбрать хотя бы один вариант.",
-    }),
-    paymentIssues: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    localPaymentSystems: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    commissionAgreement: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    useTelegram: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    desiredFeatures: z.string().optional(),
-    betaTest: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-});
-
-export const surveyClientSchema = z.object({
-    services: z.array(z.string()).refine((value) => value.some((item) => item), {
-      message: "Необходимо выбрать хотя бы один вариант.",
-    }),
-    businessType: z.string({required_error: "Пожалуйста, выберите тип вашего бизнеса."}),
-    platforms: z.array(z.string()).refine((value) => value.some((item) => item), {
-        message: "Необходимо выбрать хотя бы один вариант.",
-    }),
-    qualityIssues: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    localPaymentSystems: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    commissionAttractiveness: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    useSocials: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    verificationValue: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    hiringDifficulties: z.string().optional(),
-    betaTest: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-});
-
 export type SurveyState = {
-    errors?: any;
-    message?: string | null;
-    success: boolean;
+  errors?: {
+    [key: string]: string[];
+  };
+  message?: string | null;
+  success: boolean;
 };
