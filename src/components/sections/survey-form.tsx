@@ -121,7 +121,7 @@ export function SurveyForm() {
                 );
             case 'checkbox':
                 return (
-                    <>
+                    <div className="flex flex-col gap-2">
                         {question.options.map((item: any) => (
                             <FormField
                                 key={item.id}
@@ -155,7 +155,7 @@ export function SurveyForm() {
                                 }}
                             />
                         ))}
-                    </>
+                    </div>
                 );
             case 'textarea':
                 return <Textarea placeholder={question.placeholder} {...field} />;
@@ -175,7 +175,7 @@ export function SurveyForm() {
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
                             {questions.map((q) => (
                                 <FormField
                                     key={q.id}
@@ -190,7 +190,7 @@ export function SurveyForm() {
                                     )}
                                 />
                             ))}
-                            <Button type="submit" className="w-full text-base" size="lg" disabled={isPending}>
+                            <Button type="submit" className="w-full text-base mt-8" size="lg" disabled={isPending}>
                                 {isPending ? "Отправка..." : "Отправить ответы"}
                             </Button>
                         </form>
