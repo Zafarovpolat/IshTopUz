@@ -73,7 +73,7 @@ export function Header() {
           data-state={isMenuOpen ? 'open' : 'closed'}
         >
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
-          <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
+          <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-4 sm:px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
             <div className="flex items-center justify-between">
                <Link href="#home" onClick={closeMenu}>
                   <Logo />
