@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
                     <p>Если у вас есть вопросы по Политике конфиденциальности, свяжитесь с нами:</p>
                     <ul>
                         <li>Email: info@ishtop.uz</li>
-                        <li>Telegram: @IshTopUz</li>
+                        <li>Telegram: @ishtopuzofficial</li>
                     </ul>
                 </div>
             </main>

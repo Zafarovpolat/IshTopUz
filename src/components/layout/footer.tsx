@@ -44,7 +44,7 @@ export function Footer() {
                     <ul className="mt-4 space-y-2 text-sm">
                         <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"О нас"}</Link></li>
                         <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Контакты"}</Link></li>
-                        <li><Link href="https://t.me/IshTopUz" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
+                        <li><Link href="https://t.me/ishtopuzofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                             <Send className="h-4 w-4" /> Telegram
                             </Link>
                         </li>

@@ -84,7 +84,7 @@ export default function TermsOfUsePage() {
                     <p>По вопросам применения правил обращайтесь:</p>
                     <ul>
                         <li>Email: info@ishtop.uz</li>
-                        <li>Telegram: @IshTopUz</li>
+                        <li>Telegram: @ishtopuzofficial</li>
                     </ul>
                 </div>
             </main>
