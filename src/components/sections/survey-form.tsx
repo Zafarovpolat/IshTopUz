@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useTransition } from "react"
@@ -37,6 +37,7 @@ type ClientFormValues = z.infer<typeof surveyClientSchema>;
 
 export function SurveyForm() {
     const searchParams = useSearchParams()
+    const router = useRouter();
     const role = searchParams.get('role') as "Freelancer" | "Client" | null;
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
@@ -79,8 +80,7 @@ export function SurveyForm() {
                 description: result.message,
               });
               form.reset();
-              // Optionally redirect to a thank you page
-              // router.push('/thank-you');
+              router.push('/');
             } else {
               toast({
                 variant: "destructive",
@@ -183,7 +183,9 @@ export function SurveyForm() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>{q.label}</FormLabel>
-                                            {renderFormField(q, field)}
+                                            <FormControl>
+                                                {renderFormField(q, field)}
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
