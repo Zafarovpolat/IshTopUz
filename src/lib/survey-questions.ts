@@ -83,17 +83,6 @@ export const freelancerQuestions = [
         ],
     },
     {
-        id: 'aiAssistant',
-        type: 'select',
-        label: 'Насколько полезен был бы ИИ-ассистент для подбора заказов по вашим навыкам или напоминаний о дедлайнах?',
-        placeholder: 'Оцените полезность',
-        options: [
-            { value: 'not-useful', label: 'Не полезен' },
-            { value: 'useful', label: 'Полезен' },
-            { value: 'very-useful', label: 'Очень полезен' },
-        ],
-    },
-    {
         id: 'desiredFeatures',
         type: 'textarea',
         label: 'Какие функции вы хотели бы видеть на новой фриланс-платформе?',

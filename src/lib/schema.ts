@@ -28,7 +28,6 @@ export const surveyFreelancerSchema = z.object({
     localPaymentSystems: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
     commissionAgreement: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
     useTelegram: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
-    aiAssistant: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
     desiredFeatures: z.string().optional(),
     betaTest: z.string({required_error: "Пожалуйста, ответьте на этот вопрос."}),
 });

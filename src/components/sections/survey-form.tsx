@@ -53,7 +53,6 @@ export function SurveyForm() {
             localPaymentSystems: undefined,
             commissionAgreement: undefined,
             useTelegram: undefined,
-            aiAssistant: undefined,
             desiredFeatures: "",
             betaTest: undefined
         } : {
