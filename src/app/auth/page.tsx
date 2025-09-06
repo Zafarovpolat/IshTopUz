@@ -14,7 +14,7 @@ import {
   signInWithTelegram,
   setupRecaptcha,
 } from '@/lib/auth';
-import { ChromeIcon } from 'lucide-react';
+import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 
@@ -42,11 +42,12 @@ export default function AuthPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isSignUpLoading, setIsSignUpLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs once on component mount to setup reCAPTCHA container.
-    // It's required for phone number authentication.
     if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
       setupRecaptcha('recaptcha-container');
     }
@@ -54,35 +55,40 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoginLoading(true);
     const user = await signInWithEmail(loginEmail, loginPassword);
     if (user) {
       toast({ title: 'Успешный вход!', description: `Добро пожаловать, ${user.email}` });
     } else {
       toast({ variant: 'destructive', title: 'Ошибка входа', description: 'Проверьте email и пароль.' });
     }
+    setIsLoginLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSignUpLoading(true);
     const user = await signUpWithEmail(signUpEmail, signUpPassword);
     if (user) {
       toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации.' });
     } else {
       toast({ variant: 'destructive', title: 'Ошибка регистрации', description: 'Возможно, этот email уже используется.' });
     }
+    setIsSignUpLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
     const user = await signInWithGoogle();
     if (user) {
       toast({ title: 'Успешный вход через Google!', description: `Добро пожаловать, ${user.displayName}` });
     } else {
       toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
     }
+    setIsGoogleLoading(false);
   };
 
   const handleTelegramSignIn = async () => {
-    // Placeholder function, as real Telegram login requires a backend.
     await signInWithTelegram();
     toast({ variant: 'default', title: 'Вход через Telegram', description: 'Эта функция пока не реализована.' });
   };
@@ -111,13 +117,16 @@ export default function AuthPage() {
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="login-email">Email</Label>
-                                <Input id="login-email" type="email" placeholder="you@example.com" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+                                <Input id="login-email" type="email" placeholder="you@example.com" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} disabled={isLoginLoading} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="login-password">Пароль</Label>
-                                <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+                                <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} disabled={isLoginLoading} />
                             </div>
-                            <Button type="submit" className="w-full">Войти</Button>
+                            <Button type="submit" className="w-full" disabled={isLoginLoading}>
+                                {isLoginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isLoginLoading ? 'Вход...' : 'Войти'}
+                            </Button>
                         </form>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
@@ -128,8 +137,9 @@ export default function AuthPage() {
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <Button variant="outline" onClick={handleGoogleSignIn}>
-                                <ChromeIcon className="mr-2 h-4 w-4" /> Google
+                            <Button variant="outline" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
+                                {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
+                                Google
                             </Button>
                             <Button variant="outline" onClick={handleTelegramSignIn}>
                                 <TelegramIcon className="mr-2 h-4 w-4" /> Telegram
@@ -148,13 +158,16 @@ export default function AuthPage() {
                         <form onSubmit={handleSignUp} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="signup-email">Email</Label>
-                                <Input id="signup-email" type="email" placeholder="you@example.com" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} />
+                                <Input id="signup-email" type="email" placeholder="you@example.com" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} disabled={isSignUpLoading}/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="signup-password">Пароль</Label>
-                                <Input id="signup-password" type="password" required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} />
+                                <Input id="signup-password" type="password" required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} disabled={isSignUpLoading}/>
                             </div>
-                            <Button type="submit" className="w-full">Создать аккаунт</Button>
+                            <Button type="submit" className="w-full" disabled={isSignUpLoading}>
+                                {isSignUpLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSignUpLoading ? 'Создание...' : 'Создать аккаунт'}
+                            </Button>
                         </form>
                     </CardContent>
                     </Card>
