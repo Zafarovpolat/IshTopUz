@@ -52,10 +52,10 @@ export function Header() {
           </nav>
           <div className="hidden items-center justify-end gap-2 lg:flex flex-1">
               <Button asChild variant="ghost" className="max-w-[120px] text-base">
-                  <Link href="/404">{"Войти"}</Link>
+                  <Link href="/auth">{"Войти"}</Link>
               </Button>
               <Button asChild className="max-w-[150px] text-base">
-                  <Link href="/404">{"Регистрация"}</Link>
+                  <Link href="/auth">{"Регистрация"}</Link>
               </Button>
           </div>
           <div className="flex items-center lg:hidden">
@@ -96,10 +96,10 @@ export function Header() {
               ))}
               <div className='flex flex-col gap-4 mt-auto'>
                 <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground text-base" onClick={closeMenu}>
-                    <Link href="/404">{"Войти"}</Link>
+                    <Link href="/auth">{"Войти"}</Link>
                 </Button>
                 <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base" onClick={closeMenu}>
-                    <Link href="/404">{"Регистрация"}</Link>
+                    <Link href="/auth">{"Регистрация"}</Link>
                 </Button>
               </div>
             </div>
