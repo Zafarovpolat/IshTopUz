@@ -14,6 +14,7 @@ import {
     signInWithPhoneNumber,
     signOut,
     onAuthStateChanged,
+    signInWithCustomToken, // Добавлено
     type User,
     type Auth,
     type AuthProvider
@@ -21,7 +22,7 @@ import {
 import { app } from "./firebase"; // Your initialized Firebase app
 
 // Initialize Firebase Authentication and get a reference to the service
-const auth: Auth = getAuth(app);
+export const auth: Auth = getAuth(app); // Экспортируем auth
 
 /**
  * Handles the creation of a new user with email and password.
@@ -101,17 +102,22 @@ export function signInWithGoogle() {
 }
 
 /**
- * Placeholder for Telegram Sign-In.
- * Firebase does not have a native Telegram provider.
- * This requires a custom authentication flow with a server.
- * See: https://firebase.google.com/docs/auth/web/custom-auth
+ * Initiates Telegram Sign-In flow.
+ * This function redirects the user to the Telegram bot for authentication.
+ * The actual sign-in will be completed on the /auth/complete page.
+ * @returns {Promise<null>}
  */
-export function signInWithTelegram() {
-    console.warn("signInWithTelegram is not implemented. It requires a custom server-side authentication flow.");
-    // 1. Authenticate user with Telegram on your server.
-    // 2. Create a custom token on your server using Firebase Admin SDK.
-    // 3. Return the token to the client and use `signInWithCustomToken(auth, token)`.
-    return Promise.resolve(null);
+export async function signInWithTelegram() {
+  try {
+    // URL вашего бота, который инициирует процесс авторизации
+    // Замените ishtopuz_auth_helper_bot на имя вашего бота, если оно отличается
+    const telegramAuthUrl = 'https://t.me/ishtopuz_auth_helper_bot?start=auth'; 
+    window.location.href = telegramAuthUrl; // Перенаправляем пользователя
+    return null; // Вход будет завершён на странице /auth/complete
+  } catch (error) {
+    console.error('Error initiating Telegram sign-in:', error.message, `(Code: ${error.code})`);
+    return null;
+  }
 }
 
 
@@ -154,15 +160,23 @@ export async function sendVerificationEmail() {
 
 
 // --- Phone Authentication / 2FA ---
-
+declare global {
+    interface Window {
+        recaptchaVerifier?: RecaptchaVerifier;
+        confirmationResult?: any;
+    }
+}
 /**
  * Sets up RecaptchaVerifier for phone authentication.
  * @param {string} containerId - The ID of the HTML element where the reCAPTCHA should be rendered.
- * @returns {RecaptchaVerifier}
+ * @returns {RecaptchaVerifier | null}
  */
 export function setupRecaptcha(containerId) {
     // Ensure this is only called on the client-side
     if (typeof window !== "undefined") {
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
+        }
         window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
             'size': 'invisible',
             'callback': (response) => {
@@ -182,6 +196,10 @@ export function setupRecaptcha(containerId) {
  */
 export async function sendSmsVerification(phoneNumber) {
     const appVerifier = window.recaptchaVerifier;
+    if (!appVerifier) {
+        console.error("Error: RecaptchaVerifier not initialized.");
+        return null;
+    }
     try {
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         // SMS sent. Save confirmationResult to resolve with verification code.
@@ -192,7 +210,8 @@ export async function sendSmsVerification(phoneNumber) {
         console.error("Error: SMS sending failed:", error.message, `(Code: ${error.code})`);
         // Handle errors like invalid phone number.
         // Reset reCAPTCHA if needed
-        window.recaptchaVerifier.render().then((widgetId) => {
+        appVerifier.render().then((widgetId) => {
+            // @ts-ignore
             grecaptcha.reset(widgetId);
         });
         return null;
@@ -206,6 +225,10 @@ export async function sendSmsVerification(phoneNumber) {
  * @returns {Promise<User | null>} The user object or null on failure.
  */
 export async function verifySmsCode(code) {
+    if (!window.confirmationResult) {
+        console.error("Error: confirmationResult is not available. Please send SMS first.");
+        return null;
+    }
     try {
         const result = await window.confirmationResult.confirm(code);
         const user = result.user;

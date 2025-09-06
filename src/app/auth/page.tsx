@@ -45,11 +45,16 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
-      setupRecaptcha('recaptcha-container');
+    // This container is used for phone authentication, but good to have it ready.
+    if (typeof window !== 'undefined' && !document.getElementById('recaptcha-container')) {
+        const container = document.createElement('div');
+        container.id = 'recaptcha-container';
+        document.body.appendChild(container);
+        setupRecaptcha('recaptcha-container');
     }
   }, []);
 
@@ -89,13 +94,18 @@ export default function AuthPage() {
   };
 
   const handleTelegramSignIn = async () => {
-    await signInWithTelegram();
-    toast({ variant: 'default', title: 'Вход через Telegram', description: 'Эта функция пока не реализована.' });
+    setIsTelegramLoading(true);
+    try {
+        await signInWithTelegram();
+        // Пользователь будет перенаправлен, поэтому лоадер можно не убирать
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось инициировать вход через Telegram.' });
+        setIsTelegramLoading(false);
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary/50 p-4">
-        <div id="recaptcha-container" />
         <div className="w-full max-w-md mx-auto">
             <div className="text-center mb-6">
                 <Link href="/">
@@ -141,8 +151,9 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            <Button variant="outline" onClick={handleTelegramSignIn}>
-                                <TelegramIcon className="mr-2 h-4 w-4" /> Telegram
+                            <Button variant="outline" onClick={handleTelegramSignIn} disabled={isTelegramLoading}>
+                                {isTelegramLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TelegramIcon className="mr-2 h-4 w-4" />}
+                                Telegram
                             </Button>
                         </div>
                     </CardContent>
