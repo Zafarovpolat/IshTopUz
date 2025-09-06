@@ -40,7 +40,7 @@ export function Faq() {
                 <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">FAQ</h2>
                 <p className="mt-4 text-base text-muted-foreground sm:text-lg">{"Здесь вы найдете ответы на популярные вопросы о IshTop.Uz."}</p>
             </div>
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
               {faqs.map((faq, i) => (
                 <AccordionItem key={i} value={`item-${i + 1}`}>
                   <AccordionTrigger className="text-left text-base sm:text-lg font-medium hover:no-underline">
