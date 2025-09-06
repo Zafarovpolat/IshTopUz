@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTransition } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app'; // Добавлено
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import type { z } from 'zod';
 import { surveyFreelancerSchema, surveyClientSchema } from '@/lib/schema';
@@ -18,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { clientQuestions, freelancerQuestions } from '@/lib/survey-questions';
-import { firebaseConfig } from '@/lib/firebase'; // Добавлено
+import { app } from '@/lib/firebase';
 
 type FreelancerFormValues = z.infer<typeof surveyFreelancerSchema>;
 type ClientFormValues = z.infer<typeof surveyClientSchema>;
@@ -34,13 +33,6 @@ export function SurveyForm() {
     const { toast } = useToast();
 
     useEffect(() => {
-        // Инициализируем Firebase App, если он еще не инициализирован
-        let app;
-        if (!getApps().length) {
-            app = initializeApp(firebaseConfig);
-        } else {
-            app = getApp();
-        }
         const auth = getAuth(app);
         signInAnonymously(auth).catch((err) => {
             console.error('Auth error:', err);
