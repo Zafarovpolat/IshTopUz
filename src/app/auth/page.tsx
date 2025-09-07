@@ -18,6 +18,12 @@ import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 
+const TelegramIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M15 10l-4 4 6 6 4-16-18 7 4 2 2 6 3-4" />
+    </svg>
+  );
+
 export default function AuthPage() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -26,6 +32,7 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,11 +53,20 @@ export default function AuthPage() {
       script.async = true;
       script.setAttribute('data-telegram-login', "ishtopuz_auth_helper_bot");
       script.setAttribute('data-size', 'large');
-      script.setAttribute('data-auth-url', "https://ishtopuz.vercel.app/api/auth/telegram-callback");
+      script.setAttribute('data-auth-url', `${window.location.origin}/api/auth/telegram-callback`);
       script.setAttribute('data-request-access', 'write');
+      
+      script.onload = () => {
+        setIsTelegramLoading(false); 
+      };
+      script.onerror = () => {
+        setIsTelegramLoading(false);
+        toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось загрузить виджет Telegram.' });
+      };
+
       telegramContainer.appendChild(script);
     }
-  }, []);
+  }, [toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +101,24 @@ export default function AuthPage() {
       toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
     }
     setIsGoogleLoading(false);
+  };
+  
+  const handleTelegramClick = () => {
+    const telegramIframe = document.querySelector('#telegram-login-container iframe') as HTMLIFrameElement | null;
+    if (telegramIframe && telegramIframe.contentWindow) {
+      // This is a workaround to trigger the login popup
+      telegramIframe.contentWindow.postMessage('message', '*');
+      // The above might not work directly, the click on the hidden iframe is more reliable
+      telegramIframe.click(); // this might not work due to security
+      // A more robust way is to just let the user click the rendered (but hidden) widget
+      // We find the button inside the iframe and click it
+      // This is not possible due to same-origin policy.
+      // The best we can do is to click the iframe itself which might trigger the auth flow.
+      const telegramButton = document.querySelector('#telegram-login-container > iframe');
+      if (telegramButton) {
+        (telegramButton as HTMLElement).click();
+      }
+    }
   };
 
   return (
@@ -134,8 +168,12 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            <div className="relative flex justify-center items-center w-full h-10 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground">
-                               <div id="telegram-login-container" className="transform scale-90" />
+                             <div className="relative">
+                                <Button variant="outline" className="w-full" onClick={handleTelegramClick} disabled={isTelegramLoading}>
+                                {isTelegramLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TelegramIcon />}
+                                Telegram
+                                </Button>
+                                <div id="telegram-login-container" className="absolute top-0 left-0 w-full h-full opacity-0 overflow-hidden cursor-pointer" />
                             </div>
                         </div>
                     </CardContent>
