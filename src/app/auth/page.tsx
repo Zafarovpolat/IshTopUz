@@ -14,6 +14,8 @@ import {
   signInWithGoogle,
   setupRecaptcha,
 } from '@/lib/auth';
+import { signInWithCustomToken } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
@@ -26,23 +28,75 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
-  const [telegramAuthUrl, setTelegramAuthUrl] = useState('');
-
 
   useEffect(() => {
-    // This container is used for phone authentication, but good to have it ready.
-    if (typeof window !== 'undefined' && !document.getElementById('recaptcha-container')) {
-        const container = document.createElement('div');
-        container.id = 'recaptcha-container';
-        document.body.appendChild(container);
+    if (typeof window !== 'undefined') {
+        // Attach the callback function to the window object
+        (window as any).onTelegramAuth = async (user: any) => {
+            setIsTelegramLoading(true);
+            try {
+                const res = await fetch('/api/auth/telegram-callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Telegram authentication failed');
+                }
+
+                const userCredential = await signInWithCustomToken(auth, data.token);
+                const firebaseUser = userCredential.user;
+                
+                toast({
+                    title: 'Успешный вход через Telegram!',
+                    description: `Добро пожаловать, ${firebaseUser.displayName}`,
+                });
+                // Redirect to home or dashboard
+                window.location.href = '/';
+
+            } catch (error: any) {
+                console.error('Error during Telegram auth:', error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Ошибка входа через Telegram',
+                    description: error.message,
+                });
+            } finally {
+                setIsTelegramLoading(false);
+            }
+        };
+
+        // Load the Telegram script
+        const script = document.createElement('script');
+        script.src = "https://telegram.org/js/telegram-widget.js?22";
+        script.async = true;
+        script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'ishtopuz_auth_helper_bot');
+        script.setAttribute('data-size', 'large');
+        script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+        script.setAttribute('data-request-access', 'write');
+        
+        const container = document.getElementById('telegram-login-container');
+        if (container) {
+          // Clear previous scripts if any
+          container.innerHTML = '';
+          container.appendChild(script);
+        }
+    }
+    
+    // Recaptcha setup for phone auth (if needed later)
+    if (!document.getElementById('recaptcha-container')) {
+        const recaptchaContainer = document.createElement('div');
+        recaptchaContainer.id = 'recaptcha-container';
+        document.body.appendChild(recaptchaContainer);
         setupRecaptcha('recaptcha-container');
     }
-     // Set the callback URL only on the client-side
-     if (typeof window !== 'undefined') {
-        setTelegramAuthUrl(`${window.location.origin}/api/auth/telegram-callback`);
-     }
-  }, []);
+
+  }, [toast]);
 
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -51,6 +105,7 @@ export default function AuthPage() {
     const user = await signInWithEmail(loginEmail, loginPassword);
     if (user) {
       toast({ title: 'Успешный вход!', description: `Добро пожаловать, ${user.email}` });
+      window.location.href = '/';
     } else {
       toast({ variant: 'destructive', title: 'Ошибка входа', description: 'Проверьте email и пароль.' });
     }
@@ -74,6 +129,7 @@ export default function AuthPage() {
     const user = await signInWithGoogle();
     if (user) {
       toast({ title: 'Успешный вход через Google!', description: `Добро пожаловать, ${user.displayName}` });
+      window.location.href = '/';
     } else {
       toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
     }
@@ -127,18 +183,13 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            {telegramAuthUrl && (
-                                <div id="telegram-login-container">
-                                    <script
-                                        async
-                                        src="https://telegram.org/js/telegram-widget.js?22"
-                                        data-telegram-login="ishtopuz_auth_helper_bot"
-                                        data-size="large"
-                                        data-auth-url={telegramAuthUrl}
-                                        data-request-access="write"
-                                    ></script>
+                            {isTelegramLoading && (
+                                <div className="flex items-center justify-center p-2 border rounded-md">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Проверка Telegram...</span>
                                 </div>
                             )}
+                            <div id="telegram-login-container" className="flex justify-center" />
                         </div>
                     </CardContent>
                     </Card>
