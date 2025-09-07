@@ -1,4 +1,3 @@
-
 // IMPORTANT: This implementation is for a client-side environment.
 // Never expose your private keys or sensitive credentials in client-side code.
 
@@ -10,8 +9,6 @@ import {
     sendEmailVerification,
     GoogleAuthProvider,
     signInWithPopup,
-    RecaptchaVerifier,
-    signInWithPhoneNumber,
     signOut,
     onAuthStateChanged,
     signInWithCustomToken,
@@ -138,114 +135,42 @@ export async function sendVerificationEmail() {
     }
 }
 
-
-// --- Phone Authentication / 2FA ---
-declare global {
-    interface Window {
-        recaptchaVerifier?: RecaptchaVerifier;
-        confirmationResult?: any;
-    }
-}
 /**
- * Sets up RecaptchaVerifier for phone authentication.
- * @param {string} containerId - The ID of the HTML element where the reCAPTCHA should be rendered.
- * @returns {RecaptchaVerifier | null}
+ * Handles the Telegram sign-in process by communicating with the server-side endpoint.
+ * @param telegramData The user data object received from the Telegram widget.
+ * @returns {Promise<User | null>} The signed-in Firebase user object or null on failure.
  */
-export function setupRecaptcha(containerId) {
-    // Ensure this is only called on the client-side
-    if (typeof window !== "undefined") {
-        if (window.recaptchaVerifier) {
-            window.recaptchaVerifier.clear();
-        }
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-            'size': 'invisible',
-            'callback': (response) => {
-                // reCAPTCHA solved, allow signInWithPhoneNumber.
-                console.log("reCAPTCHA solved.");
-            }
-        });
-        return window.recaptchaVerifier;
-    }
-    return null;
-}
-
-/**
- * Sends an SMS verification code to the given phone number.
- * @param {string} phoneNumber - The user's phone number in E.164 format.
- * @returns {Promise<string | null>} The verification ID or null on failure.
- */
-export async function sendSmsVerification(phoneNumber) {
-    const appVerifier = window.recaptchaVerifier;
-    if (!appVerifier) {
-        console.error("Error: RecaptchaVerifier not initialized.");
-        return null;
-    }
-    try {
-        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-        // SMS sent. Save confirmationResult to resolve with verification code.
-        window.confirmationResult = confirmationResult;
-        console.log("Success: SMS verification code sent to", phoneNumber);
-        return confirmationResult.verificationId;
-    } catch (error) {
-        console.error("Error: SMS sending failed:", error.message, `(Code: ${error.code})`);
-        // Handle errors like invalid phone number.
-        // Reset reCAPTCHA if needed
-        appVerifier.render().then((widgetId) => {
-            // @ts-ignore
-            grecaptcha.reset(widgetId);
-        });
-        return null;
-    }
-}
-
-/**
- * Verifies the SMS code and signs in the user.
- * Can be used to link the phone number to an existing account as a second factor.
- * @param {string} code - The 6-digit code from the SMS.
- * @returns {Promise<User | null>} The user object or null on failure.
- */
-export async function verifySmsCode(code) {
-    if (!window.confirmationResult) {
-        console.error("Error: confirmationResult is not available. Please send SMS first.");
-        return null;
-    }
-    try {
-        const result = await window.confirmationResult.confirm(code);
-        const user = result.user;
-        console.log("Success: Phone number verified. User:", user);
-        // The user is now signed in with their phone number.
-        // You can now link this credential to their primary account if implementing 2FA.
-        return user;
-    } catch (error) {
-        console.error("Error: Invalid verification code:", error.message, `(Code: ${error.code})`);
-        return null;
-    }
-}
-
 export async function signInWithTelegram(telegramData: any) {
     try {
-      // Отправляем данные на сервер для верификации
+      // Send the Telegram data to our server-side endpoint for verification.
       const response = await fetch('/api/telegram-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(telegramData),
       });
   
-      const { token, error } = await response.json();
-      if (error || !token) {
-        console.error('Telegram auth error:', error);
-        return null;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Server validation failed');
+      }
+
+      const { token } = await response.json();
+      
+      if (!token) {
+        throw new Error('Custom token not received from server.');
       }
   
-      // Sign in с custom token
+      // Use the custom token to sign in to Firebase.
       const userCredential = await signInWithCustomToken(auth, token);
       console.log("Success: User signed in with Telegram:", userCredential.user);
       return userCredential.user;
+
     } catch (error) {
-      console.error("Error: Telegram sign-in failed:", error.message);
+      console.error("Error: Telegram sign-in failed:", error);
       return null;
     }
   }
+
 
 /**
  * Listens for authentication state changes.
@@ -255,5 +180,3 @@ export async function signInWithTelegram(telegramData: any) {
 export function onAuthStateChange(callback) {
     return onAuthStateChanged(auth, callback);
 }
-
-    

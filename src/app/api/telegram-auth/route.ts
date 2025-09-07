@@ -62,19 +62,27 @@ export async function POST(req: NextRequest) {
   // Данные валидны! Создаём или находим пользователя в Firebase
   // Используем Telegram ID как UID (преобразуем в string)
   const uid = `telegram:${id}`;
+  const displayName = username || `${first_name} ${last_name || ''}`.trim();
+  const photoURL = photo_url;
+
   try {
-    // Проверяем, существует ли пользователь
-    await admin.auth().getUser(uid);
+    // Обновляем пользователя, если он существует
+    await admin.auth().updateUser(uid, {
+        displayName: displayName,
+        photoURL: photoURL,
+    });
   } catch (error) {
     if (error.code === 'auth/user-not-found') {
       // Создаём нового пользователя
       await admin.auth().createUser({
         uid,
-        displayName: username || `${first_name} ${last_name || ''}`.trim(),
-        photoURL: photo_url,
+        displayName: displayName,
+        photoURL: photoURL,
       });
     } else {
-      throw error;
+      // Другая ошибка
+      console.error("Firebase Auth Error:", error);
+      return NextResponse.json({ error: 'Firebase error' }, { status: 500 });
     }
   }
 
