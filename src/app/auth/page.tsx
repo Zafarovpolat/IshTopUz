@@ -68,7 +68,13 @@ export default function AuthPage() {
       }
     };
     
+    if (document.getElementById('telegram-widget-script')) {
+        setTelegramScriptLoaded(true);
+        return;
+    }
+
     const script = document.createElement('script');
+    script.id = 'telegram-widget-script';
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
     script.async = true;
     script.onload = () => {
@@ -77,7 +83,8 @@ export default function AuthPage() {
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      // It's better not to remove the script to avoid issues on re-renders
+      // but we should clear the callback
       delete (window as any).onTelegramAuth;
     };
   }, [toast]);
@@ -120,21 +127,10 @@ export default function AuthPage() {
     setIsGoogleLoading(false);
   };
 
-  const handleTelegramClick = () => {
-    const iframe = telegramLoginWidgetRef.current?.querySelector('iframe');
-    if (iframe?.contentWindow) {
-      // The programmatic click might not work due to cross-origin policies.
-      // A better way is to ensure the widget is visible and let the user click it.
-      // For now, let's keep the logic simple, but if it fails, this is the reason.
-      iframe.click();
-    }
-  };
-  
   const TelegramLoginButton = () => (
     <Button 
         variant="outline" 
-        className="w-full" 
-        onClick={() => (telegramLoginWidgetRef.current?.querySelector('iframe') as HTMLElement)?.click()}
+        className="w-full relative overflow-hidden" 
         disabled={isTelegramLoading || isGoogleLoading || isLoginLoading || isSignUpLoading || !telegramScriptLoaded}
     >
         {isTelegramLoading ? (
@@ -195,12 +191,12 @@ export default function AuthPage() {
                             </Button>
                             
                             <div className="relative h-11">
-                                <div ref={telegramLoginWidgetRef} className="absolute top-0 left-0 w-full h-full opacity-0 z-0">
-                                {telegramScriptLoaded && (
-                                    <div data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
-                                )}
-                                </div>
-                                <TelegramLoginButton />
+                                 <TelegramLoginButton />
+                                 <div className="absolute inset-0 opacity-0">
+                                    {telegramScriptLoaded && (
+                                      <div ref={telegramLoginWidgetRef} data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
+                                    )}
+                                 </div>
                             </div>
                         </div>
                     </CardContent>
@@ -241,12 +237,12 @@ export default function AuthPage() {
                                 Google
                             </Button>
                             <div className="relative h-11">
-                                <div ref={telegramLoginWidgetRef} className="absolute top-0 left-0 w-full h-full opacity-0 z-0">
-                                    {telegramScriptLoaded && (
-                                        <div data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
-                                    )}
-                                </div>
                                 <TelegramLoginButton />
+                                <div className="absolute inset-0 opacity-0">
+                                   {telegramScriptLoaded && (
+                                     <div ref={telegramLoginWidgetRef} data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
+                                   )}
+                                </div>
                             </div>
                         </div>
                     </CardContent>
