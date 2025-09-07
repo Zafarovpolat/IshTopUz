@@ -1,10 +1,301 @@
-import { Suspense } from 'react';
-import AuthPageContent from './AuthPageContent';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import {
+  signUpWithEmail,
+  signInWithEmail,
+  signInWithGoogle,
+  setupRecaptcha,
+  auth,
+} from '@/lib/auth';
+import { signInWithCustomToken } from 'firebase/auth';
+import { ChromeIcon, Loader2 } from 'lucide-react';
+import { Logo } from '@/components/layout/logo';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function AuthPage() {
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isSignUpLoading, setIsSignUpLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+
+  // Обработка Telegram аутентификации через URL параметры
+  useEffect(() => {
+    const handleTelegramAuth = async () => {
+      // Проверяем наличие Telegram параметров в URL
+      const telegramParams = [
+        'id', 'first_name', 'last_name', 'username', 
+        'photo_url', 'auth_date', 'hash'
+      ];
+      
+      const telegramData: any = {};
+      let hasTelegramData = false;
+      
+      telegramParams.forEach(param => {
+        const value = searchParams.get(param);
+        if (value) {
+          telegramData[param] = value;
+          hasTelegramData = true;
+        }
+      });
+      
+      if (hasTelegramData && telegramData.hash) {
+        console.log('Telegram auth data from URL:', telegramData);
+        setIsTelegramLoading(true);
+        
+        try {
+          const res = await fetch('/api/auth/telegram-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(telegramData),
+          });
+
+          const data = await res.json();
+          console.log('Server response:', data);
+
+          if (!res.ok) {
+            throw new Error(data.error || 'Telegram authentication failed');
+          }
+
+          const userCredential = await signInWithCustomToken(auth, data.token);
+          const firebaseUser = userCredential.user;
+          
+          toast({
+            title: 'Успешный вход через Telegram!',
+            description: `Добро пожаловать, ${firebaseUser.displayName}`,
+          });
+          
+          // Очищаем URL от параметров Telegram
+          window.history.replaceState({}, document.title, '/auth');
+          
+          // Redirect to home or dashboard
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+
+        } catch (error: any) {
+          console.error('Error during Telegram auth:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Ошибка входа через Telegram',
+            description: error.message,
+          });
+        } finally {
+          setIsTelegramLoading(false);
+        }
+      }
+    };
+    
+    handleTelegramAuth();
+  }, [searchParams, toast]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        // Fallback callback function для случаев, когда виджет работает через JavaScript
+        (window as any).onTelegramAuth = async (user: any) => {
+            console.log('Telegram auth data via callback:', user);
+            setIsTelegramLoading(true);
+            try {
+                const res = await fetch('/api/auth/telegram-callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user),
+                });
+
+                const data = await res.json();
+                console.log('Server response:', data);
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Telegram authentication failed');
+                }
+
+                const userCredential = await signInWithCustomToken(auth, data.token);
+                const firebaseUser = userCredential.user;
+                
+                toast({
+                    title: 'Успешный вход через Telegram!',
+                    description: `Добро пожаловать, ${firebaseUser.displayName}`,
+                });
+                
+                window.location.href = '/';
+
+            } catch (error: any) {
+                console.error('Error during Telegram auth:', error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Ошибка входа через Telegram',
+                    description: error.message,
+                });
+            } finally {
+                setIsTelegramLoading(false);
+            }
+        };
+
+        // Load the Telegram script только если нет параметров в URL
+        if (!searchParams.has('hash')) {
+          const script = document.createElement('script');
+          script.src = "https://telegram.org/js/telegram-widget.js?22";
+          script.async = true;
+          script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'ishtopuz_auth_helper_bot');
+          script.setAttribute('data-size', 'large');
+          script.setAttribute('data-auth-url', `${window.location.origin}/auth`);
+          script.setAttribute('data-request-access', 'write');
+          
+          const container = document.getElementById('telegram-login-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(script);
+          }
+        }
+    }
+    
+    // Recaptcha setup for phone auth (if needed later)
+    if (!document.getElementById('recaptcha-container')) {
+        const recaptchaContainer = document.createElement('div');
+        recaptchaContainer.id = 'recaptcha-container';
+        document.body.appendChild(recaptchaContainer);
+        setupRecaptcha('recaptcha-container');
+    }
+
+  }, [searchParams]);
+
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoginLoading(true);
+    const user = await signInWithEmail(loginEmail, loginPassword);
+    if (user) {
+      toast({ title: 'Успешный вход!', description: `Добро пожаловать, ${user.email}` });
+      window.location.href = '/';
+    } else {
+      toast({ variant: 'destructive', title: 'Ошибка входа', description: 'Проверьте email и пароль.' });
+    }
+    setIsLoginLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSignUpLoading(true);
+    const user = await signUpWithEmail(signUpEmail, signUpPassword);
+    if (user) {
+      toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации.' });
+    } else {
+      toast({ variant: 'destructive', title: 'Ошибка регистрации', description: 'Возможно, этот email уже используется.' });
+    }
+    setIsSignUpLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    const user = await signInWithGoogle();
+    if (user) {
+      toast({ title: 'Успешный вход через Google!', description: `Добро пожаловать, ${user.displayName}` });
+      window.location.href = '/';
+    } else {
+      toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
+    }
+    setIsGoogleLoading(false);
+  };
+
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
-      <AuthPageContent />
-    </Suspense>
+    <div className="flex items-center justify-center min-h-screen bg-secondary/50 p-4">
+        <div className="w-full max-w-md mx-auto">
+            <div className="text-center mb-6">
+                <Link href="/">
+                    <Logo />
+                </Link>
+            </div>
+            <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Войти</TabsTrigger>
+                    <TabsTrigger value="signup">Регистрация</TabsTrigger>
+                </TabsList>
+                <TabsContent value="login">
+                    <Card>
+                    <CardHeader>
+                        <CardTitle>Вход в аккаунт</CardTitle>
+                        <CardDescription>Введите ваш email и пароль для входа.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="login-email">Email</Label>
+                                <Input id="login-email" type="email" placeholder="you@example.com" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} disabled={isLoginLoading} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="login-password">Пароль</Label>
+                                <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} disabled={isLoginLoading} />
+                            </div>
+                            <Button type="submit" className="w-full" disabled={isLoginLoading}>
+                                {isLoginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isLoginLoading ? 'Вход...' : 'Войти'}
+                            </Button>
+                        </form>
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">Или войдите через</span>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4">
+                            <Button variant="outline" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
+                                {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
+                                Google
+                            </Button>
+                            {isTelegramLoading && (
+                                <div className="flex items-center justify-center p-2 border rounded-md">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Обработка входа через Telegram...</span>
+                                </div>
+                            )}
+                            {!searchParams.has('hash') && (
+                              <div id="telegram-login-container" className="flex justify-center" />
+                            )}
+                        </div>
+                    </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="signup">
+                    <Card>
+                    <CardHeader>
+                        <CardTitle>Регистрация</CardTitle>
+                        <CardDescription>Создайте новый аккаунт, чтобы начать.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <form onSubmit={handleSignUp} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="signup-email">Email</Label>
+                                <Input id="signup-email" type="email" placeholder="you@example.com" required value={signUpEmail} onChange={(e) => setSignUpEmail(e.target.value)} disabled={isSignUpLoading}/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="signup-password">Пароль</Label>
+                                <Input id="signup-password" type="password" required value={signUpPassword} onChange={(e) => setSignUpPassword(e.target.value)} disabled={isSignUpLoading}/>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={isSignUpLoading}>
+                                {isSignUpLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSignUpLoading ? 'Создание...' : 'Создать аккаунт'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    </div>
   );
 }
