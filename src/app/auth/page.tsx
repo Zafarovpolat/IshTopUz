@@ -45,11 +45,10 @@ export default function AuthPage() {
   const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
   
-  const [telegramScriptLoaded, setTelegramScriptLoaded] = useState(false);
   const telegramLoginWidgetRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
+    // 1. Привязываем нашу функцию обратного вызова к глобальному объекту window
     window.onTelegramAuth = async (user: TelegramUser) => {
       setIsTelegramLoading(true);
       try {
@@ -68,24 +67,24 @@ export default function AuthPage() {
       }
     };
     
-    if (document.getElementById('telegram-widget-script')) {
-        setTelegramScriptLoaded(true);
-        return;
+    // 2. Создаем и добавляем скрипт Telegram
+    if (telegramLoginWidgetRef.current && !telegramLoginWidgetRef.current.hasChildNodes()) {
+        const script = document.createElement('script');
+        script.src = 'https://telegram.org/js/telegram-widget.js?22';
+        script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'false');
+        script.setAttribute('data-size', 'large');
+        // Говорим виджету вызвать нашу глобальную функцию
+        script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+        script.setAttribute('data-request-access', 'write');
+        script.async = true;
+        telegramLoginWidgetRef.current.appendChild(script);
     }
 
-    const script = document.createElement('script');
-    script.id = 'telegram-widget-script';
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.async = true;
-    script.onload = () => {
-        setTelegramScriptLoaded(true);
-    };
-    document.body.appendChild(script);
-
+    // 3. Очистка при размонтировании компонента
     return () => {
-      // It's better not to remove the script to avoid issues on re-renders
-      // but we should clear the callback
-      delete (window as any).onTelegramAuth;
+      if ((window as any).onTelegramAuth) {
+        delete (window as any).onTelegramAuth;
+      }
     };
   }, [toast]);
 
@@ -126,21 +125,6 @@ export default function AuthPage() {
     }
     setIsGoogleLoading(false);
   };
-
-  const TelegramLoginButton = () => (
-    <Button 
-        variant="outline" 
-        className="w-full relative overflow-hidden" 
-        disabled={isTelegramLoading || isGoogleLoading || isLoginLoading || isSignUpLoading || !telegramScriptLoaded}
-    >
-        {isTelegramLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-            <MessageCircle className="mr-2 h-4 w-4" />
-        )}
-        Telegram
-    </Button>
-  );
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary/50 p-4">
@@ -190,14 +174,14 @@ export default function AuthPage() {
                                 Google
                             </Button>
                             
-                            <div className="relative h-11">
-                                 <TelegramLoginButton />
-                                 <div className="absolute inset-0 opacity-0">
-                                    {telegramScriptLoaded && (
-                                      <div ref={telegramLoginWidgetRef} data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
-                                    )}
-                                 </div>
-                            </div>
+                            {/* Контейнер для виджета Telegram */}
+                            <div className="flex justify-center" ref={telegramLoginWidgetRef} />
+                            {isTelegramLoading && (
+                                <div className="flex items-center justify-center text-sm text-muted-foreground">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Вход через Telegram...</span>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                     </Card>
@@ -236,14 +220,14 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            <div className="relative h-11">
-                                <TelegramLoginButton />
-                                <div className="absolute inset-0 opacity-0">
-                                   {telegramScriptLoaded && (
-                                     <div ref={telegramLoginWidgetRef} data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME} data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></div>
-                                   )}
+                             {/* Контейнер для виджета Telegram */}
+                            <div className="flex justify-center" ref={telegramLoginWidgetRef}></div>
+                             {isTelegramLoading && (
+                                <div className="flex items-center justify-center text-sm text-muted-foreground">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Вход через Telegram...</span>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </CardContent>
                     </Card>
