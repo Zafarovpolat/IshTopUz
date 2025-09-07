@@ -12,8 +12,10 @@ import {
   signInWithEmail,
   signInWithGoogle,
   setupRecaptcha,
+  signInWithTelegram
 } from '@/lib/auth';
 import { ChromeIcon, Loader2 } from 'lucide-react';
+import { MessageCircle } from 'lucide-react'; // Пример, замените на Telegram icon если нужно
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 
@@ -25,6 +27,7 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,6 +38,31 @@ export default function AuthPage() {
         document.body.appendChild(recaptchaContainer);
         setupRecaptcha('recaptcha-container');
     }
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Callback функция для Telegram
+    window.onTelegramAuth = async (user: any) => {
+      setIsTelegramLoading(true);
+      const telegramUser = await signInWithTelegram(user);
+      if (telegramUser) {
+        toast({ title: 'Успешный вход через Telegram!', description: `Добро пожаловать, ${telegramUser.displayName || 'пользователь'}` });
+        window.location.href = '/';
+      } else {
+        toast({ variant: 'destructive', title: 'Ошибка входа через Telegram', description: 'Пожалуйста, попробуйте еще раз.' });
+      }
+      setIsTelegramLoading(false);
+    };
+
+    return () => {
+      document.body.removeChild(script);
+      delete window.onTelegramAuth;
+    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -155,11 +183,23 @@ export default function AuthPage() {
                             </div>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
-                            <Button variant="outline" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
-                                {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
-                                Google
-                            </Button>
-                        </div>
+                  <Button variant="outline" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
+                    {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
+                    Google
+                  </Button>
+                  {/* Добавьте ту же кнопку для Telegram в signup (Telegram может использоваться для sign up тоже) */}
+                  <Button variant="outline" disabled={isTelegramLoading} asChild>
+                    <div 
+                      data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME}
+                      data-size="large"
+                      data-onauth="onTelegramAuth(user)"
+                      data-request-access="write"
+                    >
+                      {isTelegramLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-2 h-4 w-4" />}
+                      Telegram
+                    </div>
+                  </Button>
+                </div>
                     </CardContent>
                     </Card>
                 </TabsContent>

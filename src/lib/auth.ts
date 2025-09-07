@@ -222,6 +222,31 @@ export async function verifySmsCode(code) {
     }
 }
 
+export async function signInWithTelegram(telegramData: any) {
+    try {
+      // Отправляем данные на сервер для верификации
+      const response = await fetch('/api/telegram-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(telegramData),
+      });
+  
+      const { token, error } = await response.json();
+      if (error || !token) {
+        console.error('Telegram auth error:', error);
+        return null;
+      }
+  
+      // Sign in с custom token
+      const userCredential = await signInWithCustomToken(auth, token);
+      console.log("Success: User signed in with Telegram:", userCredential.user);
+      return userCredential.user;
+    } catch (error) {
+      console.error("Error: Telegram sign-in failed:", error.message);
+      return null;
+    }
+  }
+
 /**
  * Listens for authentication state changes.
  * @param {function(User | null)} callback - The function to call when the auth state changes.
