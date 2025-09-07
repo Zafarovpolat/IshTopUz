@@ -103,25 +103,15 @@ export default function AuthPage() {
   const handleTelegramAuth = async (user: any) => {
     setIsTelegramLoading(true);
     try {
-      // Отправляем данные пользователя Telegram на ваш бекенд для верификации
-      const response = await fetch('/api/auth/telegram', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
+      const firebaseUser = await signInWithTelegram(user);
+      if (firebaseUser) {
         toast({ 
           title: 'Успешный вход через Telegram!', 
           description: `Добро пожаловать, ${user.first_name}!` 
         });
         window.location.href = '/';
       } else {
-        throw new Error(result.error || 'Ошибка аутентификации');
+        throw new Error('Ошибка аутентификации');
       }
     } catch (error) {
       console.error('Telegram auth error:', error);
