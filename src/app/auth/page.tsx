@@ -34,6 +34,7 @@ export default function AuthPage() {
     if (typeof window !== 'undefined') {
         // Attach the callback function to the window object
         (window as any).onTelegramAuth = async (user: any) => {
+            console.log('Telegram auth data received:', user);
             setIsTelegramLoading(true);
             try {
                 const res = await fetch('/api/auth/telegram-callback', {
@@ -43,6 +44,7 @@ export default function AuthPage() {
                 });
 
                 const data = await res.json();
+                console.log('Server response:', data);
 
                 if (!res.ok) {
                     throw new Error(data.error || 'Telegram authentication failed');
@@ -74,10 +76,12 @@ export default function AuthPage() {
         const script = document.createElement('script');
         script.src = "https://telegram.org/js/telegram-widget.js?22";
         script.async = true;
+        
+        // ИСПРАВЛЕНО: Убираем data-request-access и используем правильные настройки
         script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'ishtopuz_auth_helper_bot');
         script.setAttribute('data-size', 'large');
         script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-        script.setAttribute('data-request-access', 'write');
+        // Убираем data-request-access - он нужен только для ботов, которые требуют дополнительные разрешения
         
         const container = document.getElementById('telegram-login-container');
         if (container) {
