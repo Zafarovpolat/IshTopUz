@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,31 +12,11 @@ import {
   signUpWithEmail,
   signInWithEmail,
   signInWithGoogle,
-  signInWithTelegram,
   setupRecaptcha,
 } from '@/lib/auth';
 import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
-
-function TelegramIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M15 10l-4 4 6 6 4-16-18 7 4 2 2 6 3-4" />
-        </svg>
-    )
-}
 
 export default function AuthPage() {
   const [loginEmail, setLoginEmail] = useState('');
@@ -45,7 +26,6 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,6 +35,31 @@ export default function AuthPage() {
         container.id = 'recaptcha-container';
         document.body.appendChild(container);
         setupRecaptcha('recaptcha-container');
+    }
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.async = true;
+    script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'ishtopuz_auth_helper_bot');
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-userpic', 'false');
+    script.setAttribute('data-radius', '6');
+    // Ensure the URL is correctly constructed for Vercel deployment
+    const callbackUrl = `${window.location.origin}/api/auth/telegram-callback`;
+    script.setAttribute('data-auth-url', callbackUrl);
+    script.setAttribute('data-request-access', 'write');
+
+    const telegramContainer = document.getElementById('telegram-login-container');
+    if (telegramContainer) {
+        telegramContainer.appendChild(script);
+    }
+
+    return () => {
+        if (telegramContainer && script.parentNode === telegramContainer) {
+            telegramContainer.removeChild(script);
+        }
     }
   }, []);
 
@@ -91,17 +96,6 @@ export default function AuthPage() {
       toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
     }
     setIsGoogleLoading(false);
-  };
-
-  const handleTelegramSignIn = async () => {
-    setIsTelegramLoading(true);
-    try {
-        await signInWithTelegram();
-        // Пользователь будет перенаправлен, поэтому лоадер можно не убирать
-    } catch(e) {
-        toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось инициировать вход через Telegram.' });
-        setIsTelegramLoading(false);
-    }
   };
 
   return (
@@ -146,15 +140,12 @@ export default function AuthPage() {
                                 <span className="bg-background px-2 text-muted-foreground">Или войдите через</span>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <Button variant="outline" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            <Button variant="outline" onClick={handleTelegramSignIn} disabled={isTelegramLoading}>
-                                {isTelegramLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TelegramIcon className="mr-2 h-4 w-4" />}
-                                Telegram
-                            </Button>
+                            <div id="telegram-login-container" className="flex justify-center" />
                         </div>
                     </CardContent>
                     </Card>

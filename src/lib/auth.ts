@@ -14,7 +14,6 @@ import {
     signInWithPhoneNumber,
     signOut,
     onAuthStateChanged,
-    signInWithCustomToken, // Добавлено
     type User,
     type Auth,
     type AuthProvider
@@ -100,26 +99,6 @@ export function signInWithGoogle() {
     const provider = new GoogleAuthProvider();
     return socialSignIn(provider);
 }
-
-/**
- * Initiates Telegram Sign-In flow.
- * This function redirects the user to the Telegram bot for authentication.
- * The actual sign-in will be completed on the /auth/complete page.
- * @returns {Promise<null>}
- */
-export async function signInWithTelegram() {
-  try {
-    // URL вашего бота, который инициирует процесс авторизации
-    // Замените ishtopuz_auth_helper_bot на имя вашего бота, если оно отличается
-    const telegramAuthUrl = 'https://t.me/ishtopuz_auth_helper_bot?start=auth'; 
-    window.location.href = telegramAuthUrl; // Перенаправляем пользователя
-    return null; // Вход будет завершён на странице /auth/complete
-  } catch (error) {
-    console.error('Error initiating Telegram sign-in:', error.message, `(Code: ${error.code})`);
-    return null;
-  }
-}
-
 
 /**
  * Sends a password reset email to the given email address.
