@@ -14,7 +14,7 @@ import {
     signInWithPhoneNumber,
     signOut,
     onAuthStateChanged,
-    signInWithCustomToken
+    signInWithCustomToken,
     type User,
     type Auth,
     type AuthProvider
