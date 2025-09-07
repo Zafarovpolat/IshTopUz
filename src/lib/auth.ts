@@ -11,7 +11,6 @@ import {
     signInWithPopup,
     signOut,
     onAuthStateChanged,
-    signInWithCustomToken,
     type User,
     type Auth,
     type AuthProvider
@@ -134,42 +133,6 @@ export async function sendVerificationEmail() {
         return false;
     }
 }
-
-/**
- * Handles the Telegram sign-in process by communicating with the server-side endpoint.
- * @param telegramData The user data object received from the Telegram widget.
- * @returns {Promise<User | null>} The signed-in Firebase user object or null on failure.
- */
-export async function signInWithTelegram(telegramData: any) {
-    try {
-      // Send the Telegram data to our server-side endpoint for verification.
-      const response = await fetch('/api/telegram-auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(telegramData),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Server validation failed');
-      }
-
-      const { token } = await response.json();
-      
-      if (!token) {
-        throw new Error('Custom token not received from server.');
-      }
-  
-      // Use the custom token to sign in to Firebase.
-      const userCredential = await signInWithCustomToken(auth, token);
-      console.log("Success: User signed in with Telegram:", userCredential.user);
-      return userCredential.user;
-
-    } catch (error) {
-      console.error("Error: Telegram sign-in failed:", error);
-      return null;
-    }
-  }
 
 
 /**

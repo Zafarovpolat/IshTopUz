@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,28 +11,11 @@ import {
   signUpWithEmail,
   signInWithEmail,
   signInWithGoogle,
-  signInWithTelegram,
-  auth
 } from '@/lib/auth';
-import { ChromeIcon, Loader2, MessageCircle } from 'lucide-react';
+import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 
-interface TelegramUser {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  auth_date: number;
-  hash: string;
-}
-
-declare global {
-    interface Window {
-        onTelegramAuth: (user: TelegramUser) => void;
-    }
-}
 
 export default function AuthPage() {
   const [loginEmail, setLoginEmail] = useState('');
@@ -42,52 +25,7 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isTelegramLoading, setIsTelegramLoading] = useState(false);
   const { toast } = useToast();
-  
-  const telegramLoginWidgetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // 1. Привязываем нашу функцию обратного вызова к глобальному объекту window
-    window.onTelegramAuth = async (user: TelegramUser) => {
-      setIsTelegramLoading(true);
-      try {
-        const firebaseUser = await signInWithTelegram(user);
-        if (firebaseUser) {
-          toast({ title: 'Успешный вход через Telegram!', description: `Добро пожаловать, ${firebaseUser.displayName || 'пользователь'}` });
-          window.location.href = '/';
-        } else {
-          throw new Error('Не удалось получить пользователя Firebase.');
-        }
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Ошибка входа через Telegram', description: 'Пожалуйста, попробуйте еще раз.' });
-        console.error("Telegram sign-in error:", error);
-      } finally {
-        setIsTelegramLoading(false);
-      }
-    };
-    
-    // 2. Создаем и добавляем скрипт Telegram
-    if (telegramLoginWidgetRef.current && !telegramLoginWidgetRef.current.hasChildNodes()) {
-        const script = document.createElement('script');
-        script.src = 'https://telegram.org/js/telegram-widget.js?22';
-        script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'false');
-        script.setAttribute('data-size', 'large');
-        // Говорим виджету вызвать нашу глобальную функцию
-        script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-        script.setAttribute('data-request-access', 'write');
-        script.async = true;
-        telegramLoginWidgetRef.current.appendChild(script);
-    }
-
-    // 3. Очистка при размонтировании компонента
-    return () => {
-      if ((window as any).onTelegramAuth) {
-        delete (window as any).onTelegramAuth;
-      }
-    };
-  }, [toast]);
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,15 +111,6 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            
-                            {/* Контейнер для виджета Telegram */}
-                            <div className="flex justify-center" ref={telegramLoginWidgetRef} />
-                            {isTelegramLoading && (
-                                <div className="flex items-center justify-center text-sm text-muted-foreground">
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    <span>Вход через Telegram...</span>
-                                </div>
-                            )}
                         </div>
                     </CardContent>
                     </Card>
@@ -220,14 +149,6 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                             {/* Контейнер для виджета Telegram */}
-                            <div className="flex justify-center" ref={telegramLoginWidgetRef}></div>
-                             {isTelegramLoading && (
-                                <div className="flex items-center justify-center text-sm text-muted-foreground">
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    <span>Вход через Telegram...</span>
-                                </div>
-                            )}
                         </div>
                     </CardContent>
                     </Card>
