@@ -13,9 +13,9 @@ import {
   signInWithEmail,
   signInWithGoogle,
   setupRecaptcha,
+  auth,
 } from '@/lib/auth';
 import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
