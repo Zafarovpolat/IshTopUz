@@ -222,43 +222,6 @@ export async function verifySmsCode(code) {
     }
 }
 
-export async function signInWithTelegramToken(customToken: string): Promise<User | null> {
-    try {
-        const userCredential = await signInWithCustomToken(auth, customToken);
-        console.log("Success: User signed in with Telegram:", userCredential.user);
-        return userCredential.user;
-    } catch (error: any) {
-        console.error("Error: Telegram sign-in failed:", error.message, `(Code: ${error.code})`);
-        return null;
-    }
-}
-
-export async function signInWithTelegram(telegramUser: any): Promise<User | null> {
-    try {
-        // Отправляем данные на бекенд для создания custom token
-        const response = await fetch('/api/auth/telegram', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(telegramUser),
-        });
-
-        const result = await response.json();
-
-        if (result.success && result.customToken) {
-            // Используем custom token для входа в Firebase
-            return await signInWithTelegramToken(result.customToken);
-        } else {
-            console.error("Error: Failed to get custom token from backend");
-            return null;
-        }
-    } catch (error: any) {
-        console.error("Error: Telegram authentication failed:", error.message);
-        return null;
-    }
-}
-
 /**
  * Listens for authentication state changes.
  * @param {function(User | null)} callback - The function to call when the auth state changes.
