@@ -1,4 +1,4 @@
-IshTop.Uz - Freelance Marketplace for Uzbekistan
+оIshTop.Uz - Freelance Marketplace for Uzbekistan
 Overview
 IshTop.Uz is the first localized freelance marketplace in Uzbekistan, designed to connect freelancers (web developers, designers, copywriters, SMM specialists, etc.) with clients (individuals and small businesses). The platform addresses local market challenges, such as high commissions, payment security, and lack of localization, by offering:
 
