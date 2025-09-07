@@ -32,8 +32,9 @@ export default function AuthPage() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignUpLoading, setIsSignUpLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isTelegramLoading, setIsTelegramLoading] = useState(true);
   const { toast } = useToast();
+  const [telegramAuthUrl, setTelegramAuthUrl] = useState('');
+
 
   useEffect(() => {
     // This container is used for phone authentication, but good to have it ready.
@@ -43,30 +44,12 @@ export default function AuthPage() {
         document.body.appendChild(container);
         setupRecaptcha('recaptcha-container');
     }
+     // Set the callback URL only on the client-side
+     if (typeof window !== 'undefined') {
+        setTelegramAuthUrl(`${window.location.origin}/api/auth/telegram-callback`);
+     }
   }, []);
 
-  useEffect(() => {
-    const telegramContainer = document.getElementById('telegram-login-container');
-    if (telegramContainer && !telegramContainer.querySelector('script')) {
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.async = true;
-      script.setAttribute('data-telegram-login', "ishtopuz_auth_helper_bot");
-      script.setAttribute('data-size', 'large');
-      script.setAttribute('data-auth-url', `${window.location.origin}/api/auth/telegram-callback`);
-      script.setAttribute('data-request-access', 'write');
-      
-      script.onload = () => {
-        setIsTelegramLoading(false); 
-      };
-      script.onerror = () => {
-        setIsTelegramLoading(false);
-        toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось загрузить виджет Telegram.' });
-      };
-
-      telegramContainer.appendChild(script);
-    }
-  }, [toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,24 +84,6 @@ export default function AuthPage() {
       toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
     }
     setIsGoogleLoading(false);
-  };
-  
-  const handleTelegramClick = () => {
-    const telegramIframe = document.querySelector('#telegram-login-container iframe') as HTMLIFrameElement | null;
-    if (telegramIframe && telegramIframe.contentWindow) {
-      // This is a workaround to trigger the login popup
-      telegramIframe.contentWindow.postMessage('message', '*');
-      // The above might not work directly, the click on the hidden iframe is more reliable
-      telegramIframe.click(); // this might not work due to security
-      // A more robust way is to just let the user click the rendered (but hidden) widget
-      // We find the button inside the iframe and click it
-      // This is not possible due to same-origin policy.
-      // The best we can do is to click the iframe itself which might trigger the auth flow.
-      const telegramButton = document.querySelector('#telegram-login-container > iframe');
-      if (telegramButton) {
-        (telegramButton as HTMLElement).click();
-      }
-    }
   };
 
   return (
@@ -168,13 +133,18 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                             <div className="relative">
-                                <Button variant="outline" className="w-full" onClick={handleTelegramClick} disabled={isTelegramLoading}>
-                                {isTelegramLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TelegramIcon />}
-                                Telegram
-                                </Button>
-                                <div id="telegram-login-container" className="absolute top-0 left-0 w-full h-full opacity-0 overflow-hidden cursor-pointer" />
-                            </div>
+                            {telegramAuthUrl && (
+                                <div id="telegram-login-container">
+                                    <script
+                                        async
+                                        src="https://telegram.org/js/telegram-widget.js?22"
+                                        data-telegram-login="ishtopuz_auth_helper_bot"
+                                        data-size="large"
+                                        data-auth-url={telegramAuthUrl}
+                                        data-request-access="write"
+                                    ></script>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                     </Card>
@@ -208,3 +178,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
+    

@@ -229,3 +229,5 @@ export async function verifySmsCode(code) {
 export function onAuthStateChange(callback) {
     return onAuthStateChanged(auth, callback);
 }
+
+    
