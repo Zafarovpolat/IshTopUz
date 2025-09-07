@@ -39,27 +39,16 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.async = true;
-    script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || 'ishtopuz_auth_helper_bot');
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-userpic', 'false');
-    script.setAttribute('data-radius', '6');
-    // Ensure the URL is correctly constructed for Vercel deployment
-    const callbackUrl = `${window.location.origin}/api/auth/telegram-callback`;
-    script.setAttribute('data-auth-url', callbackUrl);
-    script.setAttribute('data-request-access', 'write');
-
     const telegramContainer = document.getElementById('telegram-login-container');
-    if (telegramContainer) {
-        telegramContainer.appendChild(script);
-    }
-
-    return () => {
-        if (telegramContainer && script.parentNode === telegramContainer) {
-            telegramContainer.removeChild(script);
-        }
+    if (telegramContainer && !telegramContainer.querySelector('script')) {
+      const script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-widget.js?22';
+      script.async = true;
+      script.setAttribute('data-telegram-login', "ishtopuz_auth_helper_bot");
+      script.setAttribute('data-size', 'large');
+      script.setAttribute('data-auth-url', "https://ishtopuz.vercel.app/api/auth/telegram-callback");
+      script.setAttribute('data-request-access', 'write');
+      telegramContainer.appendChild(script);
     }
   }, []);
 
@@ -145,7 +134,9 @@ export default function AuthPage() {
                                 {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChromeIcon className="mr-2 h-4 w-4" />}
                                 Google
                             </Button>
-                            <div id="telegram-login-container" className="flex justify-center" />
+                            <div className="relative flex justify-center items-center w-full h-10 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground">
+                               <div id="telegram-login-container" className="transform scale-90" />
+                            </div>
                         </div>
                     </CardContent>
                     </Card>
