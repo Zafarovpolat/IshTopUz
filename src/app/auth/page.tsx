@@ -18,12 +18,6 @@ import { ChromeIcon, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 
-const TelegramIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <path d="M15 10l-4 4 6 6 4-16-18 7 4 2 2 6 3-4" />
-    </svg>
-  );
-
 export default function AuthPage() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -178,7 +172,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
-    
-
-    
