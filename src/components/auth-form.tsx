@@ -20,13 +20,13 @@ import Link from 'next/link';
 import type { User } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg role="img" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path d="M500 261.8C500 403.3 403.1 504 260 504 122.8 504 12 393.2 12 256S122.8 8 260 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9c-88.3-85.2-252.5-21.2-252.5 118.2 0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9l-140.8 0 0-85.3 236.1 0c2.3 12.7 3.9 24.9 3.9 41.4z" fill="currentColor"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" {...props}>
+        <path d="M500 261.8C500 403.3 403.1 504 260 504 122.8 504 12 393.2 12 256S122.8 8 260 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9c-88.3-85.2-252.5-21.2-252.5 118.2 0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9l-140.8 0 0-85.3 236.1 0c2.3 12.7 3.9 24.9 3.9 41.4z" fill="#4285F4"/>
     </svg>
 );
 
 const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg role="img" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" {...props}>
         <path d="M256 8a248 248 0 1 0 0 496 248 248 0 1 0 0-496zM371 176.7c-3.7 39.2-19.9 134.4-28.1 178.3-3.5 18.6-10.3 24.8-16.9 25.4-14.4 1.3-25.3-9.5-39.3-18.7-21.8-14.3-34.2-23.2-55.3-37.2-24.5-16.1-8.6-25 5.3-39.5 3.7-3.8 67.1-61.5 68.3-66.7 .2-.7 .3-3.1-1.2-4.4s-3.6-.8-5.1-.5c-2.2 .5-37.1 23.5-104.6 69.1-9.9 6.8-18.9 10.1-26.9 9.9-8.9-.2-25.9-5-38.6-9.1-15.5-5-27.9-7.7-26.8-16.3 .6-4.5 6.7-9 18.4-13.7 72.3-31.5 120.5-52.3 144.6-62.3 68.9-28.6 83.2-33.6 92.5-33.8 2.1 0 6.6 .5 9.6 2.9 2 1.7 3.2 4.1 3.5 6.7 .5 3.2 .6 6.5 .4 9.8z" fill="currentColor"/>
     </svg>
 );
@@ -168,8 +168,9 @@ export function AuthForm() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  <Button
+                <Button
                     variant="outline"
+                    className="bg-white text-gray-700 hover:bg-gray-50"
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading || isCustomLoading}
                   >
@@ -181,14 +182,14 @@ export function AuthForm() {
                     Google
                   </Button>
                   <Button
-                    variant="outline"
+                    className="bg-[#27A7E7] text-white hover:bg-[#27A7E7]/90"
                     onClick={() => window.open('https://t.me/ishtopuz_auth_helper_bot', '_blank')}
                     disabled={isCustomLoading}
                   >
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-4 w-4" />
+                      <TelegramIcon className="mr-2 h-4 w-4 text-white" />
                     )}
                     Telegram
                   </Button>
@@ -243,6 +244,7 @@ export function AuthForm() {
                 <div className="grid grid-cols-1 gap-2">
                   <Button
                     variant="outline"
+                    className="bg-white text-gray-700 hover:bg-gray-50"
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading || isCustomLoading}
                   >
@@ -254,14 +256,14 @@ export function AuthForm() {
                     Google
                   </Button>
                   <Button
-                    variant="outline"
+                    className="bg-[#27A7E7] text-white hover:bg-[#27A7E7]/90"
                     onClick={() => window.open('https://t.me/ishtopuz_auth_helper_bot', '_blank')}
                     disabled={isCustomLoading}
                   >
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-4 w-4" />
+                      <TelegramIcon className="mr-2 h-4 w-4 text-white" />
                     )}
                     Telegram
                   </Button>
