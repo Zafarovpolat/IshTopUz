@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -66,46 +67,47 @@ export function Header() {
           </div>
         </div>
       </header>
-      {isMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out data-[state=closed]:opacity-0 data-[state=open]:opacity-100" 
-          aria-modal="true" 
-          data-state={isMenuOpen ? 'open' : 'closed'}
-        >
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
-          <nav className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-lg px-4 sm:px-6 py-3 transition-transform duration-300 ease-in-out data-[state=closed]:-translate-x-full data-[state=open]:translate-x-0">
-            <div className="flex items-center justify-between">
-               <Link href={getLinkHref('#home')} onClick={closeMenu}>
-                  <Logo />
-               </Link>
-              <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={"Закрыть меню"}>
-                <X className="h-6 w-6" />
-                <span className="sr-only">{"Закрыть меню"}</span>
+      {/* Mobile Menu */}
+      <div 
+        className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        aria-modal="true"
+      >
+        {/* Overlay */}
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
+        
+        {/* Navigation Panel */}
+        <nav className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-background/95 backdrop-blur-lg w-full max-w-sm p-6 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex items-center justify-between">
+             <Link href={getLinkHref('#home')} onClick={closeMenu}>
+                <Logo />
+             </Link>
+            <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={"Закрыть меню"}>
+              <X className="h-6 w-6" />
+              <span className="sr-only">{"Закрыть меню"}</span>
+            </Button>
+          </div>
+          <div className="flex flex-col gap-6 text-center self-center max-w-[360px] m-auto">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={getLinkHref(link.href)}
+                className="text-lg font-medium text-foreground"
+                onClick={closeMenu}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className='flex flex-col gap-4 mt-8'>
+              <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground text-base" onClick={closeMenu}>
+                  <Link href="/auth">{"Войти"}</Link>
+              </Button>
+              <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base" onClick={closeMenu}>
+                  <Link href="/auth">{"Регистрация"}</Link>
               </Button>
             </div>
-            <div className="flex flex-col gap-6 text-center self-center max-w-[360px] m-auto">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={getLinkHref(link.href)}
-                  className="text-lg font-medium text-foreground"
-                  onClick={closeMenu}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className='flex flex-col gap-4 mt-auto'>
-                <Button asChild size="lg" variant="ghost" className="text-foreground hover:bg-foreground/10 hover:text-foreground text-base" onClick={closeMenu}>
-                    <Link href="/auth">{"Войти"}</Link>
-                </Button>
-                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base" onClick={closeMenu}>
-                    <Link href="/auth">{"Регистрация"}</Link>
-                </Button>
-              </div>
-            </div>
-          </nav>
-        </div>
-      )}
+          </div>
+        </nav>
+      </div>
     </>
   );
 }
