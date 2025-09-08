@@ -20,8 +20,11 @@ import Link from 'next/link';
 import type { User } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" {...props}>
-        <path d="M500 261.8C500 403.3 403.1 504 260 504 122.8 504 12 393.2 12 256S122.8 8 260 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9c-88.3-85.2-252.5-21.2-252.5 118.2 0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9l-140.8 0 0-85.3 236.1 0c2.3 12.7 3.9 24.9 3.9 41.4z" fill="#4285F4"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 262" {...props}>
+        <path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"></path>
+        <path fill="#34A853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"></path>
+        <path fill="#FBBC05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"></path>
+        <path fill="#EB4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"></path>
     </svg>
 );
 
@@ -177,7 +180,7 @@ export function AuthForm() {
                     {isGoogleLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <GoogleIcon className="mr-2 h-4 w-4" />
+                      <GoogleIcon className="mr-2 h-5 w-5" />
                     )}
                     Google
                   </Button>
@@ -189,7 +192,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-4 w-4 text-white" />
+                      <TelegramIcon className="mr-2 h-5 w-5 text-white" />
                     )}
                     Telegram
                   </Button>
@@ -251,7 +254,7 @@ export function AuthForm() {
                     {isGoogleLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <GoogleIcon className="mr-2 h-4 w-4" />
+                      <GoogleIcon className="mr-2 h-5 w-5" />
                     )}
                     Google
                   </Button>
@@ -263,7 +266,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-4 w-4 text-white" />
+                      <TelegramIcon className="mr-2 h-5 w-5 text-white" />
                     )}
                     Telegram
                   </Button>
