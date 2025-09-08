@@ -192,7 +192,9 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-6 w-6 text-white" />
+                      <div className="mr-2 h-6 w-6 flex items-center justify-center">
+                        <TelegramIcon className="h-full w-full text-white" />
+                      </div>
                     )}
                     Telegram
                   </Button>
@@ -266,7 +268,9 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-6 w-6 text-white" />
+                      <div className="mr-2 h-6 w-6 flex items-center justify-center">
+                        <TelegramIcon className="h-full w-full text-white" />
+                      </div>
                     )}
                     Telegram
                   </Button>
