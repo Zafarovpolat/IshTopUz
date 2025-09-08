@@ -21,7 +21,7 @@ export function Hero() {
             {"Забудьте о старых правилах. Вы можете нанимать лучших специалистов. Прямо сейчас. Прямо здесь."}
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg" className="shadow-lg transition-transform hover:scale-105 text-base">
+            <Button asChild size="lg" className="shadow-lg transition-transform hover:scale-105 transform-gpu text-base">
               <Link href="#contact">{"Начать"}</Link>
             </Button>
           </div>
