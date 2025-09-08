@@ -76,7 +76,7 @@ export function Header() {
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={closeMenu} />
         
         {/* Navigation Panel */}
-        <nav className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-background/95 backdrop-blur-lg w-full max-w-sm p-6 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <nav className={`fixed inset-y-0 right-0 z-50 flex flex-col bg-background/95 backdrop-blur-lg w-full max-w-sm p-6 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex items-center justify-between">
              <Link href={getLinkHref('#home')} onClick={closeMenu}>
                 <Logo />
