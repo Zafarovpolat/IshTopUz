@@ -16,7 +16,7 @@ export function Cta() {
             {"Присоединяйтесь к IshTop.Uz! Запишитесь на бета-тестирование, чтобы начать зарабатывать или находить лучших исполнителей в Узбекистане."}
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button asChild size="lg" variant="secondary" className="shadow-md transition-transform hover:scale-100 text-base">
+            <Button asChild size="lg" variant="secondary" className="shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-base">
               <Link href="#contact">{"Зарегистрироваться"}</Link>
             </Button>
           </div>
