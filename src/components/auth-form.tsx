@@ -14,10 +14,28 @@ import {
   signInWithGoogle,
   signInWithCustomTokenFunc,
 } from '@/lib/auth';
-import { ChromeIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import Link from 'next/link';
 import type { User } from 'firebase/auth';
+
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.08-2.58 2.26-4.8 2.26-2.92 0-5.27-2.31-5.27-5.17s2.35-5.17 5.27-5.17c1.62 0 2.72.68 3.36 1.33l2.43-2.31C16.88 2.62 14.91 2 12.48 2c-4.29 0-7.77 3.39-7.77 7.77s3.48 7.77 7.77 7.77c2.6 0 4.38-1.12 5.92-2.62 1.63-1.59 2.2-3.82 2.2-6.04 0-.6-.05-1.19-.16-1.74l-8.04.01z"
+        fill="currentColor"
+      />
+    </svg>
+);
+
+const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-.86-.22-1.33-.47-.36-.19-.76-.39-1.94-1.25-.78-.56-.28-.86.13-1.22.1-.09 1.75-1.58 1.78-1.71.02-.09 0-.24-.11-.34-.12-.1-.28-.08-.38-.04-.09.03-1.45.94-4.09 2.76-.24.16-.46.31-.65.33-.22.02-.62-.08-.88-.2-.34-.16-.58-.35-.56-.64.01-.15.22-.98 1.13-3.02 1.78-3.99 3.49-6.09 3.49-6.09s.34-.22.54-.08c.2.14.14.42.05.62z"
+        fill="currentColor"
+      />
+    </svg>
+);
 
 export function AuthForm() {
   const [loginEmail, setLoginEmail] = useState<string>('');
@@ -164,7 +182,7 @@ export function AuthForm() {
                     {isGoogleLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <ChromeIcon className="mr-2 h-4 w-4" />
+                      <GoogleIcon className="mr-2 h-4 w-4" />
                     )}
                     Google
                   </Button>
@@ -176,12 +194,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-.86-.22-1.33-.47-.36-.19-.76-.39-1.94-1.25-.78-.56-.28-.86.13-1.22.1-.09 1.75-1.58 1.78-1.71.02-.09 0-.24-.11-.34-.12-.1-.28-.08-.38-.04-.09.03-1.45.94-4.09 2.76-.24.16-.46.31-.65.33-.22.02-.62-.08-.88-.2-.34-.16-.58-.35-.56-.64.01-.15.22-.98 1.13-3.02 1.78-3.99 3.49-6.09 3.49-6.09s.34-.22.54-.08c.2.14.14.42.05.62z"
-                        />
-                      </svg>
+                      <TelegramIcon className="mr-2 h-4 w-4" />
                     )}
                     Telegram
                   </Button>
@@ -242,7 +255,7 @@ export function AuthForm() {
                     {isGoogleLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <ChromeIcon className="mr-2 h-4 w-4" />
+                      <GoogleIcon className="mr-2 h-4 w-4" />
                     )}
                     Google
                   </Button>
@@ -254,12 +267,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-.86-.22-1.33-.47-.36-.19-.76-.39-1.94-1.25-.78-.56-.28-.86.13-1.22.1-.09 1.75-1.58 1.78-1.71.02-.09 0-.24-.11-.34-.12-.1-.28-.08-.38-.04-.09.03-1.45.94-4.09 2.76-.24.16-.46.31-.65.33-.22.02-.62-.08-.88-.2-.34-.16-.58-.35-.56-.64.01-.15.22-.98 1.13-3.02 1.78-3.99 3.49-6.09 3.49-6.09s.34-.22.54-.08c.2.14.14.42.05.62z"
-                        />
-                      </svg>
+                      <TelegramIcon className="mr-2 h-4 w-4" />
                     )}
                     Telegram
                   </Button>
