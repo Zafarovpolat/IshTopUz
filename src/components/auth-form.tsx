@@ -29,7 +29,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
+    <svg id="telegram-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.69.42z"/>
     </svg>
 );
@@ -193,7 +193,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-6 w-6" />
+                      <TelegramIcon className="mr-2" />
                     )}
                     Telegram
                   </Button>
@@ -267,7 +267,7 @@ export function AuthForm() {
                     {isCustomLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <TelegramIcon className="mr-2 h-6 w-6" />
+                      <TelegramIcon className="mr-2" />
                     )}
                     Telegram
                   </Button>
