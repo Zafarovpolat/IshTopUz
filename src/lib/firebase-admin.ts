@@ -1,5 +1,9 @@
 
 import * as admin from 'firebase-admin';
+import dotenv from 'dotenv';
+
+// Загружаем переменные окружения из .env.local (или других .env файлов)
+dotenv.config();
 
 let adminApp: admin.app.App | null = null;
 
@@ -13,7 +17,7 @@ function initializeAdminApp(): admin.app.App | null {
 
   // Если ключ не найден, выводим четкое предупреждение и возвращаем null.
   if (!serviceAccountKey) {
-    console.warn("Firebase Admin SDK: FIREBASE_SERVICE_ACCOUNT_KEY не установлена. Серверная аутентификация не будет работать.");
+    console.error("Firebase Admin SDK: FIREBASE_SERVICE_ACCOUNT_KEY не установлена. Серверная аутентификация не будет работать.");
     return null;
   }
 
