@@ -1,10 +1,68 @@
+
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from "@/lib/schema";
-import type { LeadState, SurveyState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, onboardingSchema } from "@/lib/schema";
+import type { LeadState, SurveyState, OnboardingState } from "@/lib/schema";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { getAuth } from 'firebase-admin/auth';
+import { adminApp } from "@/lib/firebase-admin";
+import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
+
+async function getCurrentUserId(): Promise<string | null> {
+  try {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return null;
+    const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie);
+    return decodedToken.uid;
+  } catch (error) {
+    console.error("Error verifying session cookie:", error);
+    return null;
+  }
+}
+
+export async function submitOnboarding(data: z.infer<typeof onboardingSchema>): Promise<OnboardingState> {
+  const validatedFields = onboardingSchema.safeParse(data);
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась.',
+      success: false,
+    };
+  }
+  
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return {
+      success: false,
+      message: 'Ошибка аутентификации. Пожалуйста, войдите снова.',
+    };
+  }
+  
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      'profile.firstName': validatedFields.data.firstName,
+      'profile.lastName': validatedFields.data.lastName,
+      userType: validatedFields.data.userType,
+      profileComplete: true,
+    });
+    return {
+      success: true,
+      message: 'Профиль успешно обновлен!',
+    };
+  } catch (e) {
+    console.error('Failed to submit onboarding data:', e);
+    return {
+      success: false,
+      message: 'Что-то пошло не так. Попробуйте позже.',
+    };
+  }
+}
+
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>

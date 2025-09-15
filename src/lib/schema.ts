@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const leadSchema = z.object({
@@ -5,6 +6,15 @@ export const leadSchema = z.object({
   email: z.string().email('Неверный формат email'),
   role: z.enum(['Freelancer', 'Client'], { message: 'Выберите роль: Фрилансер или Заказчик' }),
 });
+
+export const onboardingSchema = z.object({
+  firstName: z.string().min(2, 'Имя должно содержать минимум 2 символа.'),
+  lastName: z.string().min(2, 'Фамилия должна содержать минимум 2 символа.'),
+  userType: z.enum(['freelancer', 'client'], {
+    required_error: 'Пожалуйста, выберите вашу роль.',
+  }),
+});
+
 
 export const surveyFreelancerSchema = z.object({
   name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
@@ -46,6 +56,16 @@ export type LeadState = {
   message?: string | null;
   success: boolean;
   redirectUrl?: string;
+};
+
+export type OnboardingState = {
+  errors?: {
+    firstName?: string[];
+    lastName?: string[];
+    userType?: string[];
+  };
+  message?: string | null;
+  success: boolean;
 };
 
 export type SurveyState = {

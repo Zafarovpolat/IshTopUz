@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -34,6 +35,19 @@ const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const handleAuthSuccess = (result: { user: User; isNewUser: boolean } | null, router: any, toast: any, providerName: string) => {
+    if (result) {
+        toast({ title: `Успешный вход через ${providerName}!`, description: `Добро пожаловать, ${result.user.displayName || result.user.email}` });
+        if (result.isNewUser) {
+            router.push('/onboarding');
+        } else {
+            router.push('/dashboard');
+        }
+    } else {
+        toast({ variant: 'destructive', title: `Ошибка входа через ${providerName}`, description: 'Пожалуйста, попробуйте еще раз.' });
+    }
+};
+
 export function AuthForm() {
   const [view, setView] = useState<'login' | 'signup' | 'forgot-password'>('login');
   const [email, setEmail] = useState<string>('');
@@ -53,28 +67,23 @@ export function AuthForm() {
       setIsCustomLoading(true);
       handleCustomSignIn(token);
     }
-  }, [searchParams, isCustomLoading]);
+  }, [searchParams, isCustomLoading, router, toast]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    const user = await signInWithEmail(email, password);
-    if (user) {
-      toast({ title: 'Успешный вход!', description: `Добро пожаловать, ${user.email}` });
-      router.push('/');
-    } else {
-      toast({ variant: 'destructive', title: 'Ошибка входа', description: 'Проверьте email и пароль.' });
-    }
+    const result = await signInWithEmail(email, password);
+    handleAuthSuccess(result, router, toast, 'Email');
     setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    const user = await signUpWithEmail(email, password);
-    if (user) {
-      toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации.' });
-      setView('login');
+    const result = await signUpWithEmail(email, password);
+    if (result) {
+      toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации и завершите регистрацию.' });
+      router.push('/onboarding');
     } else {
       toast({ variant: 'destructive', title: 'Ошибка регистрации', description: 'Возможно, этот email уже используется.' });
     }
@@ -83,31 +92,14 @@ export function AuthForm() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    const user = await signInWithGoogle();
-    if (user) {
-      toast({ title: 'Успешный вход через Google!', description: `Добро пожаловать, ${user.displayName}` });
-      router.push('/');
-    } else {
-      toast({ variant: 'destructive', title: 'Ошибка входа через Google', description: 'Пожалуйста, попробуйте еще раз.' });
-    }
+    const result = await signInWithGoogle();
+    handleAuthSuccess(result, router, toast, 'Google');
     setIsGoogleLoading(false);
   };
 
   const handleCustomSignIn = async (token: string) => {
-    const user: User | null = await signInWithCustomTokenFunc(token);
-    if (user) {
-      toast({
-        title: 'Успешный вход через Telegram!',
-        description: `Добро пожаловать, ${user.displayName || user.email || 'пользователь'}`,
-      });
-      router.push('/');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка входа через Telegram',
-        description: 'Неверный токен или сессия истекла.',
-      });
-    }
+    const result = await signInWithCustomTokenFunc(token);
+    handleAuthSuccess(result, router, toast, 'Telegram');
     setIsCustomLoading(false);
   };
 
@@ -204,8 +196,6 @@ export function AuthForm() {
                         variant="link"
                         className="h-auto p-0 text-sm"
                         onClick={() => {
-                          setEmail('');
-                          setPassword('');
                           setView('forgot-password');
                         }}
                       >
