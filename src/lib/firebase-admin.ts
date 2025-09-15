@@ -16,18 +16,21 @@ function getAdminApp(): admin.app.App | null {
 
   try {
     // В средах Google Cloud (включая Firebase Studio)
-    // SDK автоматически найдет учетные данные.
-    adminApp = admin.initializeApp();
+    // SDK автоматически найдет учетные данные, но projectId лучше указать явно.
+    adminApp = admin.initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
     return adminApp;
   } catch (error) {
     console.error("Error initializing Firebase Admin SDK:", error);
-    // Если переменная окружения FIREBASE_SERVICE_ACCOUNT_KEY все же задана, попробуем использовать ее
+    // Попытка запасного варианта с сервисным ключом, если он есть
     const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (serviceAccountKey) {
         try {
             const serviceAccount = JSON.parse(serviceAccountKey);
             adminApp = admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount),
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
             });
             return adminApp;
         } catch (e) {
