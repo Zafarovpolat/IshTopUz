@@ -13,6 +13,7 @@ import {
   signInWithEmail,
   signInWithGoogle,
   signInWithCustomTokenFunc,
+  resetPassword,
 } from '@/lib/auth';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
@@ -114,6 +115,30 @@ export function AuthForm() {
     setIsCustomLoading(false);
   };
 
+  const handlePasswordReset = async () => {
+    if (!loginEmail) {
+      toast({
+        variant: 'destructive',
+        title: 'Email не указан',
+        description: 'Пожалуйста, введите ваш email в поле выше.',
+      });
+      return;
+    }
+    const success = await resetPassword(loginEmail);
+    if (success) {
+      toast({
+        title: 'Письмо отправлено',
+        description: 'Проверьте вашу почту для сброса пароля.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: 'Не удалось отправить письмо. Возможно, аккаунт с таким email не существует.',
+      });
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary/50 p-4">
       <div className="w-full max-w-md mx-auto">
@@ -148,7 +173,17 @@ export function AuthForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Пароль</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password">Пароль</Label>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="h-auto p-0 text-sm"
+                        onClick={handlePasswordReset}
+                      >
+                        Забыли пароль?
+                      </Button>
+                    </div>
                     <Input
                       id="login-password"
                       type="password"
