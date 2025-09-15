@@ -27,7 +27,6 @@ async function getCurrentUserId(): Promise<string | null> {
     const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
     return decodedToken.uid;
   } catch (error: any) {
-    // Log detailed error for debugging, but don't throw an unhandled exception
     console.error("Error verifying session cookie:", {
       code: error.code,
       message: error.message,
@@ -57,6 +56,7 @@ export async function submitOnboarding(data: z.infer<typeof onboardingSchema>): 
   
   try {
     const userRef = doc(db, 'users', userId);
+    // Correctly structure the data to match Firestore schema
     await setDoc(userRef, {
       profile: {
         firstName: validatedFields.data.firstName,
