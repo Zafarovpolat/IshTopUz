@@ -14,6 +14,7 @@ import {
   signInWithGoogle,
   signInWithCustomTokenFunc,
   resetPassword,
+  auth
 } from '@/lib/auth';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
@@ -35,8 +36,26 @@ const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const handleAuthSuccess = (result: { user: User; isNewUser: boolean } | null, router: any, toast: any, providerName: string) => {
+const createSessionCookie = async (user: User) => {
+    const idToken = await user.getIdToken();
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    });
+    return response.ok;
+};
+
+const handleAuthSuccess = async (result: { user: User; isNewUser: boolean } | null, router: any, toast: any, providerName: string) => {
     if (result) {
+        const cookieCreated = await createSessionCookie(result.user);
+        if (!cookieCreated) {
+             toast({ variant: 'destructive', title: `Ошибка сессии`, description: 'Не удалось создать сессию. Попробуйте еще раз.' });
+             return;
+        }
+
         toast({ title: `Успешный вход через ${providerName}!`, description: `Добро пожаловать, ${result.user.displayName || result.user.email}` });
         if (result.isNewUser) {
             router.push('/onboarding');
@@ -73,7 +92,7 @@ export function AuthForm() {
     e.preventDefault();
     setIsLoading(true);
     const result = await signInWithEmail(email, password);
-    handleAuthSuccess(result, router, toast, 'Email');
+    await handleAuthSuccess(result, router, toast, 'Email');
     setIsLoading(false);
   };
 
@@ -82,6 +101,12 @@ export function AuthForm() {
     setIsLoading(true);
     const result = await signUpWithEmail(email, password);
     if (result) {
+      const cookieCreated = await createSessionCookie(result.user);
+       if (!cookieCreated) {
+             toast({ variant: 'destructive', title: `Ошибка сессии`, description: 'Не удалось создать сессию. Попробуйте еще раз.' });
+             setIsLoading(false);
+             return;
+        }
       toast({ title: 'Регистрация успешна!', description: 'Теперь давайте завершим настройку вашего профиля.' });
       router.push('/onboarding');
     } else {
@@ -93,13 +118,13 @@ export function AuthForm() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     const result = await signInWithGoogle();
-    handleAuthSuccess(result, router, toast, 'Google');
+    await handleAuthSuccess(result, router, toast, 'Google');
     setIsGoogleLoading(false);
   };
 
   const handleCustomSignIn = async (token: string) => {
     const result = await signInWithCustomTokenFunc(token);
-    handleAuthSuccess(result, router, toast, 'Telegram');
+    await handleAuthSuccess(result, router, toast, 'Telegram');
     setIsCustomLoading(false);
   };
 

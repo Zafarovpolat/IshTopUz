@@ -11,6 +11,12 @@ import { getAdminApp } from "@/lib/firebase-admin";
 import { cookies } from "next/headers";
 
 async function getCurrentUserId(): Promise<string | null> {
+  const sessionCookie = cookies().get('session')?.value;
+  if (!sessionCookie) {
+    console.log("Session cookie not found.");
+    return null;
+  }
+  
   const adminApp = getAdminApp();
   if (!adminApp) {
     console.log("Admin SDK not initialized, cannot verify session cookie.");
@@ -18,9 +24,7 @@ async function getCurrentUserId(): Promise<string | null> {
   }
 
   try {
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) return null;
-    const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie);
+    const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
     return decodedToken.uid;
   } catch (error) {
     if ((error as any).code === 'auth/session-cookie-expired' || (error as any).code === 'auth/session-cookie-revoked') {
