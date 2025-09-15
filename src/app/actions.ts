@@ -54,26 +54,72 @@ export async function submitOnboarding(data: z.infer<typeof onboardingSchema>): 
     };
   }
   
+  const { firstName, lastName, userType } = validatedFields.data;
+  
+  // Формируем данные для обновления в соответствии с вашей схемой
+  const userData = {
+    userType,
+    profile: {
+      firstName,
+      lastName,
+      avatar: '',
+      city: '',
+      country: '',
+      dateOfBirth: '',
+      gender: '',
+      languages: [],
+      timezone: '',
+    },
+    profileComplete: true,
+    ...(userType === 'freelancer' && {
+      freelancerProfile: {
+        title: '',
+        description: '',
+        hourlyRate: 0,
+        skills: [],
+        categories: [],
+        portfolio: [],
+        experience: 'beginner',
+        completedProjects: 0,
+        rating: 0,
+        reviewsCount: 0,
+        isAvailable: true,
+      }
+    }),
+    ...(userType === 'client' && {
+      clientProfile: {
+        companyName: '',
+        companySize: '',
+        industry: '',
+        website: '',
+        description: '',
+        projectsPosted: 0,
+        moneySpent: 0,
+        rating: 0,
+        reviewsCount: 0,
+      }
+    }),
+    wallet: {
+      balance: 0,
+      currency: "UZS",
+      paymentMethods: [],
+      transactions: [],
+    }
+  };
+
   try {
     const userRef = doc(db, 'users', userId);
-    // Correctly structure the data to match Firestore schema
-    await setDoc(userRef, {
-      profile: {
-        firstName: validatedFields.data.firstName,
-        lastName: validatedFields.data.lastName,
-      },
-      userType: validatedFields.data.userType,
-      profileComplete: true,
-    }, { merge: true });
+    await setDoc(userRef, userData, { merge: true });
+    
     return {
       success: true,
       message: 'Профиль успешно обновлен!',
     };
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to submit onboarding data:', e);
     return {
       success: false,
-      message: 'Что-то пошло не так. Попробуйте позже.',
+      message: e.message || 'Что-то пошло не так. Попробуйте позже.',
     };
   }
 }
