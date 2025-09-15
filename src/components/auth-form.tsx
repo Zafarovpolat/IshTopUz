@@ -82,7 +82,7 @@ export function AuthForm() {
     setIsLoading(true);
     const result = await signUpWithEmail(email, password);
     if (result) {
-      toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации и завершите регистрацию.' });
+      toast({ title: 'Регистрация успешна!', description: 'Теперь давайте завершим настройку вашего профиля.' });
       router.push('/onboarding');
     } else {
       toast({ variant: 'destructive', title: 'Ошибка регистрации', description: 'Возможно, этот email уже используется.' });
