@@ -5,7 +5,7 @@ import { z } from "zod";
 import { leadSchema, surveyClientSchema, surveyFreelancerSchema, onboardingSchema } from "@/lib/schema";
 import type { LeadState, SurveyState, OnboardingState } from "@/lib/schema";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 import { getAuth } from 'firebase-admin/auth';
 import { getAdminApp } from "@/lib/firebase-admin";
 import { cookies } from "next/headers";
@@ -57,12 +57,14 @@ export async function submitOnboarding(data: z.infer<typeof onboardingSchema>): 
   
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      'profile.firstName': validatedFields.data.firstName,
-      'profile.lastName': validatedFields.data.lastName,
+    await setDoc(userRef, {
+      profile: {
+        firstName: validatedFields.data.firstName,
+        lastName: validatedFields.data.lastName,
+      },
       userType: validatedFields.data.userType,
       profileComplete: true,
-    });
+    }, { merge: true });
     return {
       success: true,
       message: 'Профиль успешно обновлен!',
