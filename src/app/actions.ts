@@ -7,18 +7,27 @@ import type { LeadState, SurveyState, OnboardingState } from "@/lib/schema";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { getAuth } from 'firebase-admin/auth';
-import { adminApp } from "@/lib/firebase-admin";
+import { getAdminApp } from "@/lib/firebase-admin";
 import { cookies } from "next/headers";
-import { auth } from "@/lib/auth";
 
 async function getCurrentUserId(): Promise<string | null> {
+  const adminApp = getAdminApp();
+  if (!adminApp) {
+    console.log("Admin SDK not initialized, cannot verify session cookie.");
+    return null;
+  }
+
   try {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return null;
     const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie);
     return decodedToken.uid;
   } catch (error) {
-    console.error("Error verifying session cookie:", error);
+    if ((error as any).code === 'auth/session-cookie-expired' || (error as any).code === 'auth/session-cookie-revoked') {
+      // Это ожидаемые ошибки, не нужно логировать их как сбой
+    } else {
+      console.error("Error verifying session cookie:", error);
+    }
     return null;
   }
 }

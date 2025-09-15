@@ -1,21 +1,36 @@
 
 import * as admin from 'firebase-admin';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
+let adminApp: admin.app.App | null = null;
 
-let adminApp: admin.app.App;
-
-if (!admin.apps.length) {
-  if (!serviceAccount) {
-    throw new Error('Firebase service account key is not available. Set FIREBASE_SERVICE_ACCOUNT_KEY env variable.');
+function getAdminApp(): admin.app.App | null {
+  if (adminApp) {
+    return adminApp;
   }
-  adminApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-} else {
-  adminApp = admin.apps[0]!;
+
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (admin.apps.length > 0) {
+    adminApp = admin.apps[0];
+    return adminApp;
+  }
+
+  if (!serviceAccountKey) {
+    console.warn("Firebase service account key is not available. Firebase Admin SDK will not be initialized.");
+    return null;
+  }
+
+  try {
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    adminApp = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    return adminApp;
+  } catch (error) {
+    console.error("Error initializing Firebase Admin SDK:", error);
+    return null;
+  }
 }
 
-export { adminApp };
+// Экспортируем функцию для получения инстанса
+export { getAdminApp };
