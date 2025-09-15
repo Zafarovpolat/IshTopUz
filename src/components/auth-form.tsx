@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -30,26 +29,22 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const TelegramIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg id="telegram-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
-        <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.69.42z"/>
-    </svg>
+  <svg id="telegram-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" {...props}>
+      <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.69.42z"/>
+  </svg>
 );
 
-
 export function AuthForm() {
-  const [loginEmail, setLoginEmail] = useState<string>('');
-  const [loginPassword, setLoginPassword] = useState<string>('');
-  const [signUpEmail, setSignUpEmail] = useState<string>('');
-  const [signUpPassword, setSignUpPassword] = useState<string>('');
-  const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
-  const [isSignUpLoading, setIsSignUpLoading] = useState<boolean>(false);
+  const [view, setView] = useState<'login' | 'signup' | 'forgot-password'>('login');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
   const [isCustomLoading, setIsCustomLoading] = useState<boolean>(false);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Обработка query-параметров для Telegram auth
   useEffect(() => {
     const provider = searchParams.get('provider');
     const token = searchParams.get('token');
@@ -60,29 +55,30 @@ export function AuthForm() {
     }
   }, [searchParams, isCustomLoading]);
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoginLoading(true);
-    const user = await signInWithEmail(loginEmail, loginPassword);
+    setIsLoading(true);
+    const user = await signInWithEmail(email, password);
     if (user) {
       toast({ title: 'Успешный вход!', description: `Добро пожаловать, ${user.email}` });
       router.push('/');
     } else {
       toast({ variant: 'destructive', title: 'Ошибка входа', description: 'Проверьте email и пароль.' });
     }
-    setIsLoginLoading(false);
+    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSignUpLoading(true);
-    const user = await signUpWithEmail(signUpEmail, signUpPassword);
+    setIsLoading(true);
+    const user = await signUpWithEmail(email, password);
     if (user) {
       toast({ title: 'Регистрация успешна!', description: 'Пожалуйста, проверьте свою почту для верификации.' });
+      setView('login');
     } else {
       toast({ variant: 'destructive', title: 'Ошибка регистрации', description: 'Возможно, этот email уже используется.' });
     }
-    setIsSignUpLoading(false);
+    setIsLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
@@ -115,21 +111,20 @@ export function AuthForm() {
     setIsCustomLoading(false);
   };
 
-  const handlePasswordReset = async () => {
-    if (!loginEmail) {
-      toast({
-        variant: 'destructive',
-        title: 'Email не указан',
-        description: 'Пожалуйста, введите ваш email в поле выше.',
-      });
+  const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email) {
+      toast({ variant: 'destructive', title: 'Email не указан', description: 'Пожалуйста, введите ваш email.' });
       return;
     }
-    const success = await resetPassword(loginEmail);
+    setIsLoading(true);
+    const success = await resetPassword(email);
     if (success) {
       toast({
         title: 'Письмо отправлено',
         description: 'Проверьте вашу почту для сброса пароля.',
       });
+      setView('login');
     } else {
       toast({
         variant: 'destructive',
@@ -137,6 +132,7 @@ export function AuthForm() {
         description: 'Не удалось отправить письмо. Возможно, аккаунт с таким email не существует.',
       });
     }
+    setIsLoading(false);
   };
 
   return (
@@ -147,170 +143,148 @@ export function AuthForm() {
             <Logo />
           </Link>
         </div>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Войти</TabsTrigger>
-            <TabsTrigger value="signup">Регистрация</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <Card>
-              <CardHeader>
-                <CardTitle>Вход в аккаунт</CardTitle>
-                <CardDescription>Введите ваш email и пароль для входа.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      required
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      disabled={isLoginLoading || isCustomLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="login-password">Пароль</Label>
+        {view === 'forgot-password' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Сброс пароля</CardTitle>
+              <CardDescription>Введите ваш email, и мы отправим вам ссылку для восстановления пароля.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading ? 'Отправка...' : 'Отправить'}
+                </Button>
+              </form>
+              <Button variant="link" className="w-full h-auto p-0" onClick={() => setView('login')}>
+                Вернуться ко входу
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle>{view === 'login' ? 'Вход в аккаунт' : 'Регистрация'}</CardTitle>
+              <CardDescription>
+                {view === 'login' ? 'Введите ваш email и пароль для входа.' : 'Создайте новый аккаунт, чтобы начать.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={view === 'login' ? handleSignIn : handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading || isCustomLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Пароль</Label>
+                    {view === 'login' && (
                       <Button
                         type="button"
                         variant="link"
                         className="h-auto p-0 text-sm"
-                        onClick={handlePasswordReset}
+                        onClick={() => {
+                          setEmail('');
+                          setPassword('');
+                          setView('forgot-password');
+                        }}
                       >
                         Забыли пароль?
                       </Button>
-                    </div>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      required
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      disabled={isLoginLoading || isCustomLoading}
-                    />
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoginLoading || isCustomLoading}>
-                    {isLoginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isLoginLoading ? 'Вход...' : 'Войти'}
-                  </Button>
-                </form>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Или войдите через</span>
-                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading || isCustomLoading}
+                  />
                 </div>
-                <div className="grid grid-cols-1 gap-2">
+                <Button type="submit" className="w-full" disabled={isLoading || isCustomLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {view === 'login' ? (isLoading ? 'Вход...' : 'Войти') : (isLoading ? 'Создание...' : 'Создать аккаунт')}
+                </Button>
+              </form>
+
+              <div className="text-center text-sm">
+                {view === 'login' ? (
+                  <>
+                    Нет аккаунта?{' '}
+                    <Button variant="link" className="p-0 h-auto" onClick={() => setView('signup')}>
+                      Зарегистрироваться
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    Уже есть аккаунт?{' '}
+                    <Button variant="link" className="p-0 h-auto" onClick={() => setView('login')}>
+                      Войти
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Или продолжить через</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
                 <Button
-                    variant="outline"
-                    className="bg-white text-gray-700 hover:bg-gray-50"
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading || isCustomLoading}
-                  >
-                    {isGoogleLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <GoogleIcon className="mr-2 h-5 w-5" />
-                    )}
-                    Google
-                  </Button>
-                  <Button
-                    className="bg-[#27A7E7] text-white hover:bg-[#27A7E7]/90"
-                    onClick={() => window.open('https://t.me/ishtopuz_auth_helper_bot', '_blank')}
-                    disabled={isCustomLoading}
-                  >
-                    {isCustomLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <TelegramIcon className="mr-2" />
-                    )}
-                    Telegram
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
-                <CardTitle>Регистрация</CardTitle>
-                <CardDescription>Создайте новый аккаунт, чтобы начать.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="you@example.com"
-                      required
-                      value={signUpEmail}
-                      onChange={(e) => setSignUpEmail(e.target.value)}
-                      disabled={isSignUpLoading || isCustomLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Пароль</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      required
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
-                      disabled={isSignUpLoading || isCustomLoading}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSignUpLoading || isCustomLoading}>
-                    {isSignUpLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isSignUpLoading ? 'Создание...' : 'Создать аккаунт'}
-                  </Button>
-                </form>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Или зарегистрируйтесь через</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    variant="outline"
-                    className="bg-white text-gray-700 hover:bg-gray-50"
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading || isCustomLoading}
-                  >
-                    {isGoogleLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <GoogleIcon className="mr-2 h-5 w-5" />
-                    )}
-                    Google
-                  </Button>
-                  <Button
-                    className="bg-[#27A7E7] text-white hover:bg-[#27A7E7]/90"
-                    onClick={() => window.open('https://t.me/ishtopuz_auth_helper_bot', '_blank')}
-                    disabled={isCustomLoading}
-                  >
-                    {isCustomLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <TelegramIcon className="mr-2" />
-                    )}
-                    Telegram
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  variant="outline"
+                  className="bg-white text-gray-700 hover:bg-gray-50"
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading || isCustomLoading}
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <GoogleIcon className="mr-2 h-5 w-5" />
+                  )}
+                  Google
+                </Button>
+                <Button
+                  className="bg-[#27A7E7] text-white hover:bg-[#27A7E7]/90"
+                  onClick={() => window.open('https://t.me/ishtopuz_auth_helper_bot', '_blank')}
+                  disabled={isCustomLoading}
+                >
+                  {isCustomLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <TelegramIcon className="mr-2" />
+                  )}
+                  Telegram
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
