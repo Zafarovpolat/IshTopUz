@@ -14,7 +14,7 @@ import {
     type Auth,
     type AuthProvider,
   } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"; 
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore"; 
 import { app, db } from "./firebase";
   
 export const auth: Auth = getAuth(app);
@@ -26,15 +26,19 @@ const createUserProfileDocument = async (user: User, additionalData = {}) => {
     const snapshot = await getDoc(userRef);
 
     if (!snapshot.exists()) {
-        const { email, displayName } = user;
+        const { email, displayName, photoURL } = user;
         const createdAt = serverTimestamp();
         try {
             await setDoc(userRef, {
                 email,
-                displayName: displayName || '',
+                profile: {
+                    firstName: displayName?.split(' ')[0] || '',
+                    lastName: displayName?.split(' ')[1] || '',
+                    avatar: photoURL || '',
+                },
                 createdAt,
                 lastLoginAt: createdAt,
-                profileComplete: false, // Флаг для онбординга
+                profileComplete: false, 
                 ...additionalData,
             });
         } catch (error) {
@@ -48,9 +52,10 @@ export async function signUpWithEmail(email: string, password: string): Promise<
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Success: User registered:", userCredential.user);
       await createUserProfileDocument(userCredential.user);
-      await sendVerificationEmail();
+      // await sendVerificationEmail(); // Verification email removed as requested
       return { user: userCredential.user, isNewUser: true };
-    } catch (error: any) {
+    } catch (error: any)
+{
       console.error("Error: Registration failed:", error.message, `(Code: ${error.code})`);
       return null;
     }
@@ -60,17 +65,16 @@ export async function signInWithEmail(email: string, password: string): Promise<
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log("Success: User signed in:", userCredential.user);
-      if (!userCredential.user.emailVerified) {
-        console.warn("Warning: User email not verified.");
-      }
+      
       const userRef = doc(db, `users/${userCredential.user.uid}`);
       const snapshot = await getDoc(userRef);
-      const isNewUser = !snapshot.exists() || !snapshot.data()?.profileComplete;
+      let isNewUser = !snapshot.exists() || !snapshot.data()?.profileComplete;
       
       if (!snapshot.exists()) {
         await createUserProfileDocument(userCredential.user);
+        isNewUser = true;
       } else {
-        await setDoc(userRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
       }
 
       return { user: userCredential.user, isNewUser };
@@ -101,7 +105,7 @@ async function socialSignIn(provider: AuthProvider): Promise<{user: User; isNewU
       if (!snapshot.exists()) {
         await createUserProfileDocument(result.user);
       } else {
-         await setDoc(userRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+         await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
       }
 
       return { user: result.user, isNewUser };
@@ -160,7 +164,7 @@ export async function signInWithCustomTokenFunc(token: string): Promise<{user: U
       if (!snapshot.exists()) {
         await createUserProfileDocument(userCredential.user);
       } else {
-         await setDoc(userRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+         await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
       }
 
       return { user: userCredential.user, isNewUser };
