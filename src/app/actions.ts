@@ -26,12 +26,12 @@ async function getCurrentUserId(): Promise<string | null> {
   try {
     const decodedToken = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
     return decodedToken.uid;
-  } catch (error) {
-    if ((error as any).code === 'auth/session-cookie-expired' || (error as any).code === 'auth/session-cookie-revoked') {
-      // Это ожидаемые ошибки, не нужно логировать их как сбой
-    } else {
-      console.error("Error verifying session cookie:", error);
-    }
+  } catch (error: any) {
+    // Log detailed error for debugging, but don't throw an unhandled exception
+    console.error("Error verifying session cookie:", {
+      code: error.code,
+      message: error.message,
+    });
     return null;
   }
 }
