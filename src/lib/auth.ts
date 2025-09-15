@@ -51,6 +51,7 @@ export async function signUpWithEmail(email: string, password: string): Promise<
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Success: User registered:", userCredential.user);
+      // Гарантируем создание документа сразу после регистрации
       await createUserProfileDocument(userCredential.user);
       return { user: userCredential.user, isNewUser: true };
     } catch (error: any)
