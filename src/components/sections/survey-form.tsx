@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTransition } from 'react';
-import { getAuth, signInAnonymously } from 'firebase/auth';
 import type { z } from 'zod';
 import { surveyFreelancerSchema, surveyClientSchema } from '@/lib/schema';
 import { submitSurvey } from '@/app/actions';
@@ -17,7 +16,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { clientQuestions, freelancerQuestions } from '@/lib/survey-questions';
-import { app } from '@/lib/firebase';
 
 type FreelancerFormValues = z.infer<typeof surveyFreelancerSchema>;
 type ClientFormValues = z.infer<typeof surveyClientSchema>;
@@ -31,18 +29,6 @@ export function SurveyForm() {
     const email = searchParams.get('email');
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
-
-    useEffect(() => {
-        const auth = getAuth(app);
-        signInAnonymously(auth).catch((err) => {
-            console.error('Auth error:', err);
-            toast({
-                variant: 'destructive',
-                title: 'Ошибка аутентификации',
-                description: 'Не удалось выполнить вход. Попробуйте снова.',
-            });
-        });
-    }, [toast]);
 
     const schema = role === 'Freelancer' ? surveyFreelancerSchema : surveyClientSchema;
 

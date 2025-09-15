@@ -56,7 +56,6 @@ export async function submitOnboarding(data: z.infer<typeof onboardingSchema>): 
   
   const { firstName, lastName, userType } = validatedFields.data;
   
-  // Формируем данные для обновления в соответствии с вашей схемой
   const userData = {
     userType,
     profile: {
