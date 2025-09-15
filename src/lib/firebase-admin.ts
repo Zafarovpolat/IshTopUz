@@ -4,35 +4,33 @@ import * as admin from 'firebase-admin';
 let adminApp: admin.app.App | null = null;
 
 function initializeAdminApp(): admin.app.App | null {
+  // Если приложение уже инициализировано, возвращаем его.
   if (admin.apps.length > 0) {
     return admin.apps[0];
   }
 
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  // Если ключ не найден, выводим четкое предупреждение и возвращаем null.
+  if (!serviceAccountKey) {
+    console.warn("Firebase Admin SDK: FIREBASE_SERVICE_ACCOUNT_KEY не установлена. Серверная аутентификация не будет работать.");
+    return null;
+  }
+
   try {
-    // Этот способ должен работать в облачных средах Google по умолчанию.
+    // Парсим ключ из строки.
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    
+    // Инициализируем приложение с учетными данными.
     const app = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     });
     return app;
-  } catch (error: any) {
-     // Если не сработало, пробуем ключ из переменной окружения.
-    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    if (serviceAccountKey) {
-        try {
-            const serviceAccount = JSON.parse(serviceAccountKey);
-            const app = admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-            });
-            return app;
-        } catch (e: any) {
-            console.error("Firebase Admin SDK: Failed to initialize with service account key. Error:", e.message);
-        }
-    }
+  } catch (e: any) {
+    console.error("Firebase Admin SDK: Не удалось разобрать FIREBASE_SERVICE_ACCOUNT_KEY. Убедитесь, что это корректный JSON. Ошибка:", e.message);
+    return null;
   }
-
-  console.warn("Firebase Admin SDK: Could not be initialized. Default credentials not found, and FIREBASE_SERVICE_ACCOUNT_KEY is not set. Server-side auth will not work.");
-  return null;
 }
 
 function getAdminApp(): admin.app.App | null {
