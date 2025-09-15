@@ -30,6 +30,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'success' });
   } catch (error: any) {
     console.error('Error creating session cookie:', error);
-    return NextResponse.json({ error: 'Failed to create session' }, { status: 401 });
+    return NextResponse.json({ error: 'Failed to create session', details: error.message }, { status: 401 });
   }
 }
