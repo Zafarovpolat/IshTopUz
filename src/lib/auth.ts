@@ -52,7 +52,6 @@ export async function signUpWithEmail(email: string, password: string): Promise<
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Success: User registered:", userCredential.user);
       await createUserProfileDocument(userCredential.user);
-      // await sendVerificationEmail(); // Verification email removed as requested
       return { user: userCredential.user, isNewUser: true };
     } catch (error: any)
 {
@@ -127,6 +126,9 @@ export async function resetPassword(email: string): Promise<boolean> {
       return true;
     } catch (error: any) {
       console.error("Error: Password reset failed:", error.message, `(Code: ${error.code})`);
+      if (error.code === 'auth/user-not-found') {
+        // This error is handled in the UI to give feedback.
+      }
       return false;
     }
 }
