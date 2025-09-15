@@ -167,7 +167,9 @@ export async function signInWithCustomTokenFunc(token: string): Promise<{user: U
       if (!snapshot.exists()) {
         await createUserProfileDocument(userCredential.user);
       } else {
-         await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+        // Логика обновления lastLoginAt уже есть в socialSignIn и signInWithEmail,
+        // добавим ее и сюда для консистентности, но это не является основной причиной ошибки.
+        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
       }
 
       return { user: userCredential.user, isNewUser };
