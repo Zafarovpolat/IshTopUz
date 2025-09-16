@@ -30,11 +30,15 @@ export function OnboardingForm() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        router.push('/auth');
+      }
       setIsLoadingUser(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
