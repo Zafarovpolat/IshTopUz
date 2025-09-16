@@ -1,7 +1,7 @@
 import 'server-only';
 import { headers } from 'next/headers';
 import { getAdminApp } from '@/lib/firebase-admin';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase-admin/firestore';
 
 export async function getUserId() {
   const headersList = headers();
