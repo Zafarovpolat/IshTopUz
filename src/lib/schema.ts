@@ -15,6 +15,35 @@ export const onboardingSchema = z.object({
   }),
 });
 
+const languages = z.string().optional();
+
+export const profileFreelancerSchema = z.object({
+  // profile
+  firstName: z.string().min(2, "Имя обязательно."),
+  lastName: z.string().min(2, "Фамилия обязательна."),
+  location: z.string().optional(),
+  // freelancerProfile
+  specialization: z.string().optional(),
+  hourlyRate: z.number().min(0, "Ставка должна быть положительным числом.").optional(),
+  skills: z.string().optional(), // Assuming skills are a comma-separated string for now
+  experience: z.enum(['less-than-1', '1-3-years', 'more-than-3']).optional(),
+  availability: z.enum(['full-time', 'part-time', 'project-based']).optional(),
+  about: z.string().optional(),
+  languages,
+});
+
+
+export const profileClientSchema = z.object({
+    // profile
+    firstName: z.string().min(2, "Имя обязательно."),
+    lastName: z.string().min(2, "Фамилия обязательна."),
+    // clientProfile
+    companyName: z.string().optional(),
+    companySize: z.enum(['1', '2-10', '11-50', '51+']).optional(),
+    industry: z.string().optional(),
+    website: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
+});
+
 
 export const surveyFreelancerSchema = z.object({
   name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
@@ -75,4 +104,10 @@ export type SurveyState = {
   };
   message?: string | null;
   success: boolean;
+};
+
+export type ProfileState = {
+    errors?: { [key: string]: string[] }
+    message?: string | null;
+    success: boolean;
 };

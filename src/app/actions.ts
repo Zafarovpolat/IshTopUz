@@ -2,10 +2,13 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema } from "@/lib/schema";
-import type { LeadState, SurveyState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema } from "@/lib/schema";
+import type { LeadState, SurveyState, ProfileState } from "@/lib/schema";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { getAdminApp } from "@/lib/firebase-admin";
+import { getAuth } from "firebase-admin/auth";
+import { revalidatePath } from 'next/cache';
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>
@@ -73,6 +76,59 @@ export async function submitSurvey(
     return {
       success: false,
       message: `Ошибка при отправке данных: ${error.message || 'Неизвестная ошибка'}`,
+    };
+  }
+}
+
+export async function updateProfile(
+  userId: string,
+  userType: 'freelancer' | 'client',
+  data: z.infer<typeof profileFreelancerSchema> | z.infer<typeof profileClientSchema>
+): Promise<ProfileState> {
+  if (!userId) {
+    return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  }
+  
+  const schema = userType === 'freelancer' ? profileFreelancerSchema : profileClientSchema;
+  const validatedFields = schema.safeParse(data);
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.',
+      success: false,
+    };
+  }
+  
+  const userRef = doc(db, 'users', userId);
+
+  try {
+    if (userType === 'freelancer') {
+      const { firstName, lastName, ...freelancerProfileData } = validatedFields.data;
+      await updateDoc(userRef, {
+        'profile.firstName': firstName,
+        'profile.lastName': lastName,
+        'freelancerProfile': freelancerProfileData
+      });
+    } else {
+       const { firstName, lastName, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
+       await updateDoc(userRef, {
+        'profile.firstName': firstName,
+        'profile.lastName': lastName,
+        'clientProfile': clientProfileData
+      });
+    }
+
+    revalidatePath('/dashboard/profile');
+    return {
+      success: true,
+      message: 'Профиль успешно обновлен!',
+    };
+  } catch (e) {
+    console.error('Failed to update profile:', e);
+    return {
+      success: false,
+      message: 'Что-то пошло не так. Пожалуйста, повторите попытку позже.',
     };
   }
 }
