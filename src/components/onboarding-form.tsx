@@ -3,25 +3,38 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import type { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { onboardingSchema } from '@/lib/schema';
-import { submitOnboarding } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from './layout/logo';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { Loader2 } from 'lucide-react';
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 
 export function OnboardingForm() {
   const [isPending, startTransition] = useTransition();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setIsLoadingUser(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
@@ -33,23 +46,95 @@ export function OnboardingForm() {
   });
 
   const onSubmit = (data: OnboardingFormValues) => {
+    if (!currentUser) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: 'Ошибка аутентификации. Пожалуйста, войдите снова.',
+      });
+      router.push('/auth');
+      return;
+    }
+
     startTransition(async () => {
-      const result = await submitOnboarding(data);
-      if (result.success) {
+      const { firstName, lastName, userType } = data;
+      const userData = {
+        userType,
+        profile: {
+          firstName,
+          lastName,
+          avatar: currentUser.photoURL || '',
+          city: '',
+          country: '',
+          dateOfBirth: '',
+          gender: '',
+          languages: [],
+          timezone: '',
+        },
+        profileComplete: true,
+        ...(userType === 'freelancer' && {
+          freelancerProfile: {
+            title: '',
+            description: '',
+            hourlyRate: 0,
+            skills: [],
+            categories: [],
+            portfolio: [],
+            experience: 'beginner',
+            completedProjects: 0,
+            rating: 0,
+            reviewsCount: 0,
+            isAvailable: true,
+          }
+        }),
+        ...(userType === 'client' && {
+          clientProfile: {
+            companyName: '',
+            companySize: '',
+            industry: '',
+            website: '',
+            description: '',
+            projectsPosted: 0,
+            moneySpent: 0,
+            rating: 0,
+            reviewsCount: 0,
+          }
+        }),
+        wallet: {
+          balance: 0,
+          currency: "UZS",
+          paymentMethods: [],
+          transactions: [],
+        }
+      };
+
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, userData, { merge: true });
+        
         toast({
           title: 'Успешно!',
-          description: 'Ваш профиль создан. Добро пожаловать!',
+          description: 'Ваш профиль обновлен. Добро пожаловать!',
         });
-        router.push('/dashboard'); // Перенаправляем в будущий личный кабинет
-      } else {
+        router.push('/dashboard');
+      } catch (e: any) {
+        console.error('Failed to submit onboarding data:', e);
         toast({
           variant: 'destructive',
           title: 'Ошибка',
-          description: result.message || 'Не удалось сохранить данные.',
+          description: e.message || 'Что-то пошло не так. Попробуйте позже.',
         });
       }
     });
   };
+  
+  if (isLoadingUser) {
+      return (
+          <div className="flex min-h-screen w-full items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      );
+  }
 
   return (
     <Card className="w-full max-w-lg mx-auto shadow-lg">
@@ -114,7 +199,7 @@ export function OnboardingForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" size="lg" disabled={isPending}>
+            <Button type="submit" className="w-full" size="lg" disabled={isPending || isLoadingUser}>
               {isPending ? 'Сохранение...' : 'Продолжить'}
             </Button>
           </form>
