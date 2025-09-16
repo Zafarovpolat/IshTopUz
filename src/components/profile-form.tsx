@@ -61,11 +61,10 @@ function FreelancerProfileForm({ user }: { user: any }) {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       
-      setAvatarUrl(downloadURL);
-      
       const result = await updateProfile(user.uid, 'freelancer', { avatar: downloadURL });
 
       if (result.success) {
+        setAvatarUrl(downloadURL);
         toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
       } else {
         throw new Error(result.message);
@@ -181,7 +180,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
                 <FormField control={form.control} name="hourlyRate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Часовая ставка (UZS)</FormLabel>
-                    <FormControl><Input type="number" placeholder="100000" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl>
+                    <FormControl><Input type="number" placeholder="100000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -286,11 +285,10 @@ function ClientProfileForm({ user }: { user: any }) {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       
-      setAvatarUrl(downloadURL);
-      
       const result = await updateProfile(user.uid, 'client', { avatar: downloadURL });
 
       if (result.success) {
+        setAvatarUrl(downloadURL);
         toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
       } else {
         throw new Error(result.message);
@@ -449,3 +447,5 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
+
+    
