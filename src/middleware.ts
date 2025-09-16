@@ -3,6 +3,9 @@ import type { NextRequest } from 'next/server';
 import { getAdminApp } from '@/lib/firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 
+// This forces the middleware to run on the Node.js runtime.
+export const runtime = 'nodejs';
+
 async function verifySessionCookie(sessionCookie: string) {
   const adminApp = getAdminApp();
   if (!adminApp) {
@@ -23,7 +26,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthPage = pathname.startsWith('/auth');
-  const isDashboardPage = pathname.startsWith('/dashboard');
+  const isDashboardPage = pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding');
+
 
   if (!sessionCookie) {
     if (isDashboardPage) {
@@ -46,7 +50,7 @@ export async function middleware(request: NextRequest) {
   if (isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-
+  
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', decodedToken.uid);
   requestHeaders.set('x-user-email', decodedToken.email || '');
@@ -59,5 +63,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/auth'],
+  matcher: ['/dashboard/:path*', '/onboarding', '/auth'],
 };

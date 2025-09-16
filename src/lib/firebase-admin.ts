@@ -1,5 +1,5 @@
 
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 
 let adminApp: admin.app.App | null = null;
 
