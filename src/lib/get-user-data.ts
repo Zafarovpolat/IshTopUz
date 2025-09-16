@@ -15,19 +15,22 @@ export async function getUserData() {
     return null;
   }
 
-  const adminApp = getAdminApp();
-   if (!adminApp) {
-    console.error("getUserData: Firebase Admin SDK not initialized.");
-    return null;
-  }
+  // Ensure admin app is initialized before using any admin services
+  getAdminApp();
   
-  const db = getFirestore(adminApp);
+  const db = getFirestore();
   const userRef = doc(db, 'users', userId);
-  const userSnap = await getDoc(userRef);
+  
+  try {
+    const userSnap = await getDoc(userRef);
 
-  if (!userSnap.exists()) {
+    if (!userSnap.exists()) {
+      return null;
+    }
+
+    return userSnap.data();
+  } catch (error) {
+    console.error("Error fetching user data in getUserData:", error);
     return null;
   }
-
-  return userSnap.data();
 }
