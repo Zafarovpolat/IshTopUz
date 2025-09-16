@@ -33,7 +33,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
       lastName: user.profile?.lastName || '',
       location: user.profile?.city || '',
       specialization: user.freelancerProfile?.specialization || '',
-      hourlyRate: user.freelancerProfile?.hourlyRate || 0,
+      hourlyRate: user.freelancerProfile?.hourlyRate,
       skills: (user.freelancerProfile?.skills || []).join(', '),
       experience: user.freelancerProfile?.experience || '1-3-years',
       availability: user.freelancerProfile?.isAvailable ? 'full-time' : 'project-based',
@@ -67,7 +67,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
                 <AvatarImage src={user.profile?.avatar} />
                 <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
               </Avatar>
-              <Button type="button" variant="outline" disabled>
+              <Button type="button" variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
                 Загрузить фото
               </Button>
@@ -117,8 +117,15 @@ function FreelancerProfileForm({ user }: { user: any }) {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="web-development">Веб-разработка</SelectItem>
-                        <SelectItem value="design">Дизайн</SelectItem>
-                        <SelectItem value="copywriting">Копирайтинг</SelectItem>
+                        <SelectItem value="mobile-development">Мобильная разработка</SelectItem>
+                        <SelectItem value="design">Дизайн (UI/UX)</SelectItem>
+                        <SelectItem value="graphic-design">Графический дизайн</SelectItem>
+                        <SelectItem value="copywriting">Копирайтинг и контент</SelectItem>
+                        <SelectItem value="smm">SMM и маркетинг</SelectItem>
+                        <SelectItem value="seo">SEO-оптимизация</SelectItem>
+                        <SelectItem value="translation">Переводы</SelectItem>
+                        <SelectItem value="video-editing">Видеомонтаж и анимация</SelectItem>
+                        <SelectItem value="other">Другое</SelectItem>
                       </SelectContent>
                     </Select>
                   <FormMessage />
@@ -127,7 +134,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
                 <FormField control={form.control} name="hourlyRate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Часовая ставка (UZS)</FormLabel>
-                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl>
+                    <FormControl><Input type="number" placeholder="100000" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || undefined)} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -240,7 +247,7 @@ function ClientProfileForm({ user }: { user: any }) {
                 <AvatarImage src={user.profile?.avatar} />
                 <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
               </Avatar>
-              <Button type="button" variant="outline" disabled>
+              <Button type="button" variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
                 Загрузить фото
               </Button>
@@ -350,3 +357,5 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
+
+    
