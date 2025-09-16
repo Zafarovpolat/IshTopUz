@@ -15,6 +15,7 @@ function initializeAdminApp(): admin.app.App {
   
   // Также проверяем стандартный массив `admin.apps` на всякий случай
   if (admin.apps.length > 0 && admin.apps[0]) {
+    global.__firebaseAdminApp__ = admin.apps[0];
     return admin.apps[0];
   }
 
@@ -39,7 +40,7 @@ function initializeAdminApp(): admin.app.App {
     return app;
   } catch (e: any) {
     console.error("Firebase Admin SDK: Не удалось разобрать содержимое FIREBASE_SERVICE_ACCOUNT. Убедитесь, что это корректный JSON без лишних символов и переносов строк. Ошибка:", e.message);
-    throw new Error("Failed to initialize Firebase Admin SDK.");
+    throw new Error("Failed to initialize Firebase Admin SDK due to parsing error.");
   }
 }
 
