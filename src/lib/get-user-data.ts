@@ -31,3 +31,4 @@ export async function getUserData() {
 
   return userSnap.data();
 }
+
