@@ -1,4 +1,6 @@
 
+'use client';
+import { useState } from 'react';
 import { ClientDashboard } from '@/components/dashboard/client-dashboard';
 import { FreelancerDashboard } from '@/components/dashboard/freelancer-dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,9 +22,11 @@ const mockUser = {
 };
 
 export default function DashboardTestPage() {
+  const [activeTab, setActiveTab] = useState<'client' | 'freelancer'>('client');
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <DashboardSidebar userType={'client'} />
+      <DashboardSidebar userType={activeTab} />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <DashboardHeader user={mockUser as User} />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -34,7 +38,7 @@ export default function DashboardTestPage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Tabs defaultValue="client">
+          <Tabs defaultValue="client" onValueChange={(value) => setActiveTab(value as 'client' | 'freelancer')}>
             <TabsList>
               <TabsTrigger value="client">Дашборд клиента</TabsTrigger>
               <TabsTrigger value="freelancer">Дашборд фрилансера</TabsTrigger>
