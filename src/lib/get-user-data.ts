@@ -1,8 +1,6 @@
-
 import 'server-only';
 import { headers } from 'next/headers';
 import { getAdminApp } from '@/lib/firebase-admin';
-import { getFirestore, doc, getDoc } from 'firebase-admin/firestore';
 
 export async function getUserId() {
   const headersList = headers();
@@ -15,22 +13,18 @@ export async function getUserData() {
     return null;
   }
 
-  // Ensure admin app is initialized before using any admin services
-  getAdminApp();
-  
-  const db = getFirestore();
-  const userRef = doc(db, 'users', userId);
-  
-  try {
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      return null;
-    }
-
-    return userSnap.data();
-  } catch (error) {
-    console.error("Error fetching user data in getUserData:", error);
+  const adminApp = getAdminApp();
+  if (!adminApp) {
+    console.error("getUserData: Firebase Admin SDK not initialized.");
     return null;
   }
+  
+  const db = adminApp.firestore(); // Используем метод firestore() из adminApp
+  const userDoc = await db.collection('users').doc(userId).get();
+
+  if (!userDoc.exists) {
+    return null;
+  }
+
+  return userDoc.data();
 }
