@@ -50,7 +50,10 @@ function FreelancerProfileForm({ user }: { user: any }) {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.uid) return;
+    if (!file || !user?.uid) {
+        toast({ variant: "destructive", title: "Ошибка", description: "Не удалось получить ID пользователя для загрузки." });
+        return;
+    }
 
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
@@ -71,7 +74,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
       }
     } catch (error: any) {
       console.error("Upload failed", error);
-      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message });
+      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message || "Не удалось загрузить фото." });
     } finally {
       setIsUploading(false);
     }
@@ -274,7 +277,10 @@ function ClientProfileForm({ user }: { user: any }) {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.uid) return;
+    if (!file || !user?.uid) {
+        toast({ variant: "destructive", title: "Ошибка", description: "Не удалось получить ID пользователя для загрузки." });
+        return;
+    };
 
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
@@ -295,7 +301,7 @@ function ClientProfileForm({ user }: { user: any }) {
       }
     } catch (error: any) {
       console.error("Upload failed", error);
-      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message });
+      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message || "Не удалось загрузить фото." });
     } finally {
       setIsUploading(false);
     }
@@ -430,12 +436,15 @@ function ClientProfileForm({ user }: { user: any }) {
 }
 
 export function ProfileForm({ user }: { user: any }) {
+  // Добавим `uid` к объекту `user`, чтобы он был доступен в дочерних компонентах
+  const userWithId = { ...user, uid: user.uid };
+  
   if (user.userType === 'freelancer') {
-    return <FreelancerProfileForm user={user} />;
+    return <FreelancerProfileForm user={userWithId} />;
   }
   
   if (user.userType === 'client') {
-    return <ClientProfileForm user={user} />;
+    return <ClientProfileForm user={userWithId} />;
   }
 
   return (
