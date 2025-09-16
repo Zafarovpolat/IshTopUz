@@ -39,7 +39,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
       lastName: user.profile?.lastName || '',
       location: user.profile?.city || '',
       specialization: user.freelancerProfile?.specialization || '',
-      hourlyRate: user.freelancerProfile?.hourlyRate,
+      hourlyRate: user.freelancerProfile?.hourlyRate || undefined,
       skills: (user.freelancerProfile?.skills || []).join(', '),
       experience: user.freelancerProfile?.experience || '1-3-years',
       availability: user.freelancerProfile?.isAvailable ? 'full-time' : 'project-based',
