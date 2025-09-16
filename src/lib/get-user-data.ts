@@ -19,12 +19,28 @@ export async function getUserData() {
     return null;
   }
   
-  const db = adminApp.firestore(); // Используем метод firestore() из adminApp
+  const db = adminApp.firestore();
   const userDoc = await db.collection('users').doc(userId).get();
 
   if (!userDoc.exists) {
     return null;
   }
 
-  return userDoc.data();
+  const userData = userDoc.data();
+  
+  // Конвертируем все Timestamp объекты в обычные Date объекты
+  const serializedUserData = JSON.parse(JSON.stringify(userData, (key, value) => {
+    // Если значение имеет _seconds и _nanoseconds (Firestore Timestamp)
+    if (value && typeof value === 'object' && '_seconds' in value && '_nanoseconds' in value) {
+      // Конвертируем в ISO string для сериализации
+      return new Date(value._seconds * 1000 + value._nanoseconds / 1000000).toISOString();
+    }
+    // Если это обычный Timestamp объект Firestore
+    if (value && typeof value.toDate === 'function') {
+      return value.toDate().toISOString();
+    }
+    return value;
+  }));
+
+  return serializedUserData;
 }
