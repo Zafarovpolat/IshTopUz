@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import {
@@ -36,15 +37,18 @@ export function DashboardHeader({ user }: { user: User | any }) {
 
     const handleSignOut = async () => {
         await doSignOut();
-        router.push('/');
+        // Перезагружаем страницу, чтобы убедиться, что все состояния сброшены
+        // и middleware корректно отработает редирект.
+        window.location.href = '/';
     };
     
     const getInitials = (name: string) => {
+        if (!name) return '';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     
     const displayName = user.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName}` : user.email;
-    const fallbackName = user.profile?.firstName ? getInitials(`${user.profile.firstName} ${user.profile.lastName}`) : getInitials(user.email);
+    const fallbackName = user.profile?.firstName ? getInitials(`${user.profile.firstName} ${user.profile.lastName}`) : getInitials(user.email || '');
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">

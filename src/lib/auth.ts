@@ -81,8 +81,11 @@ export async function signInWithEmail(email: string, password: string): Promise<
   
 export async function doSignOut(): Promise<void> {
     try {
+      // Очищаем серверную сессию
+      await fetch('/api/auth/signout', { method: 'POST' });
+      // Выходим из Firebase на клиенте
       await signOut(auth);
-      console.log("Success: User signed out.");
+      console.log("Success: User signed out from client and server.");
     } catch (error: any) {
       console.error("Error: Sign-out failed:", error.message, `(Code: ${error.code})`);
     }
