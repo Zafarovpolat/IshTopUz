@@ -1,6 +1,5 @@
 
 import {
-    getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
@@ -11,14 +10,11 @@ import {
     onAuthStateChanged,
     signInWithCustomToken,
     type User,
-    type Auth,
     type AuthProvider,
   } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore"; 
-import { app, db } from "./firebase";
+import { auth, db } from "./firebase";
   
-export const auth: Auth = getAuth(app);
-
 const createUserProfileDocument = async (user: User, additionalData = {}) => {
     if (!user) return;
 
@@ -51,7 +47,6 @@ export async function signUpWithEmail(email: string, password: string): Promise<
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Success: User registered:", userCredential.user);
-      // Гарантируем создание документа сразу после регистрации
       await createUserProfileDocument(userCredential.user);
       return { user: userCredential.user, isNewUser: true };
     } catch (error: any)
@@ -167,8 +162,6 @@ export async function signInWithCustomTokenFunc(token: string): Promise<{user: U
       if (!snapshot.exists()) {
         await createUserProfileDocument(userCredential.user);
       } else {
-        // Логика обновления lastLoginAt уже есть в socialSignIn и signInWithEmail,
-        // добавим ее и сюда для консистентности, но это не является основной причиной ошибки.
         await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
       }
 
@@ -178,3 +171,5 @@ export async function signInWithCustomTokenFunc(token: string): Promise<{user: U
       return null;
     }
 }
+
+export { auth };
