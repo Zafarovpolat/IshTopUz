@@ -4,10 +4,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { profileFreelancerSchema, profileClientSchema } from '@/lib/schema';
 import { updateProfile } from '@/app/actions';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -17,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 
 type FreelancerFormValues = z.infer<typeof profileFreelancerSchema>;
 type ClientFormValues = z.infer<typeof profileClientSchema>;
@@ -25,6 +27,10 @@ type ClientFormValues = z.infer<typeof profileClientSchema>;
 function FreelancerProfileForm({ user }: { user: any }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.profile?.avatar || user.photoURL || '');
+
 
   const form = useForm<FreelancerFormValues>({
     resolver: zodResolver(profileFreelancerSchema),
@@ -41,8 +47,42 @@ function FreelancerProfileForm({ user }: { user: any }) {
       languages: (user.profile?.languages || []).join(', '),
     },
   });
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.uid) return;
+
+    setIsUploading(true);
+    toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
+
+    const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setAvatarUrl(downloadURL);
+      
+      const result = await updateProfile(user.uid, 'freelancer', { avatar: downloadURL });
+
+      if (result.success) {
+        toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
+      console.error("Upload failed", error);
+      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
   
   const onSubmit = (data: FreelancerFormValues) => {
+    if (!user?.uid) {
+      toast({ variant: "destructive", title: "Ошибка", description: "Пользователь не найден." });
+      return;
+    }
     startTransition(async () => {
       const result = await updateProfile(user.uid, 'freelancer', data);
       if (result.success) {
@@ -64,11 +104,18 @@ function FreelancerProfileForm({ user }: { user: any }) {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={user.profile?.avatar} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
               </Avatar>
-              <Button type="button" variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
+               <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                className="hidden"
+                accept="image/png, image/jpeg, image/gif"
+              />
+              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 Загрузить фото
               </Button>
             </div>
@@ -199,7 +246,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
           </CardContent>
         </Card>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
+          <Button type="submit" disabled={isPending || isUploading}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
         </div>
       </form>
     </Form>
@@ -209,6 +256,10 @@ function FreelancerProfileForm({ user }: { user: any }) {
 function ClientProfileForm({ user }: { user: any }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.profile?.avatar || user.photoURL || '');
+
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(profileClientSchema),
@@ -222,7 +273,41 @@ function ClientProfileForm({ user }: { user: any }) {
     },
   });
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.uid) return;
+
+    setIsUploading(true);
+    toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
+
+    const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setAvatarUrl(downloadURL);
+      
+      const result = await updateProfile(user.uid, 'client', { avatar: downloadURL });
+
+      if (result.success) {
+        toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
+      console.error("Upload failed", error);
+      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const onSubmit = (data: ClientFormValues) => {
+     if (!user?.uid) {
+      toast({ variant: "destructive", title: "Ошибка", description: "Пользователь не найден." });
+      return;
+    }
     startTransition(async () => {
       const result = await updateProfile(user.uid, 'client', data);
       if (result.success) {
@@ -244,11 +329,18 @@ function ClientProfileForm({ user }: { user: any }) {
           <CardContent className="space-y-4">
              <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={user.profile?.avatar} />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
               </Avatar>
-              <Button type="button" variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                className="hidden"
+                accept="image/png, image/jpeg, image/gif"
+              />
+              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 Загрузить фото
               </Button>
             </div>
@@ -332,7 +424,7 @@ function ClientProfileForm({ user }: { user: any }) {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
+          <Button type="submit" disabled={isPending || isUploading}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
         </div>
       </form>
     </Form>
@@ -357,5 +449,3 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
-
-    

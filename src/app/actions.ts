@@ -83,10 +83,24 @@ export async function submitSurvey(
 export async function updateProfile(
   userId: string,
   userType: 'freelancer' | 'client',
-  data: z.infer<typeof profileFreelancerSchema> | z.infer<typeof profileClientSchema>
+  data: z.infer<typeof profileFreelancerSchema> | z.infer<typeof profileClientSchema> | { avatar: string }
 ): Promise<ProfileState> {
   if (!userId) {
     return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  }
+
+  const userRef = doc(db, 'users', userId);
+
+  // Special case for only updating the avatar
+  if ('avatar' in data && Object.keys(data).length === 1) {
+    try {
+      await updateDoc(userRef, { 'profile.avatar': data.avatar });
+      revalidatePath('/dashboard/profile');
+      return { success: true, message: 'Аватар успешно обновлен!' };
+    } catch (e) {
+      console.error('Failed to update avatar:', e);
+      return { success: false, message: 'Не удалось обновить аватар.' };
+    }
   }
   
   const schema = userType === 'freelancer' ? profileFreelancerSchema : profileClientSchema;
@@ -100,7 +114,6 @@ export async function updateProfile(
     };
   }
   
-  const userRef = doc(db, 'users', userId);
 
   try {
     if (userType === 'freelancer') {
