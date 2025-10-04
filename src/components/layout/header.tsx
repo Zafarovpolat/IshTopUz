@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState } from 'react';
@@ -19,7 +17,6 @@ export function Header() {
     { href: '/marketplace', label: "Биржа" },
     { href: '/talents', label: "Найти фрилансера" },
     { href: '#faq', label: "FAQ" },
-    { href: '/contacts', label: "Контакты" },
   ];
   
   const toggleMenu = () => {
