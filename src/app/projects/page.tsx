@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import placeholderImages from '@/lib/placeholder-images.json';
 
 const kworks = [
     {
@@ -19,7 +20,8 @@ const kworks = [
         authorAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026704a",
         rating: 4.9,
         reviews: 15,
-        image: "/images/kwork1.jpg"
+        image: placeholderImages.projects.kwork1.src,
+        imageHint: placeholderImages.projects.kwork1.hint,
     },
     {
         id: 2,
@@ -30,7 +32,8 @@ const kworks = [
         authorAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026704b",
         rating: 5.0,
         reviews: 22,
-        image: "/images/kwork2.jpg"
+        image: placeholderImages.projects.kwork2.src,
+        imageHint: placeholderImages.projects.kwork2.hint,
     },
     {
         id: 3,
@@ -41,7 +44,8 @@ const kworks = [
         authorAvatar: "https://i.pravatar.cc/150?u=a042581f4e29026704f",
         rating: 4.9,
         reviews: 35,
-        image: "/images/kwork3.jpg"
+        image: placeholderImages.projects.kwork3.src,
+        imageHint: placeholderImages.projects.kwork3.hint,
     },
 ];
 
@@ -82,7 +86,14 @@ export default function ProjectsCatalogPage() {
                         <Card key={kwork.id} className="overflow-hidden group">
                            <Link href="#">
                                 <div className="relative h-48 w-full">
-                                    <Image src={kwork.image} alt={kwork.title} layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105" />
+                                    <Image 
+                                        src={kwork.image} 
+                                        alt={kwork.title} 
+                                        layout="fill" 
+                                        objectFit="cover" 
+                                        className="transition-transform duration-300 group-hover:scale-105"
+                                        data-ai-hint={kwork.imageHint}
+                                    />
                                     <Badge className="absolute top-2 right-2">{kwork.category}</Badge>
                                 </div>
                                 <CardHeader>

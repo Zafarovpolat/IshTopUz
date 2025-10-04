@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Users, TrendingUp, Languages, Globe } from 'lucide-react';
 import Image from 'next/image';
+import placeholderImages from '@/lib/placeholder-images.json';
 
 const advantages = [
     { icon: Users, title: "Качественные специалисты", description: "Доступ к пулу талантливых и мотивированных профессионалов в различных областях." },
@@ -26,9 +27,9 @@ export default function HireInUzbekistanPage() {
         <>
             <Header />
             <main>
-                <section className="relative bg-cover bg-center py-20 text-white" style={{ backgroundImage: "url('/images/tashkent.jpg')" }}>
+                <section className="relative bg-cover bg-center py-20 text-white" style={{ backgroundImage: `url(${placeholderImages.hireInUzbekistan.tashkentHero.src})` }}>
                     <div className="absolute inset-0 bg-primary/80" />
-                    <div className="relative container mx-auto max-w-5xl px-4 text-center">
+                    <div className="relative container mx-auto max-w-5xl px-4 text-center" data-ai-hint={placeholderImages.hireInUzbekistan.tashkentHero.hint}>
                         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Нанимайте таланты в Узбекистане</h1>
                         <p className="mt-4 text-lg md:text-xl text-primary-foreground/80 max-w-3xl mx-auto">Откройте для своего бизнеса мир возможностей, работая с лучшими фрилансерами из сердца Центральной Азии.</p>
                         <Button asChild size="lg" className="mt-8 bg-background text-foreground hover:bg-background/90">
@@ -76,7 +77,13 @@ export default function HireInUzbekistanPage() {
                                 </div>
                             </div>
                             <div className="relative h-80 w-full rounded-lg overflow-hidden shadow-lg">
-                                 <Image src="/images/office.jpg" alt="Uzbekistan professionals" layout="fill" objectFit="cover" />
+                                 <Image 
+                                    src={placeholderImages.hireInUzbekistan.office.src} 
+                                    alt="Uzbekistan professionals" 
+                                    layout="fill" 
+                                    objectFit="cover"
+                                    data-ai-hint={placeholderImages.hireInUzbekistan.office.hint} 
+                                />
                             </div>
                          </div>
                     </div>
