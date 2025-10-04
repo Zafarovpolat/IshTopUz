@@ -21,6 +21,7 @@ async function getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
         title: data.title,
         description: data.description,
         imageUrl: data.imageUrl,
+        projectUrl: data.projectUrl,
         tags: data.tags || [],
         createdAt: data.createdAt.toDate().toISOString(),
       }

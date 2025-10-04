@@ -34,6 +34,7 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
       title: '',
       description: '',
       imageUrl: '',
+      projectUrl: '',
       tags: '',
     },
   });
@@ -171,6 +172,17 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
             <FormItem>
               <FormLabel>Описание</FormLabel>
               <FormControl><Textarea placeholder="Опишите задачу, процесс и результат работы..." rows={4} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="projectUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ссылка на проект (необязательно)</FormLabel>
+              <FormControl><Input placeholder="https://behance.net/..." {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}

@@ -79,7 +79,8 @@ export const surveyClientSchema = z.object({
 export const portfolioItemSchema = z.object({
   title: z.string().min(3, "Заголовок должен содержать минимум 3 символа."),
   description: z.string().min(10, "Описание должно содержать минимум 10 символов."),
-  imageUrl: z.string().url("Требуется действительный URL изображения."),
+  imageUrl: z.string().url("Пожалуйста, загрузите изображение проекта."),
+  projectUrl: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
   tags: z.string().optional(),
 });
 

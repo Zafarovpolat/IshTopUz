@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/alert-dialog"
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ExternalLink } from 'lucide-react';
 import { useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deletePortfolioItem } from '@/app/actions';
+import Link from 'next/link';
 
 export function PortfolioList({ initialItems, userId }: { initialItems: PortfolioItem[], userId: string }) {
     const [isPending, startTransition] = useTransition();
@@ -59,6 +60,13 @@ export function PortfolioList({ initialItems, userId }: { initialItems: Portfoli
                     fill
                     className="object-cover"
                 />
+                 {item.projectUrl && (
+                  <Link href={item.projectUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="secondary" size="icon" className="absolute top-2 right-2 h-8 w-8 z-10">
+                        <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
              </div>
           </CardHeader>
           <CardContent className="p-4 flex-grow">
