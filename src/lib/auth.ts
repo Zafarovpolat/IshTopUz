@@ -123,7 +123,7 @@ export async function resetPassword(email: string): Promise<boolean> {
       await sendPasswordResetEmail(auth, email);
       console.log("Success: Password reset email sent to", email);
       return true;
-    } catch (error: any).
+    } catch (error: any) {
       console.error("Error: Password reset failed:", error.message, `(Code: ${error.code})`);
       if (error.code === 'auth/user-not-found') {
         // This error is handled in the UI to give feedback.
