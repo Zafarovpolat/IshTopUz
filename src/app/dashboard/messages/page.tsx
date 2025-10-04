@@ -27,7 +27,7 @@ export default function MessagesPage() {
     return (
         <div className="flex h-[calc(100vh-theme(spacing.24))]">
             {/* Sidebar with conversations */}
-            <aside className="w-full md:w-1/3 lg:w-1/4 flex flex-col border-r">
+            <div className="w-full md:w-[350px] flex-shrink-0 flex flex-col border-r">
                 <div className="p-4 border-b">
                     <h1 className="text-2xl font-bold">Сообщения</h1>
                     <div className="relative mt-4">
@@ -66,7 +66,7 @@ export default function MessagesPage() {
                         ))}
                     </div>
                 </ScrollArea>
-            </aside>
+            </div>
 
             {/* Main chat window */}
             <main className="flex-1 flex flex-col">
