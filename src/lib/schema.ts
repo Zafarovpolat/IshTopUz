@@ -21,15 +21,16 @@ export const profileFreelancerSchema = z.object({
   // profile
   firstName: z.string().min(2, "Имя обязательно."),
   lastName: z.string().min(2, "Фамилия обязательна."),
-  location: z.string().optional(),
-  // freelancerProfile
-  specialization: z.string().optional(),
-  hourlyRate: z.number().min(0, "Ставка должна быть положительным числом.").optional(),
-  skills: z.string().optional(), // Assuming skills are a comma-separated string for now
-  experience: z.enum(['less-than-1', '1-3-years', 'more-than-3']).optional(),
-  availability: z.enum(['full-time', 'part-time', 'project-based']).optional(),
-  about: z.string().optional(),
+  city: z.string().optional(),
   languages,
+  
+  // freelancerProfile
+  title: z.string().min(5, "Заголовок должен содержать хотя бы 5 символов.").optional(),
+  hourlyRate: z.number().min(0, "Ставка должна быть положительным числом.").optional(),
+  skills: z.string().optional(), // Comma-separated string
+  experience: z.enum(['beginner', 'intermediate', 'expert']).optional(),
+  isAvailable: z.boolean().optional(),
+  description: z.string().optional(),
 });
 
 
@@ -81,11 +82,17 @@ export const portfolioItemSchema = z.object({
   description: z.string().min(10, "Описание должно содержать минимум 10 символов."),
   imageUrl: z.string().url("Пожалуйста, загрузите изображение проекта."),
   projectUrl: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
-  tags: z.string().optional(),
+  technologies: z.string().optional(),
 });
 
-export type PortfolioItem = z.infer<typeof portfolioItemSchema> & {
+// Used for retrieving data, not for forms
+export type PortfolioItem = {
   id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  projectUrl?: string;
+  technologies: string[];
   createdAt: string;
 };
 

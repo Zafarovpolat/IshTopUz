@@ -75,7 +75,7 @@ export function PortfolioList({ initialItems, userId }: { initialItems: Portfoli
           </CardContent>
           <CardFooter className="p-4 pt-0 flex flex-col items-start gap-4">
              <div className="flex flex-wrap gap-2">
-                {item.tags.map((tag: string) => (
+                {Array.isArray(item.technologies) && item.technologies.map((tag: string) => (
                     <Badge key={tag} variant="secondary">{tag}</Badge>
                 ))}
              </div>

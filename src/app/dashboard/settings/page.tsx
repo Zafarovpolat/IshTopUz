@@ -13,8 +13,8 @@ export default function SettingsPage() {
                 Управляйте настройками вашего аккаунта, уведомлениями и безопасностью.
             </p>
         </div>
-      <Tabs defaultValue="notifications" className="max-w-4xl">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="notifications">
+        <TabsList className="grid w-full grid-cols-3 sm:max-w-md">
           <TabsTrigger value="notifications">Уведомления</TabsTrigger>
           <TabsTrigger value="privacy">Приватность</TabsTrigger>
           <TabsTrigger value="security">Безопасность</TabsTrigger>

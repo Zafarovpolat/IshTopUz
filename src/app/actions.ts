@@ -109,6 +109,8 @@ export async function createUserOnboarding(
 
     const userData = {
       email: userRecord.email,
+      phone: userRecord.phoneNumber || '',
+      isVerified: userRecord.emailVerified,
       createdAt: FieldValue.serverTimestamp(),
       lastLoginAt: FieldValue.serverTimestamp(),
       userType,
@@ -118,20 +120,25 @@ export async function createUserOnboarding(
         avatar: userRecord.photoURL || '',
         city: '',
         country: '',
+        dateOfBirth: '',
+        gender: '',
         languages: [],
+        timezone: '',
       },
-      profileComplete: true,
+      profileComplete: true, // Assuming onboarding completes the basic profile
       ...(userType === 'freelancer' && {
         freelancerProfile: {
-          specialization: '',
+          title: '',
           description: '',
           hourlyRate: 0,
           skills: [],
-          experience: 'less-than-1',
+          categories: [],
+          experience: 'beginner',
           completedProjects: 0,
           rating: 0,
           reviewsCount: 0,
           isAvailable: true,
+          lastActiveAt: FieldValue.serverTimestamp(),
         }
       }),
       ...(userType === 'client' && {
@@ -140,11 +147,19 @@ export async function createUserOnboarding(
           companySize: '1',
           industry: '',
           website: '',
+          description: '',
           projectsPosted: 0,
           moneySpent: 0,
           rating: 0,
+          reviewsCount: 0,
         }
       }),
+       wallet: {
+        balance: 0,
+        currency: 'UZS',
+        paymentMethods: [],
+        transactions: [],
+      },
     };
     
     await userRef.set(userData, { merge: true });
@@ -184,6 +199,7 @@ export async function updateProfile(
   const validatedFields = schema.safeParse(data);
 
   if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.',
@@ -191,26 +207,24 @@ export async function updateProfile(
     };
   }
   
-
   try {
     if (userType === 'freelancer') {
-      const { firstName, lastName, skills, languages, location, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
+      const { firstName, lastName, skills, languages, city, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
       
-      // Преобразование строк в массивы
-      const skillsArray = typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
-      const languagesArray = typeof languages === 'string' ? languages.split(',').map(l => l.trim()).filter(l => l.length > 0) : [];
+      const skillsArray = typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const languagesArray = typeof languages === 'string' ? languages.split(',').map(l => l.trim()).filter(Boolean) : [];
       
       await userRef.update({
         'profile.firstName': firstName,
         'profile.lastName': lastName,
-        'profile.city': location,
+        'profile.city': city,
         'profile.languages': languagesArray,
         'freelancerProfile.skills': skillsArray,
-        'freelancerProfile.specialization': freelancerProfileData.specialization,
+        'freelancerProfile.title': freelancerProfileData.title,
         'freelancerProfile.hourlyRate': freelancerProfileData.hourlyRate,
         'freelancerProfile.experience': freelancerProfileData.experience,
-        'freelancerProfile.isAvailable': freelancerProfileData.availability === 'full-time',
-        'freelancerProfile.description': freelancerProfileData.about,
+        'freelancerProfile.isAvailable': freelancerProfileData.isAvailable,
+        'freelancerProfile.description': freelancerProfileData.description,
         'updatedAt': FieldValue.serverTimestamp()
       });
     } else {
@@ -259,13 +273,13 @@ export async function addPortfolioItem(
   
   try {
     const portfolioRef = db.collection('users').doc(userId).collection('portfolio');
-    const tagsArray = typeof validatedFields.data.tags === 'string' 
-      ? validatedFields.data.tags.split(',').map(s => s.trim()).filter(Boolean) 
+    const technologiesArray = typeof validatedFields.data.technologies === 'string' 
+      ? validatedFields.data.technologies.split(',').map(s => s.trim()).filter(Boolean) 
       : [];
 
     await portfolioRef.add({
       ...validatedFields.data,
-      tags: tagsArray,
+      technologies: technologiesArray,
       createdAt: FieldValue.serverTimestamp(),
     });
     

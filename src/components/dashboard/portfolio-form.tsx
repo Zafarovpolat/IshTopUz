@@ -35,7 +35,7 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
       description: '',
       imageUrl: '',
       projectUrl: '',
-      tags: '',
+      technologies: '',
     },
   });
   
@@ -189,10 +189,10 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
         />
         <FormField
           control={form.control}
-          name="tags"
+          name="technologies"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Технологии и теги</FormLabel>
+              <FormLabel>Технологии</FormLabel>
               <FormControl><Input placeholder="Figma, UI/UX, Prototyping" {...field} /></FormControl>
               <FormDescription>Перечислите ключевые технологии через запятую.</FormDescription>
               <FormMessage />

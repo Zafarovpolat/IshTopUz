@@ -20,6 +20,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from './ui/switch';
 
 type FreelancerFormValues = z.infer<typeof profileFreelancerSchema>;
 type ClientFormValues = z.infer<typeof profileClientSchema>;
@@ -36,15 +37,15 @@ function FreelancerProfileForm({ user }: { user: any }) {
     defaultValues: {
       firstName: user.profile?.firstName || '',
       lastName: user.profile?.lastName || '',
-      location: user.profile?.city || '',
-      specialization: user.freelancerProfile?.specialization || '',
+      city: user.profile?.city || '',
+      title: user.freelancerProfile?.title || '',
       hourlyRate: user.freelancerProfile?.hourlyRate || undefined,
       skills: Array.isArray(user.freelancerProfile?.skills) 
         ? user.freelancerProfile.skills.join(', ') 
         : (user.freelancerProfile?.skills || ''),
-      experience: user.freelancerProfile?.experience || '1-3-years',
-      availability: user.freelancerProfile?.isAvailable ? 'full-time' : 'project-based',
-      about: user.freelancerProfile?.description || '',
+      experience: user.freelancerProfile?.experience || 'beginner',
+      isAvailable: user.freelancerProfile?.isAvailable ?? true,
+      description: user.freelancerProfile?.description || '',
       languages: Array.isArray(user.profile?.languages) 
         ? user.profile.languages.join(', ') 
         : (user.profile?.languages || ''),
@@ -181,10 +182,10 @@ function FreelancerProfileForm({ user }: { user: any }) {
                   </FormItem>
                 )}
               />
-               <FormField name="location" control={form.control} render={({ field }) => (
+               <FormField name="city" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Местоположение</FormLabel>
-                    <FormControl><Input placeholder="Ташкент, Узбекистан" {...field} /></FormControl>
+                    <FormLabel>Город</FormLabel>
+                    <FormControl><Input placeholder="Ташкент" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -200,26 +201,10 @@ function FreelancerProfileForm({ user }: { user: any }) {
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <FormField control={form.control} name="specialization" render={({ field }) => (
+               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Специализация</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Выберите специализацию" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="web-development">Веб-разработка</SelectItem>
-                        <SelectItem value="mobile-development">Мобильная разработка</SelectItem>
-                        <SelectItem value="design">Дизайн (UI/UX)</SelectItem>
-                        <SelectItem value="graphic-design">Графический дизайн</SelectItem>
-                        <SelectItem value="copywriting">Копирайтинг и контент</SelectItem>
-                        <SelectItem value="smm">SMM и маркетинг</SelectItem>
-                        <SelectItem value="seo">SEO-оптимизация</SelectItem>
-                        <SelectItem value="translation">Переводы</SelectItem>
-                        <SelectItem value="video-editing">Видеомонтаж и анимация</SelectItem>
-                        <SelectItem value="other">Другое</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <FormLabel>Заголовок профиля</FormLabel>
+                  <FormControl><Input placeholder="Например: Full-stack разработчик" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
                 )} />
@@ -241,13 +226,13 @@ function FreelancerProfileForm({ user }: { user: any }) {
              </div>
              <FormField control={form.control} name="skills" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Навыки (теги)</FormLabel>
+                  <FormLabel>Навыки</FormLabel>
                   <FormControl><Input placeholder="Например: React, Node.js, Figma" {...field} /></FormControl>
                    <FormDescription>Перечислите навыки через запятую.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <FormField control={form.control} name="experience" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Опыт работы</FormLabel>
@@ -256,35 +241,33 @@ function FreelancerProfileForm({ user }: { user: any }) {
                             <SelectTrigger><SelectValue placeholder="Выберите опыт" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            <SelectItem value="less-than-1">Менее 1 года</SelectItem>
-                            <SelectItem value="1-3-years">1-3 года</SelectItem>
-                            <SelectItem value="more-than-3">Более 3 лет</SelectItem>
+                            <SelectItem value="beginner">Начинающий (менее 1 года)</SelectItem>
+                            <SelectItem value="intermediate">Средний (1-3 года)</SelectItem>
+                            <SelectItem value="expert">Эксперт (более 3 лет)</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
-                 <FormField control={form.control} name="availability" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Доступность</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                 <FormField control={form.control} name="isAvailable" render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2 pt-2">
+                    <FormLabel>Доступность для проектов</FormLabel>
+                     <div className="flex items-center space-x-2">
                         <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Выберите доступность" /></SelectTrigger>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} id="is-available"/>
                         </FormControl>
-                        <SelectContent>
-                            <SelectItem value="full-time">Полная занятость</SelectItem>
-                            <SelectItem value="part-time">Частичная</SelectItem>
-                            <SelectItem value="project-based">По проектам</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Label htmlFor="is-available" className="text-sm font-normal text-muted-foreground">
+                            {field.value ? 'Свободен для предложений' : 'Не ищу проекты'}
+                        </Label>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )} />
             </div>
-            <FormField control={form.control} name="about" render={({ field }) => (
+            <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
-                    <FormLabel>О себе</FormLabel>
-                    <FormControl><Textarea placeholder="Расскажите о своих достижениях..." rows={5} {...field} /></FormControl>
+                    <FormLabel>Описание</FormLabel>
+                    <FormControl><Textarea placeholder="Расскажите о своих достижениях, опыте и подходе к работе..." rows={5} {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -469,7 +452,7 @@ function ClientProfileForm({ user }: { user: any }) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField name="companyName" control={form.control} render={({ field }) => (
-                    <FormItem><FormLabel>Название</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Название компании</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField name="companySize" control={form.control} render={({ field }) => (
                 <FormItem>
@@ -489,10 +472,10 @@ function ClientProfileForm({ user }: { user: any }) {
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <FormField name="industry" control={form.control} render={({ field }) => (
-                    <FormItem><FormLabel>Сфера деятельности</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Сфера деятельности</FormLabel><FormControl><Input placeholder="Например: IT, Финтех, Ритейл" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                <FormField name="website" control={form.control} render={({ field }) => (
-                    <FormItem><FormLabel>Сайт</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Сайт компании</FormLabel><FormControl><Input type="url" placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
             </div>
           </CardContent>

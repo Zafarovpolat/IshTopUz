@@ -22,7 +22,7 @@ async function getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
         description: data.description,
         imageUrl: data.imageUrl,
         projectUrl: data.projectUrl,
-        tags: data.tags || [],
+        technologies: data.technologies || [],
         createdAt: data.createdAt.toDate().toISOString(),
       }
     });
