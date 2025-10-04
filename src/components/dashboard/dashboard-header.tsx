@@ -61,9 +61,11 @@ export function DashboardHeader({ user }: { user: User | any }) {
         />
       </div>
       <div className="flex items-center gap-4 ml-auto">
-         <Button variant="ghost" size="icon" className="rounded-full">
-            <MessageSquare className="h-5 w-5" />
-            <span className="sr-only">Сообщения</span>
+         <Button asChild variant="ghost" size="icon" className="rounded-full">
+            <Link href="/dashboard/messages">
+                <MessageSquare className="h-5 w-5" />
+                <span className="sr-only">Сообщения</span>
+            </Link>
          </Button>
          <Button variant="ghost" size="icon" className="rounded-full">
             <Bell className="h-5 w-5" />
