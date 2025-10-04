@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Search, Send, Paperclip } from "lucide-react";
 
 const conversations = [
-    { id: 1, name: 'Алиса В.', lastMessage: 'Хорошо, жду макеты к вечеру.', time: '10:42', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', unread: 0, online: true },
+    { id: 1, name: 'Алиса В.', lastMessage: 'Хорошо, жду макеты к вечеру. Это очень длинное сообщение, чтобы проверить, как работает перенос строки и усечение текста.', time: '10:42', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a', unread: 0, online: true },
     { id: 2, name: 'Максим П.', lastMessage: 'Проект завершен. Спасибо за работу!', time: 'Вчера', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b', unread: 0, online: false },
     { id: 3, name: 'ООО "Рога и Копыта"', lastMessage: 'Уточните, пожалуйста, стоимость правок.', time: '2д', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704c', unread: 2, online: true },
     { id: 4, name: 'Иван Петров', lastMessage: 'Все отлично, спасибо!', time: '5д', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', unread: 0, online: false },
@@ -50,8 +50,8 @@ export default function MessagesPage() {
                                     <AvatarFallback>{convo.name.charAt(0)}</AvatarFallback>
                                     {convo.online && <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />}
                                 </Avatar>
-                                <div className="flex-1 truncate">
-                                    <p className="font-semibold">{convo.name}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold truncate">{convo.name}</p>
                                     <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
                                 </div>
                                 <div className="flex flex-col items-end text-xs text-muted-foreground">
