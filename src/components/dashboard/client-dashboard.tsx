@@ -31,10 +31,14 @@ import {
 } from '@/components/ui/table';
 import Link from 'next/link';
 
-// NOTE: This component currently uses static data.
-// It needs to be connected to Firestore to fetch real user data.
+// NOTE: This component is partially connected to Firestore.
+// Some data like projects and freelancers are still static.
 
-export function ClientDashboard() {
+export function ClientDashboard({ userData }: { userData: any }) {
+  const moneySpent = userData?.clientProfile?.moneySpent || 0;
+  // This is a placeholder, in a real app you'd fetch this.
+  const activeProjectsCount = 5; 
+
   return (
     <div className="grid gap-4 md:gap-8">
        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -46,9 +50,9 @@ export function ClientDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45,231,890 UZS</div>
+            <div className="text-2xl font-bold">{moneySpent.toLocaleString()} UZS</div>
             <p className="text-xs text-muted-foreground">
-              +20.1% с прошлого месяца
+              На основе завершенных проектов
             </p>
           </CardContent>
         </Card>
@@ -60,7 +64,7 @@ export function ClientDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+5</div>
+            <div className="text-2xl font-bold">+{activeProjectsCount}</div>
             <p className="text-xs text-muted-foreground">
               +3 с прошлой недели
             </p>
@@ -72,7 +76,7 @@ export function ClientDashboard() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12</div>
+            <div className="text-2xl font-bold">+{userData?.clientProfile?.reviewsCount || 0}</div>
             <p className="text-xs text-muted-foreground">
               +2 с прошлого месяца
             </p>
@@ -202,5 +206,3 @@ export function ClientDashboard() {
     </div>
   );
 }
-
-    

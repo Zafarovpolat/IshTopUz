@@ -20,10 +20,10 @@ export function Footer() {
                 <div>
                     <h3 className="font-semibold text-foreground">{"Заказчикам"}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Как нанять"}</Link></li>
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Биржа талантов"}</Link></li>
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Каталог проектов"}</Link></li>
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Нанять в UZ"}</Link></li>
+                        <li><Link href="/clients/how-to-hire" className="text-muted-foreground hover:text-primary">{"Как нанять"}</Link></li>
+                        <li><Link href="/talents" className="text-muted-foreground hover:text-primary">{"Биржа талантов"}</Link></li>
+                        <li><Link href="/projects" className="text-muted-foreground hover:text-primary">{"Каталог проектов"}</Link></li>
+                        <li><Link href="/hire-in-uzbekistan" className="text-muted-foreground hover:text-primary">{"Нанять в UZ"}</Link></li>
                     </ul>
                 </div>
                 <div>

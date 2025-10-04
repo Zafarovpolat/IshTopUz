@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   }
 
   if (userType === 'client') {
-    return <ClientDashboard />;
+    return <ClientDashboard userData={userData} />;
   }
 
   // Fallback for users with no type or 'both'
