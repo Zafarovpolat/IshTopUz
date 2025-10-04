@@ -31,7 +31,6 @@ function FreelancerProfileForm({ user }: { user: any }) {
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user.profile?.avatar || user.photoURL || '');
 
-
   const form = useForm<FreelancerFormValues>({
     resolver: zodResolver(profileFreelancerSchema),
     defaultValues: {
@@ -40,11 +39,15 @@ function FreelancerProfileForm({ user }: { user: any }) {
       location: user.profile?.city || '',
       specialization: user.freelancerProfile?.specialization || '',
       hourlyRate: user.freelancerProfile?.hourlyRate || undefined,
-      skills: (user.freelancerProfile?.skills || []).join(', '),
+      skills: Array.isArray(user.freelancerProfile?.skills) 
+        ? user.freelancerProfile.skills.join(', ') 
+        : (user.freelancerProfile?.skills || ''),
       experience: user.freelancerProfile?.experience || '1-3-years',
       availability: user.freelancerProfile?.isAvailable ? 'full-time' : 'project-based',
       about: user.freelancerProfile?.description || '',
-      languages: (user.profile?.languages || []).join(', '),
+      languages: Array.isArray(user.profile?.languages) 
+        ? user.profile.languages.join(', ') 
+        : (user.profile?.languages || ''),
     },
   });
 
@@ -55,10 +58,24 @@ function FreelancerProfileForm({ user }: { user: any }) {
         return;
     }
 
+    // Проверка типа и размера файла
+    if (!file.type.startsWith('image/')) {
+      toast({ variant: "destructive", title: "Ошибка", description: "Пожалуйста, выберите изображение." });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast({ variant: "destructive", title: "Ошибка", description: "Размер файла не должен превышать 5MB." });
+      return;
+    }
+
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
 
-    const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+    // Создаем уникальное имя файла
+    const timestamp = Date.now();
+    const fileName = `avatar_${timestamp}.${file.name.split('.').pop()}`;
+    const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
 
     try {
       const snapshot = await uploadBytes(storageRef, file);
@@ -74,9 +91,17 @@ function FreelancerProfileForm({ user }: { user: any }) {
       }
     } catch (error: any) {
       console.error("Upload failed", error);
-      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message || "Не удалось загрузить фото." });
+      toast({ 
+        variant: "destructive", 
+        title: "Ошибка загрузки", 
+        description: error.message || "Не удалось загрузить фото." 
+      });
     } finally {
       setIsUploading(false);
+      // Очищаем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
   
@@ -91,6 +116,9 @@ function FreelancerProfileForm({ user }: { user: any }) {
         toast({ title: "Успешно", description: result.message });
       } else {
         toast({ variant: "destructive", title: "Ошибка", description: result.message });
+        if (result.errors) {
+          console.log('Validation errors:', result.errors);
+        }
       }
     });
   };
@@ -107,18 +135,30 @@ function FreelancerProfileForm({ user }: { user: any }) {
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={avatarUrl} />
-                <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
+                <AvatarFallback>
+                  {user.profile?.firstName?.[0] || user.displayName?.[0] || 'U'}
+                  {user.profile?.lastName?.[0] || ''}
+                </AvatarFallback>
               </Avatar>
                <input
                 type="file"
                 ref={fileInputRef}
                 onChange={handleAvatarUpload}
                 className="hidden"
-                accept="image/png, image/jpeg, image/gif"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
               />
-              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Загрузить фото
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {isUploading ? 'Загрузка...' : 'Загрузить фото'}
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +223,14 @@ function FreelancerProfileForm({ user }: { user: any }) {
                 <FormField control={form.control} name="hourlyRate" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Часовая ставка (UZS)</FormLabel>
-                    <FormControl><Input type="number" placeholder="100000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))} /></FormControl>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="100000" 
+                        {...field} 
+                        onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -248,7 +295,9 @@ function FreelancerProfileForm({ user }: { user: any }) {
           </CardContent>
         </Card>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending || isUploading}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
+          <Button type="submit" disabled={isPending || isUploading}>
+            {isPending ? 'Сохранение...' : 'Сохранить изменения'}
+          </Button>
         </div>
       </form>
     </Form>
@@ -261,7 +310,6 @@ function ClientProfileForm({ user }: { user: any }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user.profile?.avatar || user.photoURL || '');
-
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(profileClientSchema),
@@ -280,12 +328,26 @@ function ClientProfileForm({ user }: { user: any }) {
     if (!file || !user?.uid) {
         toast({ variant: "destructive", title: "Ошибка", description: "Не удалось получить ID пользователя для загрузки." });
         return;
-    };
+    }
+
+    // Проверка типа и размера файла
+    if (!file.type.startsWith('image/')) {
+      toast({ variant: "destructive", title: "Ошибка", description: "Пожалуйста, выберите изображение." });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast({ variant: "destructive", title: "Ошибка", description: "Размер файла не должен превышать 5MB." });
+      return;
+    }
 
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
 
-    const storageRef = ref(storage, `avatars/${user.uid}/${file.name}`);
+    // Создаем уникальное имя файла
+    const timestamp = Date.now();
+    const fileName = `avatar_${timestamp}.${file.name.split('.').pop()}`;
+    const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
 
     try {
       const snapshot = await uploadBytes(storageRef, file);
@@ -301,9 +363,17 @@ function ClientProfileForm({ user }: { user: any }) {
       }
     } catch (error: any) {
       console.error("Upload failed", error);
-      toast({ variant: "destructive", title: "Ошибка загрузки", description: error.message || "Не удалось загрузить фото." });
+      toast({ 
+        variant: "destructive", 
+        title: "Ошибка загрузки", 
+        description: error.message || "Не удалось загрузить фото." 
+      });
     } finally {
       setIsUploading(false);
+      // Очищаем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -318,6 +388,9 @@ function ClientProfileForm({ user }: { user: any }) {
         toast({ title: "Успешно", description: result.message });
       } else {
         toast({ variant: "destructive", title: "Ошибка", description: result.message });
+        if (result.errors) {
+          console.log('Validation errors:', result.errors);
+        }
       }
     });
   };
@@ -334,18 +407,30 @@ function ClientProfileForm({ user }: { user: any }) {
              <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={avatarUrl} />
-                <AvatarFallback>{user.profile?.firstName?.[0]}{user.profile?.lastName?.[0]}</AvatarFallback>
+                <AvatarFallback>
+                  {user.profile?.firstName?.[0] || user.displayName?.[0] || 'U'}
+                  {user.profile?.lastName?.[0] || ''}
+                </AvatarFallback>
               </Avatar>
               <input
                 type="file"
                 ref={fileInputRef}
                 onChange={handleAvatarUpload}
                 className="hidden"
-                accept="image/png, image/jpeg, image/gif"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
               />
-              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Загрузить фото
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                {isUploading ? 'Загрузка...' : 'Загрузить фото'}
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -428,7 +513,9 @@ function ClientProfileForm({ user }: { user: any }) {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending || isUploading}>{isPending ? 'Сохранение...' : 'Сохранить изменения'}</Button>
+          <Button type="submit" disabled={isPending || isUploading}>
+            {isPending ? 'Сохранение...' : 'Сохранить изменения'}
+          </Button>
         </div>
       </form>
     </Form>
@@ -436,6 +523,16 @@ function ClientProfileForm({ user }: { user: any }) {
 }
 
 export function ProfileForm({ user }: { user: any }) {
+  if (!user) {
+    return (
+       <Card>
+        <CardHeader>
+          <CardTitle>Ошибка</CardTitle>
+          <CardDescription>Не удалось загрузить данные пользователя. Пожалуйста, перезагрузите страницу.</CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
   // Добавим `uid` к объекту `user`, чтобы он был доступен в дочерних компонентах
   const userWithId = { ...user, uid: user.uid };
   
@@ -456,5 +553,3 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
-
-    
