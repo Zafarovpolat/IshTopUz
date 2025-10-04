@@ -10,6 +10,7 @@ export function SecurityTab() {
   return (
     <div className="grid gap-6 mt-4">
         <Card>
+          <form>
             <CardHeader>
                 <CardTitle>Смена пароля</CardTitle>
                 <CardDescription>
@@ -31,8 +32,9 @@ export function SecurityTab() {
                 </div>
             </CardContent>
             <CardFooter>
-                <Button>Сохранить пароль</Button>
+                <Button type="submit">Сохранить пароль</Button>
             </CardFooter>
+          </form>
         </Card>
 
         <Card>
