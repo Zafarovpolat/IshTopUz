@@ -4,11 +4,13 @@
 import { z } from "zod";
 import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema } from "@/lib/schema";
 import type { LeadState, SurveyState, ProfileState } from "@/lib/schema";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { getAdminApp } from "@/lib/firebase-admin";
-import { getAuth } from "firebase-admin/auth";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { revalidatePath } from 'next/cache';
+
+// Инициализируем Admin SDK
+const adminApp = getAdminApp();
+const db = getFirestore(adminApp);
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>
@@ -24,7 +26,7 @@ export async function submitLead(
   }
 
   try {
-    const docRef = await addDoc(collection(db, 'leads'), {
+    const docRef = await db.collection('leads').add({
       ...validatedFields.data,
     });
     return {
@@ -62,7 +64,7 @@ export async function submitSurvey(
   }
 
   try {
-    await addDoc(collection(db, 'surveys'), {
+    await db.collection('surveys').add({
       role,
       ...validatedFields.data,
     });
@@ -89,12 +91,12 @@ export async function updateProfile(
     return { success: false, message: 'Ошибка: Пользователь не найден.' };
   }
 
-  const userRef = doc(db, 'users', userId);
+  const userRef = db.collection('users').doc(userId);
 
   // Special case for only updating the avatar
   if ('avatar' in data && Object.keys(data).length === 1) {
     try {
-      await updateDoc(userRef, { 'profile.avatar': data.avatar });
+      await userRef.update({ 'profile.avatar': data.avatar });
       revalidatePath('/dashboard/profile');
       return { success: true, message: 'Аватар успешно обновлен!' };
     } catch (e) {
@@ -117,18 +119,35 @@ export async function updateProfile(
 
   try {
     if (userType === 'freelancer') {
-      const { firstName, lastName, ...freelancerProfileData } = validatedFields.data;
-      await updateDoc(userRef, {
+      const { firstName, lastName, skills, languages, location, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
+      
+      // Преобразование строк в массивы
+      const skillsArray = typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+      const languagesArray = typeof languages === 'string' ? languages.split(',').map(l => l.trim()).filter(l => l.length > 0) : [];
+      
+      await userRef.update({
         'profile.firstName': firstName,
         'profile.lastName': lastName,
-        'freelancerProfile': freelancerProfileData
+        'profile.city': location,
+        'profile.languages': languagesArray,
+        'freelancerProfile.skills': skillsArray,
+        'freelancerProfile.specialization': freelancerProfileData.specialization,
+        'freelancerProfile.hourlyRate': freelancerProfileData.hourlyRate,
+        'freelancerProfile.experience': freelancerProfileData.experience,
+        'freelancerProfile.isAvailable': freelancerProfileData.availability === 'full-time',
+        'freelancerProfile.description': freelancerProfileData.about,
+        'updatedAt': FieldValue.serverTimestamp()
       });
     } else {
        const { firstName, lastName, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
-       await updateDoc(userRef, {
+       await userRef.update({
         'profile.firstName': firstName,
         'profile.lastName': lastName,
-        'clientProfile': clientProfileData
+        'clientProfile.companyName': clientProfileData.companyName,
+        'clientProfile.companySize': clientProfileData.companySize,
+        'clientProfile.industry': clientProfileData.industry,
+        'clientProfile.website': clientProfileData.website,
+        'updatedAt': FieldValue.serverTimestamp()
       });
     }
 
@@ -145,5 +164,3 @@ export async function updateProfile(
     };
   }
 }
-
-    

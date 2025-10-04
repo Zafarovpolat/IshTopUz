@@ -14,8 +14,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from './layout/logo';
-import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAdminApp } from '@/lib/firebase-admin';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 
@@ -62,6 +63,7 @@ export function OnboardingForm() {
 
     startTransition(async () => {
       const { firstName, lastName, userType } = data;
+      const db = getFirestore(getAdminApp());
       const userData = {
         userType,
         profile: {
