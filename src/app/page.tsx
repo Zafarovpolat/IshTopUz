@@ -1,3 +1,4 @@
+
 import { Benefits } from '@/components/sections/benefits';
 import { ContactFormSection } from '@/components/sections/contact-form';
 import { Cta } from '@/components/sections/cta';
@@ -10,11 +11,13 @@ export default function Home() {
   return (
     <>
       <Header />
-      <Hero />
-      <Benefits />
-      <Faq />
-      <ContactFormSection />
-      <Cta />
+      <main>
+        <Hero />
+        <Benefits />
+        <Faq />
+        <ContactFormSection />
+        <Cta />
+      </main>
       <Footer />
     </>
   );

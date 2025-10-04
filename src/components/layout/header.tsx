@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -14,10 +15,11 @@ export function Header() {
   const isHomePage = pathname === '/';
 
   const navLinks = [
-    { href: '#home', label: "Главная" },
-    { href: '#benefits', label: "Почему IshTop.Uz" },
+    { href: '/', label: "Главная" },
+    { href: '/marketplace', label: "Биржа" },
+    { href: '/talents', label: "Найти фрилансера" },
     { href: '#faq', label: "FAQ" },
-    { href: '#contact', label: "Контакты" },
+    { href: '/contacts', label: "Контакты" },
   ];
   
   const toggleMenu = () => {
@@ -28,7 +30,8 @@ export function Header() {
   };
 
   const getLinkHref = (href: string) => {
-    return isHomePage ? href : `/${href}`;
+    if (href.startsWith('/')) return href;
+    return isHomePage ? `#${href.replace('#', '')}` : `/#${href.replace('#', '')}`;
   };
 
   return (
@@ -36,7 +39,7 @@ export function Header() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-14 sm:h-16 lg:h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center flex-1">
-            <Link href={getLinkHref('#home')}>
+            <Link href={getLinkHref('/')}>
               <Logo />
             </Link>
           </div>
@@ -78,7 +81,7 @@ export function Header() {
         {/* Navigation Panel */}
         <nav className={`fixed inset-y-0 right-0 z-50 flex flex-col bg-background/95 backdrop-blur-lg w-full max-w-sm p-6 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex items-center justify-between">
-             <Link href={getLinkHref('#home')} onClick={closeMenu}>
+             <Link href={getLinkHref('/')} onClick={closeMenu}>
                 <Logo />
              </Link>
             <Button variant="ghost" size="icon" onClick={closeMenu} aria-label={"Закрыть меню"}>
