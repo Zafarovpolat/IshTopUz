@@ -1,16 +1,10 @@
 
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobBoard } from "@/app/jobs/page";
 import { KworksCatalog } from "@/app/projects/page";
-import { getUserId } from '@/lib/get-user-data';
-import { DashboardLayout } from "./layout";
 
 export default async function MarketplacePage() {
-    const userId = await getUserId();
-    
-    const content = (
+    return (
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight">Биржа</h1>
@@ -30,23 +24,5 @@ export default async function MarketplacePage() {
                 </TabsContent>
             </Tabs>
         </div>
-    );
-
-    if (userId) {
-        return (
-            <DashboardLayout>
-                {content}
-            </DashboardLayout>
-        );
-    }
-
-    return (
-        <>
-            <Header />
-            <main>
-                {content}
-            </main>
-            <Footer />
-        </>
     );
 }
