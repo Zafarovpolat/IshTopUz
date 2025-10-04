@@ -20,15 +20,15 @@ export function SecurityTab() {
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="current-password">Текущий пароль</Label>
-                    <Input id="current-password" type="password" />
+                    <Input id="current-password" type="password" autoComplete="current-password" />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="new-password">Новый пароль</Label>
-                    <Input id="new-password" type="password" />
+                    <Input id="new-password" type="password" autoComplete="new-password" />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="confirm-password">Подтвердите новый пароль</Label>
-                    <Input id="confirm-password" type="password" />
+                    <Input id="confirm-password" type="password" autoComplete="new-password" />
                 </div>
             </CardContent>
             <CardFooter>

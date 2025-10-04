@@ -178,6 +178,7 @@ export function AuthForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
+                    autoComplete="email"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
@@ -210,6 +211,7 @@ export function AuthForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading || isCustomLoading}
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -235,6 +237,7 @@ export function AuthForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading || isCustomLoading}
+                    autoComplete={view === 'login' ? "current-password" : "new-password"}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading || isCustomLoading}>
