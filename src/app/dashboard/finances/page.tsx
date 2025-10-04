@@ -1,34 +1,28 @@
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OverviewTab } from "@/components/dashboard/finances/overview-tab";
-import { WithdrawalMethodsTab } from "@/components/dashboard/finances/withdrawal-methods-tab";
-import { ReportsTab } from "@/components/dashboard/finances/reports-tab";
+import { getUserData } from '@/lib/get-user-data';
+import { redirect } from 'next/navigation';
+import { FreelancerFinancesPage } from '@/components/dashboard/finances/freelancer-finances-page';
+import { ClientFinancesPage } from '@/components/dashboard/finances/client-finances-page';
 
-export default function FinancesPage() {
+export default async function FinancesPage() {
+  const userData = await getUserData();
+
+  if (!userData) {
+    redirect('/auth');
+  }
+
+  if (userData.userType === 'freelancer') {
+    return <FreelancerFinancesPage />;
+  }
+
+  if (userData.userType === 'client') {
+    return <ClientFinancesPage />;
+  }
+
   return (
-    <div className="space-y-6">
-        <div>
-            <h1 className="text-2xl font-bold tracking-tight">Финансы</h1>
-            <p className="text-muted-foreground">
-                Управляйте своими доходами, выводите средства и отслеживайте статистику.
-            </p>
-        </div>
-      <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-3 sm:max-w-md">
-          <TabsTrigger value="overview">Обзор</TabsTrigger>
-          <TabsTrigger value="withdrawal">Вывод средств</TabsTrigger>
-          <TabsTrigger value="reports">Отчеты</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview">
-            <OverviewTab />
-        </TabsContent>
-        <TabsContent value="withdrawal">
-            <WithdrawalMethodsTab />
-        </TabsContent>
-        <TabsContent value="reports">
-            <ReportsTab />
-        </TabsContent>
-      </Tabs>
+    <div>
+      <h1 className="text-xl font-bold">Не удалось определить вашу роль</h1>
+      <p className="text-muted-foreground">Пожалуйста, обратитесь в поддержку.</p>
     </div>
   );
 }
