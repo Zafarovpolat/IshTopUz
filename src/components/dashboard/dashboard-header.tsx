@@ -87,7 +87,7 @@ export function DashboardHeader({ user }: { user: User | any }) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Настройки</DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href="/dashboard/settings">Настройки</Link></DropdownMenuItem>
             <DropdownMenuItem>Поддержка</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>Выйти</DropdownMenuItem>
