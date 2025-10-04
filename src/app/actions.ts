@@ -2,8 +2,8 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema } from "@/lib/schema";
-import type { LeadState, SurveyState, ProfileState, OnboardingState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema } from "@/lib/schema";
+import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState } from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from 'firebase-admin/auth';
@@ -238,4 +238,58 @@ export async function updateProfile(
       message: 'Что-то пошло не так. Пожалуйста, повторите попытку позже.',
     };
   }
+}
+
+export async function addPortfolioItem(
+  userId: string,
+  data: z.infer<typeof portfolioItemSchema>
+): Promise<PortfolioState> {
+  if (!userId) {
+    return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  }
+  
+  const validatedFields = portfolioItemSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась.',
+      success: false,
+    };
+  }
+  
+  try {
+    const portfolioRef = db.collection('users').doc(userId).collection('portfolio');
+    const tagsArray = typeof validatedFields.data.tags === 'string' 
+      ? validatedFields.data.tags.split(',').map(s => s.trim()).filter(Boolean) 
+      : [];
+
+    await portfolioRef.add({
+      ...validatedFields.data,
+      tags: tagsArray,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    
+    revalidatePath('/dashboard/portfolio');
+    return { success: true, message: 'Работа успешно добавлена в портфолио!' };
+  } catch (error: any) {
+    console.error('Failed to add portfolio item:', error);
+    return { success: false, message: error.message || 'Не удалось добавить работу.' };
+  }
+}
+
+export async function deletePortfolioItem(userId: string, itemId: string): Promise<PortfolioState> {
+    if (!userId || !itemId) {
+        return { success: false, message: 'Ошибка: Необходим ID пользователя и ID работы.' };
+    }
+    
+    try {
+        const itemRef = db.collection('users').doc(userId).collection('portfolio').doc(itemId);
+        await itemRef.delete();
+        
+        revalidatePath('/dashboard/portfolio');
+        return { success: true, message: 'Работа успешно удалена!' };
+    } catch (error: any) {
+        console.error('Failed to delete portfolio item:', error);
+        return { success: false, message: 'Не удалось удалить работу.' };
+    }
 }

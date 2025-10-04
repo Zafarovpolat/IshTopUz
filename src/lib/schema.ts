@@ -76,6 +76,19 @@ export const surveyClientSchema = z.object({
   betaTest: z.string().optional(),
 });
 
+export const portfolioItemSchema = z.object({
+  title: z.string().min(3, "Заголовок должен содержать минимум 3 символа."),
+  description: z.string().min(10, "Описание должно содержать минимум 10 символов."),
+  imageUrl: z.string().url("Требуется действительный URL изображения."),
+  tags: z.string().optional(),
+});
+
+export type PortfolioItem = z.infer<typeof portfolioItemSchema> & {
+  id: string;
+  createdAt: string;
+};
+
+
 export type LeadState = {
   errors?: {
     name?: string[];
@@ -109,4 +122,12 @@ export type ProfileState = {
     errors?: { [key: string]: string[] }
     message?: string | null;
     success: boolean;
+};
+
+export type PortfolioState = {
+  errors?: {
+    [key: string]: string[];
+  };
+  message?: string | null;
+  success: boolean;
 };
