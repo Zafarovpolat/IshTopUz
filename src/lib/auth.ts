@@ -12,45 +12,30 @@ import {
     type User,
     type AuthProvider,
   } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, addDoc } from "firebase/firestore"; 
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore"; 
 import { auth, db } from "./firebase";
   
-const createUserProfileDocument = async (user: User, additionalData = {}) => {
+const checkUserProfile = async (user: User, additionalData = {}) => {
     if (!user) return;
 
     const userRef = doc(db, `users/${user.uid}`);
     const snapshot = await getDoc(userRef);
 
-    if (!snapshot.exists()) {
-        const { email, displayName, photoURL } = user;
-        const createdAt = serverTimestamp();
-        try {
-            await setDoc(userRef, {
-                email,
-                profile: {
-                    firstName: displayName?.split(' ')[0] || '',
-                    lastName: displayName?.split(' ')[1] || '',
-                    avatar: photoURL || '',
-                },
-                createdAt,
-                lastLoginAt: createdAt,
-                profileComplete: false, 
-                ...additionalData,
-            });
-        } catch (error) {
-            console.error("Error creating user profile:", error);
-        }
+    if (snapshot.exists()) {
+        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+        return snapshot.data()?.profileComplete || false;
     }
+    
+    return false;
 };
 
 export async function signUpWithEmail(email: string, password: string): Promise<{user: User; isNewUser: boolean} | null> {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Success: User registered:", userCredential.user);
-      await createUserProfileDocument(userCredential.user);
+      // Profile document is now created in the onboarding server action
       return { user: userCredential.user, isNewUser: true };
-    } catch (error: any)
-{
+    } catch (error: any) {
       console.error("Error: Registration failed:", error.message, `(Code: ${error.code})`);
       return null;
     }
@@ -61,16 +46,8 @@ export async function signInWithEmail(email: string, password: string): Promise<
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log("Success: User signed in:", userCredential.user);
       
-      const userRef = doc(db, `users/${userCredential.user.uid}`);
-      const snapshot = await getDoc(userRef);
-      let isNewUser = !snapshot.exists() || !snapshot.data()?.profileComplete;
-      
-      if (!snapshot.exists()) {
-        await createUserProfileDocument(userCredential.user);
-        isNewUser = true;
-      } else {
-        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
-      }
+      const profileComplete = await checkUserProfile(userCredential.user);
+      const isNewUser = !profileComplete;
 
       return { user: userCredential.user, isNewUser };
     } catch (error: any) {
@@ -96,15 +73,8 @@ async function socialSignIn(provider: AuthProvider): Promise<{user: User; isNewU
       const result = await signInWithPopup(auth, provider);
       console.log("Success: Social sign-in successful:", result.user);
       
-      const userRef = doc(db, `users/${result.user.uid}`);
-      const snapshot = await getDoc(userRef);
-      const isNewUser = !snapshot.exists() || !snapshot.data()?.profileComplete;
-      
-      if (!snapshot.exists()) {
-        await createUserProfileDocument(result.user);
-      } else {
-         await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
-      }
+      const profileComplete = await checkUserProfile(result.user);
+      const isNewUser = !profileComplete;
 
       return { user: result.user, isNewUser };
     } catch (error: any) {
@@ -158,15 +128,8 @@ export async function signInWithCustomTokenFunc(token: string): Promise<{user: U
       const userCredential = await signInWithCustomToken(auth, token);
       console.log("Success: Signed in with custom token:", userCredential.user);
       
-      const userRef = doc(db, `users/${userCredential.user.uid}`);
-      const snapshot = await getDoc(userRef);
-      const isNewUser = !snapshot.exists() || !snapshot.data()?.profileComplete;
-      
-      if (!snapshot.exists()) {
-        await createUserProfileDocument(userCredential.user);
-      } else {
-        await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
-      }
+      const profileComplete = await checkUserProfile(userCredential.user);
+      const isNewUser = !profileComplete;
 
       return { user: userCredential.user, isNewUser };
     } catch (error: any) {

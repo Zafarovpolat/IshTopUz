@@ -87,7 +87,6 @@ export type LeadState = {
   redirectUrl?: string;
 };
 
-// This type is no longer needed for server actions, but can be kept for client-side state
 export type OnboardingState = {
   errors?: {
     firstName?: string[];
@@ -111,5 +110,3 @@ export type ProfileState = {
     message?: string | null;
     success: boolean;
 };
-
-    

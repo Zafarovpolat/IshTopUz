@@ -2,15 +2,17 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema } from "@/lib/schema";
-import type { LeadState, SurveyState, ProfileState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema } from "@/lib/schema";
+import type { LeadState, SurveyState, ProfileState, OnboardingState } from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getAuth } from 'firebase-admin/auth';
 import { revalidatePath } from 'next/cache';
 
 // Инициализируем Admin SDK
 const adminApp = getAdminApp();
 const db = getFirestore(adminApp);
+const auth = getAuth(adminApp);
 
 export async function submitLead(
   data: z.infer<typeof leadSchema>
@@ -81,6 +83,79 @@ export async function submitSurvey(
     };
   }
 }
+
+export async function createUserOnboarding(
+  userId: string,
+  data: z.infer<typeof onboardingSchema>
+): Promise<OnboardingState> {
+  if (!userId) {
+    return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  }
+
+  const validatedFields = onboardingSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась.',
+      success: false,
+    };
+  }
+  
+  const { firstName, lastName, userType } = validatedFields.data;
+  
+  try {
+    const userRecord = await auth.getUser(userId);
+    const userRef = db.collection('users').doc(userId);
+
+    const userData = {
+      email: userRecord.email,
+      createdAt: FieldValue.serverTimestamp(),
+      lastLoginAt: FieldValue.serverTimestamp(),
+      userType,
+      profile: {
+        firstName,
+        lastName,
+        avatar: userRecord.photoURL || '',
+        city: '',
+        country: '',
+        languages: [],
+      },
+      profileComplete: true,
+      ...(userType === 'freelancer' && {
+        freelancerProfile: {
+          specialization: '',
+          description: '',
+          hourlyRate: 0,
+          skills: [],
+          experience: 'less-than-1',
+          completedProjects: 0,
+          rating: 0,
+          reviewsCount: 0,
+          isAvailable: true,
+        }
+      }),
+      ...(userType === 'client' && {
+        clientProfile: {
+          companyName: '',
+          companySize: '1',
+          industry: '',
+          website: '',
+          projectsPosted: 0,
+          moneySpent: 0,
+          rating: 0,
+        }
+      }),
+    };
+    
+    await userRef.set(userData, { merge: true });
+
+    return { success: true, message: "Профиль успешно создан." };
+  } catch (error: any) {
+    console.error("Onboarding failed:", error);
+    return { success: false, message: error.message || 'Не удалось сохранить данные.' };
+  }
+}
+
 
 export async function updateProfile(
   userId: string,

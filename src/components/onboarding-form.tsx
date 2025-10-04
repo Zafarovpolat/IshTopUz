@@ -15,10 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from './layout/logo';
 import { auth } from '@/lib/firebase';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { getAdminApp } from '@/lib/firebase-admin';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
+import { createUserOnboarding } from '@/app/actions';
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 
@@ -62,73 +61,19 @@ export function OnboardingForm() {
     }
 
     startTransition(async () => {
-      const { firstName, lastName, userType } = data;
-      const db = getFirestore(getAdminApp());
-      const userData = {
-        userType,
-        profile: {
-          firstName,
-          lastName,
-          avatar: currentUser.photoURL || '',
-          city: '',
-          country: '',
-          dateOfBirth: '',
-          gender: '',
-          languages: [],
-          timezone: '',
-        },
-        profileComplete: true,
-        ...(userType === 'freelancer' && {
-          freelancerProfile: {
-            title: '',
-            description: '',
-            hourlyRate: 0,
-            skills: [],
-            categories: [],
-            portfolio: [],
-            experience: 'beginner',
-            completedProjects: 0,
-            rating: 0,
-            reviewsCount: 0,
-            isAvailable: true,
-          }
-        }),
-        ...(userType === 'client' && {
-          clientProfile: {
-            companyName: '',
-            companySize: '',
-            industry: '',
-            website: '',
-            description: '',
-            projectsPosted: 0,
-            moneySpent: 0,
-            rating: 0,
-            reviewsCount: 0,
-          }
-        }),
-        wallet: {
-          balance: 0,
-          currency: "UZS",
-          paymentMethods: [],
-          transactions: [],
-        }
-      };
-
-      try {
-        const userRef = doc(db, 'users', currentUser.uid);
-        await setDoc(userRef, userData, { merge: true });
-        
+      const result = await createUserOnboarding(currentUser.uid, data);
+      
+      if (result.success) {
         toast({
           title: 'Успешно!',
           description: 'Ваш профиль обновлен. Добро пожаловать!',
         });
         router.push('/dashboard');
-      } catch (e: any) {
-        console.error('Failed to submit onboarding data:', e);
-        toast({
+      } else {
+         toast({
           variant: 'destructive',
           title: 'Ошибка',
-          description: e.message || 'Что-то пошло не так. Попробуйте позже.',
+          description: result.message || 'Что-то пошло не так. Попробуйте позже.',
         });
       }
     });
