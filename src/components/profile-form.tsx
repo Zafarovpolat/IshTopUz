@@ -10,6 +10,8 @@ import { profileFreelancerSchema, profileClientSchema } from '@/lib/schema';
 import { updateProfile } from '@/app/actions';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
+import { Loader2, Upload } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -18,8 +20,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload } from 'lucide-react';
 
 type FreelancerFormValues = z.infer<typeof profileFreelancerSchema>;
 type ClientFormValues = z.infer<typeof profileClientSchema>;
@@ -53,17 +53,17 @@ function FreelancerProfileForm({ user }: { user: any }) {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.uid) {
+    if (!file) return;
+
+    if (!user?.uid) {
         toast({ variant: "destructive", title: "Ошибка", description: "Не удалось получить ID пользователя для загрузки." });
         return;
     }
 
-    // Проверка типа и размера файла
     if (!file.type.startsWith('image/')) {
       toast({ variant: "destructive", title: "Ошибка", description: "Пожалуйста, выберите изображение." });
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) { // 5MB
       toast({ variant: "destructive", title: "Ошибка", description: "Размер файла не должен превышать 5MB." });
       return;
@@ -72,9 +72,8 @@ function FreelancerProfileForm({ user }: { user: any }) {
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
 
-    // Создаем уникальное имя файла
-    const timestamp = Date.now();
-    const fileName = `avatar_${timestamp}.${file.name.split('.').pop()}`;
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
     const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
 
     try {
@@ -87,7 +86,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
         setAvatarUrl(downloadURL);
         toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
       } else {
-        throw new Error(result.message);
+        throw new Error(result.message || 'Не удалось обновить аватар.');
       }
     } catch (error: any) {
       console.error("Upload failed", error);
@@ -98,7 +97,6 @@ function FreelancerProfileForm({ user }: { user: any }) {
       });
     } finally {
       setIsUploading(false);
-      // Очищаем input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -122,6 +120,12 @@ function FreelancerProfileForm({ user }: { user: any }) {
       }
     });
   };
+  
+  const getInitials = (name1?: string, name2?: string) => {
+    const first = name1?.[0] || '';
+    const second = name2?.[0] || '';
+    return `${first}${second}`.toUpperCase();
+  };
 
   return (
     <Form {...form}>
@@ -136,8 +140,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
               <Avatar className="h-20 w-20">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback>
-                  {user.profile?.firstName?.[0] || user.displayName?.[0] || 'U'}
-                  {user.profile?.lastName?.[0] || ''}
+                  {getInitials(user.profile?.firstName, user.profile?.lastName)}
                 </AvatarFallback>
               </Avatar>
                <input
@@ -227,7 +230,8 @@ function FreelancerProfileForm({ user }: { user: any }) {
                       <Input 
                         type="number" 
                         placeholder="100000" 
-                        {...field} 
+                        {...field}
+                        value={field.value === 0 ? '' : field.value} 
                         onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))} 
                       />
                     </FormControl>
@@ -325,17 +329,17 @@ function ClientProfileForm({ user }: { user: any }) {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user?.uid) {
+    if (!file) return;
+
+    if (!user?.uid) {
         toast({ variant: "destructive", title: "Ошибка", description: "Не удалось получить ID пользователя для загрузки." });
         return;
     }
 
-    // Проверка типа и размера файла
     if (!file.type.startsWith('image/')) {
       toast({ variant: "destructive", title: "Ошибка", description: "Пожалуйста, выберите изображение." });
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) { // 5MB
       toast({ variant: "destructive", title: "Ошибка", description: "Размер файла не должен превышать 5MB." });
       return;
@@ -344,9 +348,8 @@ function ClientProfileForm({ user }: { user: any }) {
     setIsUploading(true);
     toast({ title: "Загрузка фото...", description: "Пожалуйста, подождите." });
 
-    // Создаем уникальное имя файла
-    const timestamp = Date.now();
-    const fileName = `avatar_${timestamp}.${file.name.split('.').pop()}`;
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
     const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
 
     try {
@@ -359,7 +362,7 @@ function ClientProfileForm({ user }: { user: any }) {
         setAvatarUrl(downloadURL);
         toast({ title: "Успешно", description: "Ваш аватар обновлен!" });
       } else {
-        throw new Error(result.message);
+        throw new Error(result.message || 'Не удалось обновить аватар.');
       }
     } catch (error: any) {
       console.error("Upload failed", error);
@@ -370,7 +373,6 @@ function ClientProfileForm({ user }: { user: any }) {
       });
     } finally {
       setIsUploading(false);
-      // Очищаем input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -394,6 +396,12 @@ function ClientProfileForm({ user }: { user: any }) {
       }
     });
   };
+  
+  const getInitials = (name1?: string, name2?: string) => {
+    const first = name1?.[0] || '';
+    const second = name2?.[0] || '';
+    return `${first}${second}`.toUpperCase();
+  };
 
   return (
     <Form {...form}>
@@ -408,8 +416,7 @@ function ClientProfileForm({ user }: { user: any }) {
               <Avatar className="h-20 w-20">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback>
-                  {user.profile?.firstName?.[0] || user.displayName?.[0] || 'U'}
-                  {user.profile?.lastName?.[0] || ''}
+                  {getInitials(user.profile?.firstName, user.profile?.lastName)}
                 </AvatarFallback>
               </Avatar>
               <input
@@ -533,15 +540,13 @@ export function ProfileForm({ user }: { user: any }) {
       </Card>
     )
   }
-  // Добавим `uid` к объекту `user`, чтобы он был доступен в дочерних компонентах
-  const userWithId = { ...user, uid: user.uid };
   
   if (user.userType === 'freelancer') {
-    return <FreelancerProfileForm user={userWithId} />;
+    return <FreelancerProfileForm user={user} />;
   }
   
   if (user.userType === 'client') {
-    return <ClientProfileForm user={userWithId} />;
+    return <ClientProfileForm user={user} />;
   }
 
   return (
@@ -553,3 +558,5 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
+
+    
