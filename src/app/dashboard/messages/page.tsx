@@ -34,7 +34,7 @@ export default function MessagesPage() {
                         <Input placeholder="Поиск по чатам..." className="pl-8" />
                     </div>
                 </div>
-                <ScrollArea className="flex-1">
+                <div className="flex-1 overflow-y-auto">
                     <div className="flex flex-col">
                         {conversations.map((convo) => (
                              <button
@@ -64,7 +64,7 @@ export default function MessagesPage() {
                             </button>
                         ))}
                     </div>
-                </ScrollArea>
+                </div>
             </div>
 
             {/* Main chat window */}
