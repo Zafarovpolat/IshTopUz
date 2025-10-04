@@ -25,6 +25,5 @@ export const clientNavLinks = [
     { href: '/dashboard/profile', label: 'Мой профиль', icon: User },
     { href: '/dashboard/projects', label: 'Мои проекты', icon: Briefcase },
     { href: '/dashboard/search', label: 'Поиск исполнителей', icon: Search },
-    { href: '/dashboard/messages', label: 'Сообщения', icon: MessageSquare },
     { href: '/dashboard/finances', label: 'Финансы', icon: Wallet },
 ];
