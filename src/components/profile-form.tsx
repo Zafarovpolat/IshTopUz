@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from './ui/switch';
+import { Label } from '@/components/ui/label';
+
 
 type FreelancerFormValues = z.infer<typeof profileFreelancerSchema>;
 type ClientFormValues = z.infer<typeof profileClientSchema>;
@@ -541,3 +543,5 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
+
+    
