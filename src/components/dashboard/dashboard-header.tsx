@@ -77,7 +77,7 @@ export function DashboardHeader({ user }: { user: User | any }) {
               className="overflow-hidden rounded-full"
             >
               <Avatar>
-                 <AvatarImage src={user.profile?.avatar || user.photoURL} alt={displayName} />
+                 <AvatarImage src={user.profile?.avatar || user.photoURL} alt={displayName} className="object-cover" />
                  <AvatarFallback>{fallbackName}</AvatarFallback>
               </Avatar>
             </Button>

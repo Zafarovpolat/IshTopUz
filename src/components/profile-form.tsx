@@ -138,7 +138,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarUrl} />
+                <AvatarImage src={avatarUrl} className="object-cover" />
                 <AvatarFallback>
                   {getInitials(user.profile?.firstName, user.profile?.lastName)}
                 </AvatarFallback>
@@ -414,7 +414,7 @@ function ClientProfileForm({ user }: { user: any }) {
           <CardContent className="space-y-4">
              <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarUrl} />
+                <AvatarImage src={avatarUrl} className="object-cover" />
                 <AvatarFallback>
                   {getInitials(user.profile?.firstName, user.profile?.lastName)}
                 </AvatarFallback>
@@ -558,5 +558,3 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
-
-    
