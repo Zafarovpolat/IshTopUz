@@ -3,7 +3,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { useState, useTransition, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 // import { createProject } from '@/app/actions';
