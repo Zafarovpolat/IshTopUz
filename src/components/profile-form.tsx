@@ -306,9 +306,10 @@ function ClientProfileForm({ user }: { user: any }) {
       firstName: user.profile?.firstName || '',
       lastName: user.profile?.lastName || '',
       companyName: user.clientProfile?.companyName || '',
-      companySize: user.clientProfile?.companySize || '2-10',
+      companySize: user.clientProfile?.companySize || '1',
       industry: user.clientProfile?.industry || '',
       website: user.clientProfile?.website || '',
+      description: user.clientProfile?.description || '',
     },
   });
 
@@ -480,6 +481,13 @@ function ClientProfileForm({ user }: { user: any }) {
                     <FormItem><FormLabel>Сайт компании</FormLabel><FormControl><Input type="url" placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
             </div>
+             <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Описание компании</FormLabel>
+                    <FormControl><Textarea placeholder="Расскажите о вашей компании..." rows={4} {...field} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+            )} />
           </CardContent>
         </Card>
 
@@ -495,7 +503,7 @@ function ClientProfileForm({ user }: { user: any }) {
               </div>
               <div className="rounded-lg border p-4">
                   <p className="text-sm text-muted-foreground">Потрачено</p>
-                  <p className="text-2xl font-bold">{user.clientProfile?.moneySpent || 0} UZS</p>
+                  <p className="text-2xl font-bold">{new Intl.NumberFormat('ru-RU').format(user.clientProfile?.moneySpent || 0)} UZS</p>
               </div>
                <div className="rounded-lg border p-4">
                   <p className="text-sm text-muted-foreground">Средний рейтинг</p>

@@ -18,6 +18,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DollarSign, CreditCard, ShieldCheck, PlusCircle } from "lucide-react"
 
+// NOTE: This component currently uses static data.
+// It needs to be connected to Firestore to fetch real user data.
+
 const transactions = [
     { id: 't1', type: 'Оплата', date: '15.08.2024', amount: '-2,500,000 UZS', project: 'Разработка логотипа' },
     { id: 't2', type: 'Пополнение', date: '14.08.2024', amount: '+5,000,000 UZS', project: 'С карты HUMO **** 1234' },
@@ -103,3 +106,5 @@ export function ClientOverviewTab() {
     </div>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 import {
   Activity,
   ArrowUpRight,
@@ -29,6 +30,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+
+// NOTE: This component currently uses static data.
+// It needs to be connected to Firestore to fetch real user data.
 
 export function ClientDashboard() {
   return (
@@ -198,3 +202,5 @@ export function ClientDashboard() {
     </div>
   );
 }
+
+    

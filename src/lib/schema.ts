@@ -43,6 +43,7 @@ export const profileClientSchema = z.object({
     companySize: z.enum(['1', '2-10', '11-50', '51+']).optional(),
     industry: z.string().optional(),
     website: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
+    description: z.string().optional(),
 });
 
 
@@ -139,3 +140,5 @@ export type PortfolioState = {
   message?: string | null;
   success: boolean;
 };
+
+    
