@@ -11,6 +11,9 @@ import { ListFilter, Search as SearchIcon, Verified, Bookmark } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { getUserId } from "@/lib/get-user-data";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 const jobs = [
     {
@@ -42,7 +45,10 @@ const jobs = [
     },
 ];
 
-export function JobBoard() {
+export async function JobBoard() {
+  const userId = await getUserId();
+  const applyLink = userId ? '/dashboard/offers' : '/auth';
+
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
         {/* Filters Sidebar */}
@@ -126,7 +132,7 @@ export function JobBoard() {
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <CardTitle className="text-lg hover:text-primary transition-colors">
-                                    <Link href="#">{job.title}</Link>
+                                    <Link href={`/jobs/${job.id}`}>{job.title}</Link>
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -156,7 +162,9 @@ export function JobBoard() {
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between items-center">
-                            <Button>Подать заявку</Button>
+                            <Button asChild>
+                              <Link href={applyLink}>Подать заявку</Link>
+                            </Button>
                             <span className="text-sm text-muted-foreground">Откликов: {job.proposals}</span>
                         </CardFooter>
                     </Card>
@@ -167,14 +175,18 @@ export function JobBoard() {
   );
 }
 
-export default function JobsPage() {
+export default async function JobsPage() {
     return (
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <>
+        <Header />
+        <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight">Поиск работы</h1>
                 <p className="mt-4 text-lg text-muted-foreground">Найдите лучшие проекты и откликнитесь на них первыми.</p>
             </div>
             <JobBoard />
-        </div>
+        </main>
+        <Footer />
+      </>
     )
 }

@@ -7,10 +7,12 @@ import {
     Search,
     BookImage,
     Send,
+    ShoppingBag,
 } from 'lucide-react';
 
 export const freelancerNavLinks = [
     { href: '/dashboard', label: 'Панель управления', icon: LayoutDashboard },
+    { href: '/marketplace', label: 'Биржа', icon: ShoppingBag },
     { href: '/dashboard/profile', label: 'Мой профиль', icon: User },
     { href: '/dashboard/portfolio', label: 'Портфолио', icon: BookImage },
     { href: '/dashboard/projects', label: 'Мои проекты', icon: Briefcase },
@@ -20,6 +22,7 @@ export const freelancerNavLinks = [
 
 export const clientNavLinks = [
     { href: '/dashboard', label: 'Панель управления', icon: LayoutDashboard },
+    { href: '/marketplace', label: 'Биржа', icon: ShoppingBag },
     { href: '/dashboard/profile', label: 'Мой профиль', icon: User },
     { href: '/dashboard/projects', label: 'Мои проекты', icon: Briefcase },
     { href: '/dashboard/offers', label: 'Предложения', icon: Send },

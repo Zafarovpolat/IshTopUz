@@ -1,4 +1,5 @@
 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -11,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import Link from 'next/link';
+import { getUserId } from "@/lib/get-user-data";
 
 const freelancers = [
     {
@@ -60,7 +63,10 @@ const freelancers = [
 ];
 
 
-export default function TalentsPage() {
+export default async function TalentsPage() {
+    const userId = await getUserId();
+    const actionLink = userId ? '/dashboard/offers' : '/auth';
+
   return (
     <>
     <Header />
@@ -174,7 +180,7 @@ export default function TalentsPage() {
                                 </div>
                             </CardContent>
                             <CardFooter className="flex gap-2">
-                                <Button className="w-full">Пригласить</Button>
+                                <Button className="w-full" asChild><Link href={actionLink}>Пригласить</Link></Button>
                                 <Button variant="outline" className="w-full">Профиль</Button>
                             </CardFooter>
                         </Card>

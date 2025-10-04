@@ -8,6 +8,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { getUserId } from "@/lib/get-user-data";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 const kworks = [
     {
@@ -50,7 +53,10 @@ const kworks = [
 
 const categories = ["Веб-разработка", "Мобильные приложения", "Дизайн", "Копирайтинг", "Переводы", "Маркетинг", "Видео/Аудио"];
 
-export function KworksCatalog() {
+export async function KworksCatalog() {
+    const userId = await getUserId();
+    const orderLink = userId ? `/projects/${kworks[0].id}` : '/auth';
+
     return (
         <>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
@@ -75,8 +81,8 @@ export function KworksCatalog() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {kworks.map(kwork => (
-                    <Card key={kwork.id} className="overflow-hidden group">
-                        <Link href="#">
+                    <Card key={kwork.id} className="overflow-hidden group flex flex-col">
+                        <Link href={orderLink} className="flex flex-col flex-grow">
                             <div className="relative h-48 w-full">
                                 <Image 
                                     src={kwork.image} 
@@ -91,7 +97,7 @@ export function KworksCatalog() {
                             <CardHeader>
                                 <CardTitle className="text-lg leading-tight h-14 group-hover:text-primary transition-colors">{kwork.title}</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="flex-grow">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Image src={kwork.authorAvatar} alt={kwork.author} width={24} height={24} className="rounded-full" />
@@ -122,6 +128,7 @@ export function KworksCatalog() {
 export default function ProjectsCatalogPage() {
     return (
         <>
+            <Header />
             <main className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold tracking-tight">Каталог Проектов</h1>
@@ -129,6 +136,7 @@ export default function ProjectsCatalogPage() {
                 </div>
                 <KworksCatalog />
             </main>
+            <Footer />
         </>
     );
 }
