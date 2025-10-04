@@ -21,14 +21,18 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session')?.value;
   const { pathname } = request.nextUrl;
 
-  const protectedPaths = ['/dashboard', '/onboarding'];
+  const protectedPaths = ['/dashboard', '/onboarding', '/marketplace', '/talents'];
   const isProtectedPath = protectedPaths.some(p => pathname.startsWith(p));
-
-  if (!sessionCookie && isProtectedPath) {
+  
+  // Если пользователь не авторизован и пытается зайти на защищенный роут,
+  // но это не главная страница биржи или талантов (они должны быть доступны публично)
+  // то перенаправляем на авторизацию
+  if (!sessionCookie && isProtectedPath && !['/marketplace', '/talents'].includes(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     return NextResponse.redirect(url);
   }
+
 
   if (sessionCookie) {
     const decodedToken = await verifySessionCookie(sessionCookie);
@@ -42,24 +46,27 @@ export async function middleware(request: NextRequest) {
          url.pathname = '/dashboard';
          return NextResponse.redirect(url);
       }
+      
+      // Для всех остальных случаев, включая /marketplace и /talents,
+      // просто добавляем заголовок и продолжаем
+      return NextResponse.next({
+          request: {
+              headers: requestHeaders,
+          },
+      });
 
     } else {
-      // If the cookie is invalid, redirect to login and clear the cookie
+      // Если кука есть, но она невалидна
       const response = NextResponse.redirect(new URL('/auth', request.url));
       response.cookies.set('session', '', { maxAge: -1 });
       return response;
     }
-    
-    return NextResponse.next({
-        request: {
-            headers: requestHeaders,
-        },
-    });
   }
 
+  // Если куки нет и это не защищенный роут, просто продолжаем
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding', '/auth'],
+  matcher: ['/dashboard/:path*', '/onboarding', '/auth', '/marketplace', '/talents'],
 };
