@@ -29,9 +29,9 @@ export function Footer() {
                 <div>
                     <h3 className="font-semibold text-foreground">{"Фрилансерам"}</h3>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Как заработать"}</Link></li>
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Найти работу"}</Link></li>
-                        <li><Link href="/404" className="text-muted-foreground hover:text-primary">{"Связаться с клиентами"}</Link></li>
+                        <li><Link href="/freelancers/how-to-earn" className="text-muted-foreground hover:text-primary">{"Как заработать"}</Link></li>
+                        <li><Link href="/jobs" className="text-muted-foreground hover:text-primary">{"Найти работу"}</Link></li>
+                        <li><Link href="/freelancers/client-communication" className="text-muted-foreground hover:text-primary">{"Связаться с клиентами"}</Link></li>
                     </ul>
                 </div>
                 <div>
