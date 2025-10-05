@@ -10,8 +10,6 @@ import { Slider } from "@/components/ui/slider";
 import { ListFilter, Search as SearchIcon, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import Link from 'next/link';
 import { getUserId } from "@/lib/get-user-data";
 
@@ -69,7 +67,6 @@ export default async function TalentsPage() {
 
   return (
     <>
-    <Header />
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold tracking-tight">Биржа талантов</h1>
@@ -189,7 +186,6 @@ export default async function TalentsPage() {
             </main>
         </div>
     </div>
-    <Footer />
     </>
   );
 }
