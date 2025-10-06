@@ -27,30 +27,35 @@ interface Project {
     proposalsCount: number;
     clientId: string;
     clientVerified?: boolean; 
+    status: string;
 }
 
 async function getProjects(): Promise<Project[]> {
     const adminApp = getAdminApp();
     const db = adminApp.firestore();
-    const projectsSnapshot = await db.collection('projects').where('status', '==', 'open').orderBy('createdAt', 'desc').get();
+    // Query requires a composite index. Removing .where() and filtering in code.
+    const projectsSnapshot = await db.collection('projects').orderBy('createdAt', 'desc').get();
     
     if (projectsSnapshot.empty) {
         return [];
     }
     
-    const projects = projectsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            title: data.title,
-            budgetType: data.budgetType,
-            budgetAmount: data.budgetAmount,
-            skills: data.skills || [],
-            createdAt: data.createdAt.toDate().toISOString(), // Serialize timestamp
-            proposalsCount: data.proposalsCount || 0,
-            clientId: data.clientId,
-        }
-    });
+    const projects = projectsSnapshot.docs
+        .map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                title: data.title,
+                budgetType: data.budgetType,
+                budgetAmount: data.budgetAmount,
+                skills: data.skills || [],
+                createdAt: data.createdAt.toDate().toISOString(), // Serialize timestamp
+                proposalsCount: data.proposalsCount || 0,
+                clientId: data.clientId,
+                status: data.status,
+            }
+        })
+        .filter(project => project.status === 'open'); // Filter in code
 
     // In a real app, you'd fetch client verification status here in bulk
     return projects.map(p => ({...p, clientVerified: true})); // Mocking verification for now
