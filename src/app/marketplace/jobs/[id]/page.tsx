@@ -1,5 +1,5 @@
-import { getDoc, doc, collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import type { Project, Proposal } from '@/lib/schema';
 import { getAdminApp } from '@/lib/firebase-admin';
 import { ProjectDetailsClient } from '@/components/project-details-client';
@@ -48,8 +48,8 @@ async function getProposals(projectId: string): Promise<Proposal[]> {
     const adminApp = getAdminApp();
     const firestore = adminApp.firestore();
     const proposalsRef = firestore.collection('projects').doc(projectId).collection('proposals');
-    const q = query(proposalsRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
+    const q = proposalsRef.orderBy('createdAt', 'desc');
+    const snapshot = await q.get();
 
     if (snapshot.empty) {
         return [];
