@@ -361,17 +361,25 @@ export async function getProjectsByClientId(clientId: string): Promise<Project[]
   if (!clientId) return [];
 
   const projectsRef = db.collection('projects');
-  const q = projectsRef.where('clientId', '==', clientId).orderBy('createdAt', 'desc');
+  const q = projectsRef.where('clientId', '==', clientId);
   const snapshot = await q.get();
 
   if (snapshot.empty) {
     return [];
   }
+  
+  const docsWithData = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: doc.data().createdAt,
+  }));
+  
+  docsWithData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  const projects: Project[] = snapshot.docs.map(doc => {
-    const data = doc.data();
+
+  const projects: Project[] = docsWithData.map(data => {
     return {
-      id: doc.id,
+      id: data.id,
       title: data.title,
       description: data.description,
       budgetType: data.budgetType,
