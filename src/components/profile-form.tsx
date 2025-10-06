@@ -218,8 +218,6 @@ function FreelancerProfileForm({ user }: { user: any }) {
                         type="number" 
                         placeholder="100000" 
                         {...field}
-                        value={field.value === 0 ? '' : field.value} 
-                        onChange={e => field.onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))} 
                       />
                     </FormControl>
                     <FormMessage />
@@ -551,5 +549,3 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
-
-    

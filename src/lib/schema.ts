@@ -15,7 +15,7 @@ export const onboardingSchema = z.object({
   }),
 });
 
-const languages = z.string().optional();
+const languages = z.union([z.string(), z.array(z.string())]).optional();
 
 export const profileFreelancerSchema = z.object({
   // profile
@@ -26,8 +26,11 @@ export const profileFreelancerSchema = z.object({
   
   // freelancerProfile
   title: z.string().min(5, "Заголовок должен содержать хотя бы 5 символов.").optional(),
-  hourlyRate: z.number().min(0, "Ставка должна быть положительным числом.").optional(),
-  skills: z.string().optional(), // Comma-separated string
+  hourlyRate: z.preprocess(
+    (val) => (val === "" ? undefined : Number(val)),
+    z.number().min(0, "Ставка должна быть положительным числом.").optional()
+  ),
+  skills: z.union([z.string(), z.array(z.string())]).optional(),
   experience: z.enum(['beginner', 'intermediate', 'expert']).optional(),
   isAvailable: z.boolean().optional(),
   description: z.string().optional(),
@@ -140,5 +143,3 @@ export type PortfolioState = {
   message?: string | null;
   success: boolean;
 };
-
-    
