@@ -11,7 +11,9 @@ import placeholderImages from '@/lib/placeholder-images.json';
 import { getUserId } from "@/lib/get-user-data";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { getAdminApp } from "@/lib/firebase-admin";
 
+// This is a placeholder and should be replaced with a proper Firestore query
 const kworks = [
     {
         id: 1,
@@ -51,11 +53,18 @@ const kworks = [
     },
 ];
 
+async function getKworks() {
+    // In a real app, you would fetch this from Firestore 'kworks' or similar collection.
+    // For now, we return the static data.
+    return kworks;
+}
+
 const categories = ["Веб-разработка", "Мобильные приложения", "Дизайн", "Копирайтинг", "Переводы", "Маркетинг", "Видео/Аудио"];
 
 export async function KworksCatalog() {
     const userId = await getUserId();
-    const orderLink = userId ? `/projects/${kworks[0].id}` : '/auth';
+    const kworksData = await getKworks();
+    const orderLinkBase = userId ? '/projects' : '/auth';
 
     return (
         <>
@@ -80,45 +89,48 @@ export async function KworksCatalog() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {kworks.map(kwork => (
-                    <Card key={kwork.id} className="overflow-hidden group flex flex-col">
-                        <Link href={orderLink} className="flex flex-col flex-grow">
-                            <div className="relative h-48 w-full">
-                                <Image 
-                                    src={kwork.image} 
-                                    alt={kwork.title} 
-                                    layout="fill" 
-                                    objectFit="cover" 
-                                    className="transition-transform duration-300 group-hover:scale-105"
-                                    data-ai-hint={kwork.imageHint}
-                                />
-                                <Badge className="absolute top-2 right-2">{kwork.category}</Badge>
-                            </div>
-                            <CardHeader>
-                                <CardTitle className="text-lg leading-tight h-14 group-hover:text-primary transition-colors">{kwork.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Image src={kwork.authorAvatar} alt={kwork.author} width={24} height={24} className="rounded-full" />
-                                        <span className="text-sm font-medium">{kwork.author}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                                        <span className="text-sm font-semibold">{kwork.rating}</span>
-                                        <span className="text-sm text-muted-foreground">({kwork.reviews})</span>
-                                    </div>
+                {kworksData.map(kwork => {
+                    const orderLink = `${orderLinkBase}/${kwork.id}`;
+                    return (
+                        <Card key={kwork.id} className="overflow-hidden group flex flex-col">
+                            <Link href={orderLink} className="flex flex-col flex-grow">
+                                <div className="relative h-48 w-full">
+                                    <Image 
+                                        src={kwork.image} 
+                                        alt={kwork.title} 
+                                        layout="fill" 
+                                        objectFit="cover" 
+                                        className="transition-transform duration-300 group-hover:scale-105"
+                                        data-ai-hint={kwork.imageHint}
+                                    />
+                                    <Badge className="absolute top-2 right-2">{kwork.category}</Badge>
                                 </div>
-                            </CardContent>
-                            <CardFooter>
-                                <div className="w-full flex items-center justify-between">
-                                    <p className="text-sm text-muted-foreground">от</p>
-                                    <p className="text-lg font-bold">{kwork.price}</p>
-                                </div>
-                            </CardFooter>
-                        </Link>
-                    </Card>
-                ))}
+                                <CardHeader>
+                                    <CardTitle className="text-lg leading-tight h-14 group-hover:text-primary transition-colors">{kwork.title}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Image src={kwork.authorAvatar} alt={kwork.author} width={24} height={24} className="rounded-full" />
+                                            <span className="text-sm font-medium">{kwork.author}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-sm font-semibold">{kwork.rating}</span>
+                                            <span className="text-sm text-muted-foreground">({kwork.reviews})</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <div className="w-full flex items-center justify-between">
+                                        <p className="text-sm text-muted-foreground">от</p>
+                                        <p className="text-lg font-bold">{kwork.price}</p>
+                                    </div>
+                                </CardFooter>
+                            </Link>
+                        </Card>
+                    )
+                })}
             </div>
         </>
     )

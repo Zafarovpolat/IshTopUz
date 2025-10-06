@@ -23,10 +23,9 @@ interface Project {
     budgetType: 'fixed' | 'hourly';
     budgetAmount: number;
     skills: string[];
-    createdAt: any; // Firestore Timestamp
+    createdAt: string; // Changed to string to be serializable
     proposalsCount: number;
     clientId: string;
-    // We will fetch client data separately
     clientVerified?: boolean; 
 }
 
@@ -39,10 +38,19 @@ async function getProjects(): Promise<Project[]> {
         return [];
     }
     
-    const projects = projectsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    } as Project));
+    const projects = projectsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            title: data.title,
+            budgetType: data.budgetType,
+            budgetAmount: data.budgetAmount,
+            skills: data.skills || [],
+            createdAt: data.createdAt.toDate().toISOString(), // Serialize timestamp
+            proposalsCount: data.proposalsCount || 0,
+            clientId: data.clientId,
+        }
+    });
 
     // In a real app, you'd fetch client verification status here in bulk
     return projects.map(p => ({...p, clientVerified: true})); // Mocking verification for now
@@ -140,7 +148,7 @@ export async function JobBoard() {
             ) : (
                 <div className="grid gap-6">
                     {projects.map(job => {
-                        const postedAt = job.createdAt.toDate ? job.createdAt.toDate() : new Date();
+                        const postedAt = new Date(job.createdAt);
                         const timeAgo = formatDistanceToNow(postedAt, { addSuffix: true, locale: ru });
                         const budget = `${job.budgetAmount.toLocaleString('ru-RU')} UZS`;
                         const applyLink = `${applyLinkBase}/${job.id}`;
@@ -210,5 +218,3 @@ export default async function JobsPage() {
       </>
     )
 }
-
-    
