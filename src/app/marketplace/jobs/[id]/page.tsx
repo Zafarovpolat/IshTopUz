@@ -19,7 +19,7 @@ async function getProjectData(id: string): Promise<Project | null> {
     if (!project) return null;
 
     const clientDoc = await firestore.collection('users').doc(project.clientId).get();
-    const clientData = clientDoc.exists() ? clientDoc.data() : null;
+    const clientData = clientDoc.exists ? clientDoc.data() : null;
     
     return {
         id: projectDoc.id,
@@ -60,19 +60,21 @@ async function getProposals(projectId: string): Promise<Proposal[]> {
         const data = docSnap.data();
         const freelancerDoc = await firestore.collection('users').doc(data.freelancerId).get();
         
-        if (freelancerDoc.exists()) {
+        if (freelancerDoc.exists) {
             const freelancerData = freelancerDoc.data();
-            proposals.push({
-                id: docSnap.id,
-                ...data,
-                createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
-                freelancer: {
-                    name: `${freelancerData!.profile.firstName} ${freelancerData!.profile.lastName}`,
-                    avatar: freelancerData!.profile.avatar,
-                    rating: freelancerData!.freelancerProfile?.rating || 0,
-                    title: freelancerData!.freelancerProfile?.title || ''
-                }
-            } as Proposal);
+            if (freelancerData) {
+                proposals.push({
+                    id: docSnap.id,
+                    ...data,
+                    createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+                    freelancer: {
+                        name: `${freelancerData.profile.firstName} ${freelancerData.profile.lastName}`,
+                        avatar: freelancerData.profile.avatar,
+                        rating: freelancerData.freelancerProfile?.rating || 0,
+                        title: freelancerData.freelancerProfile?.title || ''
+                    }
+                } as Proposal);
+            }
         }
     }
     return proposals;
