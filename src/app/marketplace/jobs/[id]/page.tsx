@@ -78,6 +78,7 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
 
     const timeAgo = formatDistanceToNow(project.createdAt, { addSuffix: true, locale: ru });
     const budget = `${project.budgetAmount.toLocaleString('ru-RU')} UZS`;
+    const isOwner = userId === project.clientId;
 
     return (
         <main className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -149,7 +150,7 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
                                     <CardContent>
                                         <p className="text-sm text-muted-foreground italic border-l-2 pl-3">"{p.coverLetter}"</p>
                                     </CardContent>
-                                    {userId && (
+                                    {isOwner && (
                                         <CardFooter className="gap-2">
                                             <Button size="sm">Нанять</Button>
                                             <Button size="sm" variant="outline">Сообщение</Button>
@@ -160,8 +161,8 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
                         </div>
                     </div>
 
-                        {/* Submit Proposal Section */}
-                    {userId ? (
+                    {/* Submit Proposal Section */}
+                    {userId && !isOwner && (
                             <Card id="submit-proposal">
                             <CardHeader>
                                 <CardTitle>Подать предложение</CardTitle>
@@ -198,7 +199,8 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
                                 <Button size="lg"><Send className="mr-2 h-4 w-4" /> Отправить предложение</Button>
                             </CardFooter>
                         </Card>
-                    ) : (
+                    )}
+                    {!userId && (
                         <Card className="text-center p-8">
                             <CardTitle>Хотите выполнить этот проект?</CardTitle>
                             <CardDescription className="mt-2">Войдите в свой аккаунт или зарегистрируйтесь, чтобы подать предложение.</CardDescription>

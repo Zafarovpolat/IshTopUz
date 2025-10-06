@@ -42,6 +42,8 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
             progress = 50;
         } else if (project.status === 'completed') {
             progress = 100;
+        } else if (project.status === 'open') {
+            progress = 0;
         }
         
         const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ru-RU') : 'не указан';
@@ -73,8 +75,10 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
                 <Progress value={progress} />
                 </div>
                 <div className="flex justify-between items-center">
-                    <Badge variant="outline">Срок сдачи: {deadline}</Badge>
-                    <span className="text-lg font-bold text-primary">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
+                    {freelancer && project.deadline && (
+                        <Badge variant="outline">Срок сдачи: {deadline}</Badge>
+                    )}
+                    <span className="text-lg font-bold text-primary ml-auto">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
                 </div>
             </CardContent>
             <CardFooter className="flex gap-2">
