@@ -111,7 +111,7 @@ export const projectSchema = z.object({
   skills: z.string().min(1, 'Укажите хотя бы один навык.'),
   budgetType: z.enum(['fixed', 'hourly']),
   budgetAmount: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
+    (a) => parseFloat(String(a)),
     z.number().positive('Сумма должна быть положительной.')
   ),
   deadline: z.date({
