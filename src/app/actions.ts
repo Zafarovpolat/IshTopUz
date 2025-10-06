@@ -239,9 +239,11 @@ export async function updateProfile(
       updateData['freelancerProfile.description'] = freelancerProfileData.description;
       updateData['freelancerProfile.skills'] = skillsArray;
     } else { // client
-       const { firstName, lastName, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
+       const { firstName, lastName, city, country, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
        updateData['profile.firstName'] = firstName;
        updateData['profile.lastName'] = lastName;
+       updateData['profile.city'] = city;
+       updateData['profile.country'] = country;
        updateData['clientProfile.companyName'] = clientProfileData.companyName;
        updateData['clientProfile.companySize'] = clientProfileData.companySize;
        updateData['clientProfile.industry'] = clientProfileData.industry;

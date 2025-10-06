@@ -44,6 +44,8 @@ export const profileClientSchema = z.object({
     // profile
     firstName: z.string().min(2, "Имя обязательно."),
     lastName: z.string().min(2, "Фамилия обязательна."),
+    city: z.string().optional(),
+    country: z.string().optional(),
     // clientProfile
     companyName: z.string().optional(),
     companySize: z.enum(['1', '2-10', '11-50', '51+']).optional(),

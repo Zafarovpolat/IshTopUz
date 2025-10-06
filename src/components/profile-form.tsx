@@ -41,7 +41,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
       lastName: user.profile?.lastName || '',
       city: user.profile?.city || '',
       country: user.profile?.country || '',
-      dateOfBirth: user.profile?.dateOfBirth || '',
+      dateOfBirth: user.profile?.dateOfBirth ? user.profile.dateOfBirth.split('T')[0] : '',
       gender: user.profile?.gender || '',
       languages: Array.isArray(user.profile?.languages) 
         ? user.profile.languages.join(', ') 
@@ -338,6 +338,8 @@ function ClientProfileForm({ user }: { user: any }) {
     defaultValues: {
       firstName: user.profile?.firstName || '',
       lastName: user.profile?.lastName || '',
+      city: user.profile?.city || '',
+      country: user.profile?.country || '',
       companyName: user.clientProfile?.companyName || '',
       companySize: user.clientProfile?.companySize || '1',
       industry: user.clientProfile?.industry || '',
@@ -472,6 +474,22 @@ function ClientProfileForm({ user }: { user: any }) {
                   <FormItem>
                     <FormLabel>Фамилия</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField name="city" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Город</FormLabel>
+                    <FormControl><Input placeholder="Ташкент" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField name="country" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Страна</FormLabel>
+                    <FormControl><Input placeholder="Узбекистан" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
