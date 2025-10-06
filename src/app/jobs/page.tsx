@@ -33,7 +33,6 @@ interface Project {
 async function getProjects(): Promise<Project[]> {
     const adminApp = getAdminApp();
     const db = adminApp.firestore();
-    // Query requires a composite index. Removing .where() and filtering in code.
     const projectsSnapshot = await db.collection('projects').orderBy('createdAt', 'desc').get();
     
     if (projectsSnapshot.empty) {
@@ -43,28 +42,30 @@ async function getProjects(): Promise<Project[]> {
     const projects = projectsSnapshot.docs
         .map(doc => {
             const data = doc.data();
+            const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
             return {
                 id: doc.id,
                 title: data.title,
                 budgetType: data.budgetType,
                 budgetAmount: data.budgetAmount,
                 skills: data.skills || [],
-                createdAt: data.createdAt.toDate().toISOString(), // Serialize timestamp
+                createdAt: createdAt.toISOString(),
                 proposalsCount: data.proposalsCount || 0,
                 clientId: data.clientId,
                 status: data.status,
             }
         })
-        .filter(project => project.status === 'open'); // Filter in code
+        .filter(project => project.status === 'open');
 
     // In a real app, you'd fetch client verification status here in bulk
-    return projects.map(p => ({...p, clientVerified: true})); // Mocking verification for now
+    return projects.map(p => ({...p, clientVerified: true}));
 }
+
 
 async function JobsPageContent() {
   const userId = await getUserId();
   const projects = await getProjects();
-  const applyLinkBase = userId ? '/jobs' : '/auth';
+  const applyLinkBase = userId ? '/marketplace/jobs' : '/auth';
 
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
@@ -163,7 +164,7 @@ async function JobsPageContent() {
                                 <CardHeader>
                                     <div className="flex justify-between items-start">
                                         <CardTitle className="text-lg hover:text-primary transition-colors">
-                                            <Link href={`/jobs/${job.id}`}>{job.title}</Link>
+                                            <Link href={`/marketplace/jobs/${job.id}`}>{job.title}</Link>
                                         </CardTitle>
                                         <div className="flex items-center gap-2">
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -212,7 +213,7 @@ export function JobBoard() {
     return <JobsPageContent />;
 }
 
-export default async function JobsPage() {
+export default function JobsPage() {
     return (
       <>
         <Header />
