@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAdminApp } from '@/lib/firebase-admin';
@@ -27,7 +28,7 @@ export async function middleware(request: NextRequest) {
   // Если пользователь не авторизован и пытается зайти на защищенный роут,
   // но это не главная страница биржи или талантов (они должны быть доступны публично)
   // то перенаправляем на авторизацию
-  if (!sessionCookie && isProtectedPath && !['/marketplace', '/talents'].includes(pathname)) {
+  if (!sessionCookie && isProtectedPath && !['/marketplace', '/talents', '/jobs'].includes(pathname) && !pathname.startsWith('/marketplace/jobs')) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
     return NextResponse.redirect(url);
@@ -68,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding', '/auth', '/marketplace', '/talents'],
+  matcher: ['/dashboard/:path*', '/onboarding', '/auth', '/marketplace/:path*', '/talents', '/jobs'],
 };
