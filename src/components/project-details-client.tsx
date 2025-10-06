@@ -68,7 +68,7 @@ function ProposalForm({ project, freelancerId, existingProposal, onFormSubmit }:
 
     const onSubmit = (data: ProposalFormValues) => {
         startTransition(async () => {
-            const result = isEditMode
+            const result = isEditMode && existingProposal
               ? await updateProposal(existingProposal.id, project.id, data)
               : await submitProposal(freelancerId, project.id, project.title, project.clientId, data);
             
@@ -198,13 +198,17 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
     const { toast } = useToast();
     const router = useRouter();
     const [project] = useState<Project | null>(initialProject);
-    const [proposals] = useState<Proposal[]>(initialProposals);
+    const [proposals, setProposals] = useState<Proposal[]>(initialProposals);
     const { user: authUser, isLoading: isUserLoading } = useAuth();
     
     const [isEditing, setIsEditing] = useState(false);
 
     const currentUserProposal = proposals.find(p => p.freelancerId === currentUserId);
     const isOwner = currentUserId === project?.clientId;
+
+    useEffect(() => {
+        setProposals(initialProposals);
+    }, [initialProposals]);
 
 
     const handleDelete = async (proposalId: string) => {
@@ -262,9 +266,9 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                         </CardContent>
                     </Card>
 
-                    <div id="proposals">
-                        <h2 className="text-2xl font-bold mb-4">Предложения ({proposals.length})</h2>
-                        {proposals.length > 0 ? (
+                    {proposals.filter(p => p.freelancerId !== currentUserId).length > 0 && (
+                        <div id="proposals">
+                            <h2 className="text-2xl font-bold mb-4">Предложения ({proposals.length})</h2>
                             <div className="space-y-6">
                                 {proposals.map(p => (
                                     p.freelancerId !== currentUserId && (
@@ -301,17 +305,10 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                                     )
                                 ))}
                             </div>
-                        ) : (
-                             !currentUserProposal && (
-                                <Card className="text-center p-8 border-dashed">
-                                    <CardTitle className="text-lg font-normal">Предложений пока нет</CardTitle>
-                                    <CardDescription>Будьте первым, кто откликнется на этот проект.</CardDescription>
-                                </Card>
-                            )
-                        )}
-                    </div>
+                        </div>
+                    )}
                     
-                     {authUser && !isOwner && (
+                     {authUser && authUser.uid !== project.clientId && (
                         currentUserProposal && !isEditing ? (
                             <YourProposalCard 
                                 proposal={currentUserProposal} 
@@ -394,3 +391,5 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
         </main>
     );
 }
+
+    
