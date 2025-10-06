@@ -27,7 +27,7 @@ export const profileFreelancerSchema = z.object({
   // freelancerProfile
   title: z.string().min(5, "Заголовок должен содержать хотя бы 5 символов.").optional(),
   hourlyRate: z.preprocess(
-    (val) => (val === "" ? undefined : Number(val)),
+    (val) => (val === "" || val === undefined ? 0 : Number(val)),
     z.number().min(0, "Ставка должна быть положительным числом.").optional()
   ),
   skills: z.union([z.string(), z.array(z.string())]).optional(),
@@ -86,7 +86,7 @@ export const portfolioItemSchema = z.object({
   description: z.string().min(10, "Описание должно содержать минимум 10 символов."),
   imageUrl: z.string().url("Пожалуйста, загрузите изображение проекта."),
   projectUrl: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
-  technologies: z.string().optional(),
+  technologies: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
 // Used for retrieving data, not for forms
@@ -143,3 +143,4 @@ export type PortfolioState = {
   message?: string | null;
   success: boolean;
 };
+

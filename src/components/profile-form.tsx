@@ -41,7 +41,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
       lastName: user.profile?.lastName || '',
       city: user.profile?.city || '',
       title: user.freelancerProfile?.title || '',
-      hourlyRate: user.freelancerProfile?.hourlyRate || undefined,
+      hourlyRate: user.freelancerProfile?.hourlyRate || 0,
       skills: Array.isArray(user.freelancerProfile?.skills) 
         ? user.freelancerProfile.skills.join(', ') 
         : (user.freelancerProfile?.skills || ''),
@@ -549,3 +549,4 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
+

@@ -107,13 +107,13 @@ export async function createUserOnboarding(
     const userRecord = await auth.getUser(userId);
     const userRef = db.collection('users').doc(userId);
 
-    const userData = {
+    const userData: any = {
       email: userRecord.email,
       phone: userRecord.phoneNumber || '',
+      userType,
       isVerified: userRecord.emailVerified,
       createdAt: FieldValue.serverTimestamp(),
       lastLoginAt: FieldValue.serverTimestamp(),
-      userType,
       profile: {
         firstName,
         lastName,
@@ -125,42 +125,44 @@ export async function createUserOnboarding(
         languages: [],
         timezone: '',
       },
-      profileComplete: true, // Assuming onboarding completes the basic profile
-      ...(userType === 'freelancer' && {
-        freelancerProfile: {
-          title: '',
-          description: '',
-          hourlyRate: 0,
-          skills: [],
-          categories: [],
-          experience: 'beginner',
-          completedProjects: 0,
-          rating: 0,
-          reviewsCount: 0,
-          isAvailable: true,
-          lastActiveAt: FieldValue.serverTimestamp(),
-        }
-      }),
-      ...(userType === 'client' && {
-        clientProfile: {
-          companyName: '',
-          companySize: '1',
-          industry: '',
-          website: '',
-          description: '',
-          projectsPosted: 0,
-          moneySpent: 0,
-          rating: 0,
-          reviewsCount: 0,
-        }
-      }),
-       wallet: {
+      wallet: {
         balance: 0,
         currency: 'UZS',
         paymentMethods: [],
         transactions: [],
       },
+      profileComplete: true, // Assuming onboarding completes the basic profile
     };
+
+    if (userType === 'freelancer') {
+      userData.freelancerProfile = {
+        title: '',
+        description: '',
+        hourlyRate: 0,
+        skills: [],
+        categories: [],
+        experience: 'beginner',
+        completedProjects: 0,
+        rating: 0,
+        reviewsCount: 0,
+        isAvailable: true,
+        lastActiveAt: FieldValue.serverTimestamp(),
+      };
+    }
+
+    if (userType === 'client') {
+      userData.clientProfile = {
+        companyName: '',
+        companySize: '1',
+        industry: '',
+        website: '',
+        description: '',
+        projectsPosted: 0,
+        moneySpent: 0,
+        rating: 0,
+        reviewsCount: 0,
+      };
+    }
     
     await userRef.set(userData, { merge: true });
 
@@ -208,38 +210,43 @@ export async function updateProfile(
   }
   
   try {
+    const updateData: { [key: string]: any } = {
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
     if (userType === 'freelancer') {
-      const { firstName, lastName, skills, languages, city, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
+      const { firstName, lastName, city, languages, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
       
-      const skillsArray = typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
-      const languagesArray = typeof languages === 'string' ? languages.split(',').map(l => l.trim()).filter(Boolean) : [];
+      const skillsArray = Array.isArray(freelancerProfileData.skills)
+          ? freelancerProfileData.skills
+          : (freelancerProfileData.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+          
+      const languagesArray = Array.isArray(languages)
+          ? languages
+          : (languages || '').split(',').map(l => l.trim()).filter(Boolean);
       
-      await userRef.update({
-        'profile.firstName': firstName,
-        'profile.lastName': lastName,
-        'profile.city': city,
-        'profile.languages': languagesArray,
-        'freelancerProfile.skills': skillsArray,
-        'freelancerProfile.title': freelancerProfileData.title,
-        'freelancerProfile.hourlyRate': freelancerProfileData.hourlyRate,
-        'freelancerProfile.experience': freelancerProfileData.experience,
-        'freelancerProfile.isAvailable': freelancerProfileData.isAvailable,
-        'freelancerProfile.description': freelancerProfileData.description,
-        'updatedAt': FieldValue.serverTimestamp()
-      });
-    } else {
+      updateData['profile.firstName'] = firstName;
+      updateData['profile.lastName'] = lastName;
+      updateData['profile.city'] = city;
+      updateData['profile.languages'] = languagesArray;
+      updateData['freelancerProfile.title'] = freelancerProfileData.title;
+      updateData['freelancerProfile.hourlyRate'] = freelancerProfileData.hourlyRate;
+      updateData['freelancerProfile.experience'] = freelancerProfileData.experience;
+      updateData['freelancerProfile.isAvailable'] = freelancerProfileData.isAvailable;
+      updateData['freelancerProfile.description'] = freelancerProfileData.description;
+      updateData['freelancerProfile.skills'] = skillsArray;
+    } else { // client
        const { firstName, lastName, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
-       await userRef.update({
-        'profile.firstName': firstName,
-        'profile.lastName': lastName,
-        'clientProfile.companyName': clientProfileData.companyName,
-        'clientProfile.companySize': clientProfileData.companySize,
-        'clientProfile.industry': clientProfileData.industry,
-        'clientProfile.website': clientProfileData.website,
-        'updatedAt': FieldValue.serverTimestamp()
-      });
+       updateData['profile.firstName'] = firstName;
+       updateData['profile.lastName'] = lastName;
+       updateData['clientProfile.companyName'] = clientProfileData.companyName;
+       updateData['clientProfile.companySize'] = clientProfileData.companySize;
+       updateData['clientProfile.industry'] = clientProfileData.industry;
+       updateData['clientProfile.website'] = clientProfileData.website;
+       updateData['clientProfile.description'] = clientProfileData.description;
     }
 
+    await userRef.update(updateData);
     revalidatePath('/dashboard/profile');
     return {
       success: true,
@@ -307,3 +314,4 @@ export async function deletePortfolioItem(userId: string, itemId: string): Promi
         return { success: false, message: 'Не удалось удалить работу.' };
     }
 }
+

@@ -16,6 +16,7 @@ async function getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
 
     const items: PortfolioItem[] = portfolioSnapshot.docs.map(doc => {
       const data = doc.data();
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
       return {
         id: doc.id,
         title: data.title,
@@ -23,7 +24,7 @@ async function getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
         imageUrl: data.imageUrl,
         projectUrl: data.projectUrl,
         technologies: data.technologies || [],
-        createdAt: data.createdAt.toDate().toISOString(),
+        createdAt: createdAt.toISOString(),
       }
     });
 
