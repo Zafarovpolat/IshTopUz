@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Project } from "@/lib/schema";
 import Link from 'next/link';
+import { Edit } from 'lucide-react';
 
 // Mock data for freelancer, this should come from a separate query
 const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
@@ -29,7 +30,7 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
                 <p className="mt-2 text-sm text-muted-foreground">
                     Когда вы наймете исполнителя, ваш проект появится здесь.
                 </p>
-                <Button className="mt-4">Создать проект</Button>
+                <Button className="mt-4" onClick={() => onEdit({} as Project)}>Создать проект</Button>
             </div>
         )
     }
@@ -51,9 +52,9 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
         return (
             <Card key={project.id}>
             <CardHeader>
-                <Link href={`/marketplace/jobs/${project.id}`}>
-                    <CardTitle className="hover:text-primary transition-colors">{project.title}</CardTitle>
-                </Link>
+                <CardTitle className="hover:text-primary transition-colors">
+                    <Link href={`/marketplace/jobs/${project.id}`}>{project.title}</Link>
+                </CardTitle>
                 {freelancer ? (
                     <CardDescription className="flex items-center gap-2 pt-1">
                         <Avatar className="h-6 w-6">
@@ -78,14 +79,18 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
                     {freelancer && project.deadline && (
                         <Badge variant="outline">Срок сдачи: {deadline}</Badge>
                     )}
-                    <span className="text-lg font-bold text-primary ml-auto">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
+                     <Badge variant="outline" className="ml-auto">Откликов: {project.proposalsCount || 0}</Badge>
+                    <span className="text-lg font-bold text-primary ml-4">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
                 </div>
             </CardContent>
             <CardFooter className="flex gap-2">
-                 <Button asChild className="w-full">
-                    <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть проект</Link>
+                 <Button asChild variant="outline" className="w-full">
+                    <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть</Link>
                 </Button>
-                {freelancer && <Button variant="outline" className="w-full">Чат с исполнителем</Button>}
+                <Button onClick={() => onEdit(project)} className="w-full">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Редактировать
+                </Button>
             </CardFooter>
             </Card>
         )

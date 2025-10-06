@@ -51,7 +51,7 @@ export function ClientProjectsPage() {
   }, [user]);
   
   const handleEdit = (project: Project) => {
-    setSelectedProject(project);
+    setSelectedProject(project.id ? project : null);
     setIsFormOpen(true);
   };
 
@@ -82,7 +82,7 @@ export function ClientProjectsPage() {
         </div>
         <Dialog open={isFormOpen} onOpenChange={handleFormClose}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsFormOpen(true)}>
+            <Button onClick={() => handleEdit({} as Project)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Создать новый проект
             </Button>
@@ -105,10 +105,10 @@ export function ClientProjectsPage() {
           <TabsTrigger value="completed">Завершенные</TabsTrigger>
         </TabsList>
         <TabsContent value="active">
-            {isLoading || isPending ? <Loader2 className="mt-4 h-8 w-8 animate-spin" /> : <ClientActiveProjectsTab projects={activeProjects} onEdit={handleEdit} />}
+            {isLoading || isPending ? <div className="flex justify-center mt-4"><Loader2 className="h-8 w-8 animate-spin" /></div> : <ClientActiveProjectsTab projects={activeProjects} onEdit={handleEdit} />}
         </TabsContent>
         <TabsContent value="completed">
-            {isLoading || isPending ? <Loader2 className="mt-4 h-8 w-8 animate-spin" /> : <ClientCompletedProjectsTab projects={completedProjects} />}
+            {isLoading || isPending ? <div className="flex justify-center mt-4"><Loader2 className="h-8 w-8 animate-spin" /></div> : <ClientCompletedProjectsTab projects={completedProjects} />}
         </TabsContent>
       </Tabs>
     </div>
