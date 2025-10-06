@@ -6,8 +6,20 @@ import type { z } from 'zod';
 import { useState, useTransition, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { proposalSchema, type Project, type Proposal } from '@/lib/schema';
-import { submitProposal } from '@/app/actions';
+import { submitProposal, updateProposal, deleteProposal } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,10 +27,9 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { MapPin, Verified, Briefcase, DollarSign, Clock, Star, Send, Loader2 } from 'lucide-react';
+import { MapPin, Verified, Briefcase, DollarSign, Clock, Star, Send, Loader2, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,42 +37,186 @@ import { ru } from 'date-fns/locale';
 
 type ProposalFormValues = z.infer<typeof proposalSchema>;
 
-export function ProjectDetailsClient({ initialProject, initialProposals, currentUserId }: { initialProject: Project | null, initialProposals: Proposal[], currentUserId: string | null }) {
+function ProposalForm({ project, freelancerId, existingProposal, onFormSubmit }: {
+    project: Project;
+    freelancerId: string;
+    existingProposal?: Proposal | null;
+    onFormSubmit: () => void;
+}) {
     const [isPending, startTransition] = useTransition();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const isEditMode = !!existingProposal;
+
+    const form = useForm<ProposalFormValues>({
+        resolver: zodResolver(proposalSchema),
+        defaultValues: {
+            bidAmount: existingProposal?.bidAmount || undefined,
+            bidDuration: existingProposal?.bidDuration || undefined,
+            coverLetter: existingProposal?.coverLetter || '',
+        },
+    });
+    
+    useEffect(() => {
+        form.reset({
+            bidAmount: existingProposal?.bidAmount || undefined,
+            bidDuration: existingProposal?.bidDuration || undefined,
+            coverLetter: existingProposal?.coverLetter || '',
+        });
+    }, [existingProposal, form]);
+
+    const onSubmit = (data: ProposalFormValues) => {
+        startTransition(async () => {
+            const result = isEditMode
+              ? await updateProposal(existingProposal.id, project.id, data)
+              : await submitProposal(freelancerId, project.id, project.title, project.clientId, data);
+            
+            if (result.success) {
+                toast({ title: 'Успешно!', description: result.message });
+                onFormSubmit();
+                router.refresh();
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Ошибка',
+                    description: result.message || 'Произошла непредвиденная ошибка.',
+                });
+            }
+        });
+    };
+
+    return (
+        <Card id="submit-proposal">
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <CardHeader>
+                        <CardTitle>{isEditMode ? 'Редактировать предложение' : 'Подать предложение'}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField control={form.control} name="bidAmount" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ваша ставка (UZS)</FormLabel>
+                                    <FormControl><Input type="number" placeholder="3000000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="bidDuration" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Срок выполнения (дни)</FormLabel>
+                                    <FormControl><Input type="number" placeholder="5" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </div>
+                        <FormField control={form.control} name="coverLetter" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Сопроводительное письмо</FormLabel>
+                                <FormControl><Textarea placeholder="Расскажите, почему именно вы подходите для этого проекта..." rows={5} {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit" size="lg" disabled={isPending}>
+                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                            {isPending ? (isEditMode ? 'Сохранение...' : 'Отправка...') : (isEditMode ? 'Сохранить изменения' : 'Отправить предложение')}
+                        </Button>
+                         {isEditMode && (
+                            <Button type="button" variant="ghost" onClick={onFormSubmit} className="ml-2">
+                                Отмена
+                            </Button>
+                        )}
+                    </CardFooter>
+                </form>
+            </Form>
+        </Card>
+    );
+}
+
+function YourProposalCard({ proposal, onEdit, onDelete }: { proposal: Proposal, onEdit: () => void, onDelete: (proposalId: string) => void }) {
+    const [isDeleting, startTransition] = useTransition();
+
+    const handleDelete = () => {
+        startTransition(() => {
+            onDelete(proposal.id);
+        });
+    }
+
+    return (
+        <Card className="bg-primary/5">
+            <CardHeader>
+                <CardTitle>Ваше предложение</CardTitle>
+                <CardDescription>Вы уже откликнулись на этот проект. Вы можете отредактировать или отозвать свое предложение.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Предложенная ставка</p>
+                        <p className="text-lg font-bold">{proposal.bidAmount.toLocaleString('ru-RU')} UZS</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Срок</p>
+                        <p className="text-lg font-bold text-right">{proposal.bidDuration} дней</p>
+                    </div>
+                </div>
+                <p className="text-sm text-muted-foreground italic border-l-2 pl-3">"{proposal.coverLetter}"</p>
+            </CardContent>
+            <CardFooter className="gap-2">
+                <Button onClick={onEdit}><Edit className="mr-2 h-4 w-4"/>Редактировать</Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4"/>Отозвать</Button>
+                    </AlertDialogTrigger>
+                     <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Это действие нельзя будет отменить. Ваше предложение будет удалено.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Удаление..." : "Да, отозвать"}
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </CardFooter>
+        </Card>
+    );
+}
+
+
+export function ProjectDetailsClient({ initialProject, initialProposals, currentUserId }: { initialProject: Project | null, initialProposals: Proposal[], currentUserId: string | null }) {
     const { toast } = useToast();
     const router = useRouter();
     const [project] = useState<Project | null>(initialProject);
     const [proposals] = useState<Proposal[]>(initialProposals);
     const { user: authUser, isLoading: isUserLoading } = useAuth();
     
-    const hasSubmittedProposal = proposals.some(p => p.freelancerId === currentUserId);
+    const [isEditing, setIsEditing] = useState(false);
 
-    const form = useForm<ProposalFormValues>({
-        resolver: zodResolver(proposalSchema),
-        defaultValues: {
-            bidAmount: undefined,
-            bidDuration: undefined,
-            coverLetter: '',
-        },
-    });
+    const currentUserProposal = proposals.find(p => p.freelancerId === currentUserId);
+    const isOwner = currentUserId === project?.clientId;
 
-    const onSubmit = (data: ProposalFormValues) => {
-        if (!currentUserId || !project) return;
-        startTransition(async () => {
-            const result = await submitProposal(currentUserId, project.id, project.title, project.clientId, data);
-            if (result.success) {
-                toast({ title: 'Успешно!', description: result.message });
-                form.reset();
-                router.refresh();
-            } else {
-                toast({
-                    variant: 'destructive',
-                    title: 'Ошибка',
-                    description: result.message,
-                });
-            }
-        });
-    };
+
+    const handleDelete = async (proposalId: string) => {
+        if (!project || !currentUserId) return;
+        const result = await deleteProposal(proposalId, project.id, currentUserId);
+         if (result.success) {
+            toast({ title: 'Успешно!', description: result.message });
+            router.refresh();
+        } else {
+            toast({ variant: 'destructive', title: 'Ошибка', description: result.message });
+        }
+    }
 
     if (isUserLoading) {
         return (
@@ -85,7 +240,6 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
 
     const timeAgo = formatDistanceToNow(new Date(project.createdAt), { addSuffix: true, locale: ru });
     const budget = `${project.budgetAmount.toLocaleString('ru-RU')} UZS`;
-    const isOwner = currentUserId === project.clientId;
 
     return (
         <main className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -113,6 +267,7 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                         {proposals.length > 0 ? (
                             <div className="space-y-6">
                                 {proposals.map(p => (
+                                    p.freelancerId !== currentUserId && (
                                     <Card key={p.id}>
                                         <CardHeader className="flex flex-row justify-between">
                                             <div className="flex items-center gap-4">
@@ -143,64 +298,36 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                                             </CardFooter>
                                         )}
                                     </Card>
+                                    )
                                 ))}
                             </div>
                         ) : (
-                            <Card className="text-center p-8 border-dashed">
-                                <CardTitle className="text-lg font-normal">Предложений пока нет</CardTitle>
-                                <CardDescription>Будьте первым, кто откликнется на этот проект.</CardDescription>
-                            </Card>
+                             !currentUserProposal && (
+                                <Card className="text-center p-8 border-dashed">
+                                    <CardTitle className="text-lg font-normal">Предложений пока нет</CardTitle>
+                                    <CardDescription>Будьте первым, кто откликнется на этот проект.</CardDescription>
+                                </Card>
+                            )
                         )}
                     </div>
                     
-                    {authUser && !isOwner && !hasSubmittedProposal && (
-                         <Card id="submit-proposal">
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)}>
-                                    <CardHeader>
-                                        <CardTitle>Подать предложение</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField control={form.control} name="bidAmount" render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Ваша ставка (UZS)</FormLabel>
-                                                    <FormControl><Input type="number" placeholder="3000000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )} />
-                                            <FormField control={form.control} name="bidDuration" render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Срок выполнения (дни)</FormLabel>
-                                                    <FormControl><Input type="number" placeholder="5" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )} />
-                                        </div>
-                                        <FormField control={form.control} name="coverLetter" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Сопроводительное письмо</FormLabel>
-                                                <FormControl><Textarea placeholder="Расскажите, почему именно вы подходите для этого проекта..." rows={5} {...field} /></FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                    </CardContent>
-                                    <CardFooter>
-                                        <Button type="submit" size="lg" disabled={isPending}>
-                                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                            {isPending ? 'Отправка...' : 'Отправить предложение'}
-                                        </Button>
-                                    </CardFooter>
-                                </form>
-                            </Form>
-                         </Card>
+                     {authUser && !isOwner && (
+                        currentUserProposal && !isEditing ? (
+                            <YourProposalCard 
+                                proposal={currentUserProposal} 
+                                onEdit={() => setIsEditing(true)}
+                                onDelete={handleDelete}
+                            />
+                        ) : (
+                            <ProposalForm
+                                project={project}
+                                freelancerId={currentUserId!}
+                                existingProposal={isEditing ? currentUserProposal : null}
+                                onFormSubmit={() => setIsEditing(false)}
+                            />
+                        )
                     )}
-                    {hasSubmittedProposal && (
-                         <Card className="text-center p-8">
-                            <CardTitle>Вы уже подали предложение</CardTitle>
-                            <CardDescription className="mt-2">Заказчик скоро рассмотрит вашу заявку.</CardDescription>
-                        </Card>
-                    )}
+
                     {!authUser && !isUserLoading && (
                         <Card className="text-center p-8">
                             <CardTitle>Хотите выполнить этот проект?</CardTitle>

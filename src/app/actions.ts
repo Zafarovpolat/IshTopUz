@@ -504,3 +504,53 @@ export async function submitProposal(
     return { success: false, message: 'Произошла ошибка при отправке предложения.' };
   }
 }
+
+export async function updateProposal(
+  proposalId: string,
+  projectId: string,
+  data: z.infer<typeof proposalSchema>
+): Promise<ProposalState> {
+  const validatedFields = proposalSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors, message: 'Проверка не удалась.', success: false };
+  }
+
+  try {
+    const proposalRef = db.collection('projects').doc(projectId).collection('proposals').doc(proposalId);
+    await proposalRef.update({
+      ...validatedFields.data,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    revalidatePath(`/marketplace/jobs/${projectId}`);
+    return { success: true, message: 'Ваше предложение успешно обновлено!' };
+  } catch (error: any) {
+    return { success: false, message: 'Произошла ошибка при обновлении предложения.' };
+  }
+}
+
+
+export async function deleteProposal(
+    proposalId: string,
+    projectId: string,
+    freelancerId: string
+): Promise<{ success: boolean, message: string }> {
+
+    try {
+        const projectRef = db.collection('projects').doc(projectId);
+        const proposalRef = projectRef.collection('proposals').doc(proposalId);
+        
+        const proposalDoc = await proposalRef.get();
+        if (!proposalDoc.exists || proposalDoc.data()?.freelancerId !== freelancerId) {
+            return { success: false, message: 'Предложение не найдено или у вас нет прав на его удаление.' };
+        }
+
+        await proposalRef.delete();
+        await projectRef.update({ proposalsCount: FieldValue.increment(-1) });
+
+        revalidatePath(`/marketplace/jobs/${projectId}`);
+        return { success: true, message: 'Ваше предложение успешно удалено.' };
+    } catch (error: any) {
+        console.error("Failed to delete proposal:", error);
+        return { success: false, message: 'Произошла ошибка при удалении предложения.' };
+    }
+}
