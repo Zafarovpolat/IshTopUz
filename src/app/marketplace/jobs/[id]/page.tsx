@@ -182,18 +182,6 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
                                     <Label htmlFor="cover-letter">Сопроводительное письмо</Label>
                                     <Textarea id="cover-letter" placeholder="Расскажите, почему именно вы подходите для этого проекта..." rows={5} />
                                 </div>
-                                    <div className="space-y-2">
-                                    <Label htmlFor="attachments">Прикрепить файлы</Label>
-                                    <div className="flex items-center justify-center w-full">
-                                        <label htmlFor="attachments" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
-                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <Paperclip className="w-8 h-8 mb-3 text-muted-foreground" />
-                                                <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Нажмите для загрузки</span> или перетащите</p>
-                                            </div>
-                                            <Input id="attachments" type="file" className="hidden" />
-                                        </label>
-                                    </div> 
-                                </div>
                             </CardContent>
                             <CardFooter>
                                 <Button size="lg"><Send className="mr-2 h-4 w-4" /> Отправить предложение</Button>
@@ -266,5 +254,7 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
             </div>
         </main>
     );
+
+    
 
     
