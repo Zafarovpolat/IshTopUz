@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +7,7 @@ import { useState, useTransition, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { proposalSchema, type Project, type Proposal } from '@/lib/schema';
 import { submitProposal } from '@/app/actions';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { MapPin, Verified, Briefcase, DollarSign, Clock, Star, Paperclip, Send, Loader2 } from 'lucide-react';
+import { MapPin, Verified, Briefcase, DollarSign, Clock, Star, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -27,9 +29,12 @@ type ProposalFormValues = z.infer<typeof proposalSchema>;
 export function ProjectDetailsClient({ initialProject, initialProposals, currentUserId }: { initialProject: Project | null, initialProposals: Proposal[], currentUserId: string | null }) {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    const router = useRouter();
     const [project] = useState<Project | null>(initialProject);
     const [proposals] = useState<Proposal[]>(initialProposals);
     const { user: authUser, isLoading: isUserLoading } = useAuth();
+    
+    const hasSubmittedProposal = proposals.some(p => p.freelancerId === currentUserId);
 
     const form = useForm<ProposalFormValues>({
         resolver: zodResolver(proposalSchema),
@@ -47,7 +52,7 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
             if (result.success) {
                 toast({ title: 'Успешно!', description: result.message });
                 form.reset();
-                // Optionally refresh proposals here
+                router.refresh();
             } else {
                 toast({
                     variant: 'destructive',
@@ -148,7 +153,7 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                         )}
                     </div>
                     
-                    {authUser && !isOwner && (
+                    {authUser && !isOwner && !hasSubmittedProposal && (
                          <Card id="submit-proposal">
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -160,14 +165,14 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                                             <FormField control={form.control} name="bidAmount" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Ваша ставка (UZS)</FormLabel>
-                                                    <FormControl><Input type="number" placeholder="3000000" {...field} /></FormControl>
+                                                    <FormControl><Input type="number" placeholder="3000000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
                                             <FormField control={form.control} name="bidDuration" render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Срок выполнения (дни)</FormLabel>
-                                                    <FormControl><Input type="number" placeholder="5" {...field} /></FormControl>
+                                                    <FormControl><Input type="number" placeholder="5" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )} />
@@ -189,6 +194,12 @@ export function ProjectDetailsClient({ initialProject, initialProposals, current
                                 </form>
                             </Form>
                          </Card>
+                    )}
+                    {hasSubmittedProposal && (
+                         <Card className="text-center p-8">
+                            <CardTitle>Вы уже подали предложение</CardTitle>
+                            <CardDescription className="mt-2">Заказчик скоро рассмотрит вашу заявку.</CardDescription>
+                        </Card>
                     )}
                     {!authUser && !isUserLoading && (
                         <Card className="text-center p-8">

@@ -17,13 +17,32 @@ interface Notification {
     createdAt: any;
 }
 
+const formatNotificationDate = (timestamp: any) => {
+    if (!timestamp) return 'только что';
+    try {
+        const date = timestamp.toDate();
+        return date.toLocaleString('ru-RU', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return 'недавно';
+    }
+};
+
 export function NotificationBell({ userId }: { userId: string }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+            setIsLoading(false);
+            return;
+        };
 
         const q = query(
             collection(db, 'notifications'),
@@ -43,6 +62,9 @@ export function NotificationBell({ userId }: { userId: string }) {
             });
             setNotifications(fetchedNotifications);
             setUnreadCount(unread);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching notifications: ", error);
             setIsLoading(false);
         });
 
@@ -72,10 +94,10 @@ export function NotificationBell({ userId }: { userId: string }) {
                     ) : notifications.length > 0 ? (
                         notifications.map((notif) => (
                             <Link key={notif.id} href={`/marketplace/jobs/${notif.entityId}`} className="block">
-                                <div className={`p-4 hover:bg-muted ${!notif.isRead ? 'bg-blue-500/10' : ''}`}>
+                                <div className={`p-4 hover:bg-muted ${!notif.isRead ? 'bg-primary/10' : ''}`}>
                                     <p className="text-sm">{notif.message}</p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {new Date(notif.createdAt?.toDate()).toLocaleString()}
+                                        {formatNotificationDate(notif.createdAt)}
                                     </p>
                                 </div>
                             </Link>

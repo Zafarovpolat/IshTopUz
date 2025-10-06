@@ -458,10 +458,18 @@ export async function submitProposal(
   }
 
   const projectRef = db.collection('projects').doc(projectId);
+  const proposalsRef = projectRef.collection('proposals');
 
   try {
+     // Check for existing proposal
+    const existingProposalQuery = proposalsRef.where('freelancerId', '==', freelancerId);
+    const existingProposalSnapshot = await existingProposalQuery.get();
+    if (!existingProposalSnapshot.empty) {
+      return { success: false, message: 'Вы уже подали предложение на этот проект.' };
+    }
+
     // 1. Add proposal to subcollection
-    await projectRef.collection('proposals').add({
+    await proposalsRef.add({
       freelancerId,
       ...validatedFields.data,
       createdAt: FieldValue.serverTimestamp(),
