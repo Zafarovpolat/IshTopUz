@@ -475,7 +475,7 @@ export async function submitProposal(
 
     // 3. Create a notification for the client
     const freelancerDoc = await db.collection('users').doc(freelancerId).get();
-    const freelancerName = freelancerDoc.exists() ? `${freelancerDoc.data()?.profile.firstName} ${freelancerDoc.data()?.profile.lastName}` : 'Новый исполнитель';
+    const freelancerName = freelancerDoc.exists ? `${freelancerDoc.data()?.profile.firstName} ${freelancerDoc.data()?.profile.lastName}` : 'Новый исполнитель';
 
     await db.collection('notifications').add({
       recipientId: clientId,
