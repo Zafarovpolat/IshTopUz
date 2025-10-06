@@ -56,7 +56,7 @@ async function getProjects(): Promise<Project[]> {
     return projects.map(p => ({...p, clientVerified: true})); // Mocking verification for now
 }
 
-export async function JobBoard() {
+async function JobsPageContent() {
   const userId = await getUserId();
   const projects = await getProjects();
   const applyLinkBase = userId ? '/jobs' : '/auth';
@@ -203,6 +203,10 @@ export async function JobBoard() {
   );
 }
 
+export function JobBoard() {
+    return <JobsPageContent />;
+}
+
 export default async function JobsPage() {
     return (
       <>
@@ -212,7 +216,7 @@ export default async function JobsPage() {
                 <h1 className="text-4xl font-bold tracking-tight">Поиск работы</h1>
                 <p className="mt-4 text-lg text-muted-foreground">Найдите лучшие проекты и откликнитесь на них первыми.</p>
             </div>
-            <JobBoard />
+            <JobsPageContent />
         </main>
         <Footer />
       </>

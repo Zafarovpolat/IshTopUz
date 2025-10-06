@@ -61,7 +61,7 @@ async function getKworks() {
 
 const categories = ["Веб-разработка", "Мобильные приложения", "Дизайн", "Копирайтинг", "Переводы", "Маркетинг", "Видео/Аудио"];
 
-export async function KworksCatalog() {
+async function KworksCatalogContent() {
     const userId = await getUserId();
     const kworksData = await getKworks();
     const orderLinkBase = userId ? '/projects' : '/auth';
@@ -136,6 +136,9 @@ export async function KworksCatalog() {
     )
 }
 
+export function KworksCatalog() {
+    return <KworksCatalogContent />;
+}
 
 export default function ProjectsCatalogPage() {
     return (
@@ -146,7 +149,7 @@ export default function ProjectsCatalogPage() {
                     <h1 className="text-4xl font-bold tracking-tight">Каталог Проектов</h1>
                     <p className="mt-4 text-lg text-muted-foreground">Готовые решения от лучших фрилансеров с фиксированной ценой.</p>
                 </div>
-                <KworksCatalog />
+                <KworksCatalogContent />
             </main>
             <Footer />
         </>
