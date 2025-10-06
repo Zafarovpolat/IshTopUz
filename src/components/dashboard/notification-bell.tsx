@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
@@ -71,6 +71,18 @@ export function NotificationBell({ userId }: { userId: string }) {
         return () => unsubscribe();
     }, [userId]);
 
+    const handleNotificationClick = async (notification: Notification) => {
+        if (!notification.isRead) {
+            const notifRef = doc(db, 'notifications', notification.id);
+            try {
+                await updateDoc(notifRef, { isRead: true });
+            } catch (error) {
+                console.error("Error updating notification: ", error);
+            }
+        }
+    };
+
+
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -93,8 +105,8 @@ export function NotificationBell({ userId }: { userId: string }) {
                         </div>
                     ) : notifications.length > 0 ? (
                         notifications.map((notif) => (
-                            <Link key={notif.id} href={`/marketplace/jobs/${notif.entityId}`} className="block">
-                                <div className={`p-4 hover:bg-muted ${!notif.isRead ? 'bg-primary/10' : ''}`}>
+                            <Link key={notif.id} href={`/marketplace/jobs/${notif.entityId}`} passHref>
+                                <div onClick={() => handleNotificationClick(notif)} className={`p-4 hover:bg-muted ${!notif.isRead ? 'bg-primary/10' : ''} cursor-pointer`}>
                                     <p className="text-sm">{notif.message}</p>
                                     <p className="text-xs text-muted-foreground mt-1">
                                         {formatNotificationDate(notif.createdAt)}

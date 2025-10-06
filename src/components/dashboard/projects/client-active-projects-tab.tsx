@@ -82,7 +82,9 @@ export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Projec
                 </div>
             </CardContent>
             <CardFooter className="flex gap-2">
-                <Button variant="secondary" className="w-full" onClick={() => onEdit(project)}>Редактировать</Button>
+                 <Button asChild className="w-full">
+                    <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть проект</Link>
+                </Button>
                 {freelancer && <Button variant="outline" className="w-full">Чат с исполнителем</Button>}
             </CardFooter>
             </Card>
