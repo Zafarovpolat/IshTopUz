@@ -65,7 +65,6 @@ async function getProjects(): Promise<Project[]> {
 async function JobsPageContent() {
   const userId = await getUserId();
   const projects = await getProjects();
-  const applyLinkBase = userId ? '/marketplace/jobs' : '/auth';
 
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
@@ -157,7 +156,7 @@ async function JobsPageContent() {
                         const postedAt = new Date(job.createdAt);
                         const timeAgo = formatDistanceToNow(postedAt, { addSuffix: true, locale: ru });
                         const budget = `${job.budgetAmount.toLocaleString('ru-RU')} UZS`;
-                        const applyLink = `${applyLinkBase}/${job.id}`;
+                        const applyLink = userId ? `/marketplace/jobs/${job.id}` : '/auth';
 
                         return (
                             <Card key={job.id}>
@@ -213,7 +212,7 @@ export function JobBoard() {
     return <JobsPageContent />;
 }
 
-export default function JobsPage() {
+export default async function JobsPage() {
     return (
       <>
         <Header />
