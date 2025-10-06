@@ -40,6 +40,12 @@ function FreelancerProfileForm({ user }: { user: any }) {
       firstName: user.profile?.firstName || '',
       lastName: user.profile?.lastName || '',
       city: user.profile?.city || '',
+      country: user.profile?.country || '',
+      dateOfBirth: user.profile?.dateOfBirth || '',
+      gender: user.profile?.gender || '',
+      languages: Array.isArray(user.profile?.languages) 
+        ? user.profile.languages.join(', ') 
+        : (user.profile?.languages || ''),
       title: user.freelancerProfile?.title || '',
       hourlyRate: user.freelancerProfile?.hourlyRate || 0,
       skills: Array.isArray(user.freelancerProfile?.skills) 
@@ -48,9 +54,6 @@ function FreelancerProfileForm({ user }: { user: any }) {
       experience: user.freelancerProfile?.experience || 'beginner',
       isAvailable: user.freelancerProfile?.isAvailable ?? true,
       description: user.freelancerProfile?.description || '',
-      languages: Array.isArray(user.profile?.languages) 
-        ? user.profile.languages.join(', ') 
-        : (user.profile?.languages || ''),
     },
   });
 
@@ -188,6 +191,38 @@ function FreelancerProfileForm({ user }: { user: any }) {
                   <FormItem>
                     <FormLabel>Город</FormLabel>
                     <FormControl><Input placeholder="Ташкент" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField name="country" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Страна</FormLabel>
+                    <FormControl><Input placeholder="Узбекистан" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField name="dateOfBirth" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Дата рождения</FormLabel>
+                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField name="gender" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Пол</FormLabel>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Выберите пол" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="male">Мужской</SelectItem>
+                            <SelectItem value="female">Женский</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -549,4 +584,3 @@ export function ProfileForm({ user }: { user: any }) {
     </Card>
   );
 }
-

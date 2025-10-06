@@ -23,7 +23,7 @@ async function getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
         description: data.description,
         imageUrl: data.imageUrl,
         projectUrl: data.projectUrl,
-        technologies: data.technologies || [],
+        technologies: data.tags || [], // Fix: Use 'tags' from DB and map to 'technologies'
         createdAt: createdAt.toISOString(),
       }
     });

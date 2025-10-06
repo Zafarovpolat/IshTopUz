@@ -22,6 +22,9 @@ export const profileFreelancerSchema = z.object({
   firstName: z.string().min(2, "Имя обязательно."),
   lastName: z.string().min(2, "Фамилия обязательна."),
   city: z.string().optional(),
+  country: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  gender: z.string().optional(),
   languages,
   
   // freelancerProfile
@@ -143,4 +146,3 @@ export type PortfolioState = {
   message?: string | null;
   success: boolean;
 };
-

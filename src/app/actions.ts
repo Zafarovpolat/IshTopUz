@@ -215,7 +215,7 @@ export async function updateProfile(
     };
 
     if (userType === 'freelancer') {
-      const { firstName, lastName, city, languages, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
+      const { firstName, lastName, city, country, dateOfBirth, gender, languages, ...freelancerProfileData } = validatedFields.data as z.infer<typeof profileFreelancerSchema>;
       
       const skillsArray = Array.isArray(freelancerProfileData.skills)
           ? freelancerProfileData.skills
@@ -228,6 +228,9 @@ export async function updateProfile(
       updateData['profile.firstName'] = firstName;
       updateData['profile.lastName'] = lastName;
       updateData['profile.city'] = city;
+      updateData['profile.country'] = country;
+      updateData['profile.dateOfBirth'] = dateOfBirth;
+      updateData['profile.gender'] = gender;
       updateData['profile.languages'] = languagesArray;
       updateData['freelancerProfile.title'] = freelancerProfileData.title;
       updateData['freelancerProfile.hourlyRate'] = freelancerProfileData.hourlyRate;
@@ -314,4 +317,3 @@ export async function deletePortfolioItem(userId: string, itemId: string): Promi
         return { success: false, message: 'Не удалось удалить работу.' };
     }
 }
-
