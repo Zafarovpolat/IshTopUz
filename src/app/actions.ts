@@ -2,7 +2,7 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema, type Project } from "@/lib/schema";
 import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState, ProjectState } from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -349,9 +349,43 @@ export async function createProject(userId: string, data: z.infer<typeof project
         
         revalidatePath('/jobs');
         revalidatePath('/marketplace');
+        revalidatePath('/dashboard/projects');
         return { success: true, message: 'Проект успешно создан!' };
     } catch (error: any) {
         console.error('Failed to create project:', error);
         return { success: false, message: error.message || 'Не удалось создать проект.' };
     }
+}
+
+export async function getProjectsByClientId(clientId: string): Promise<Project[]> {
+  if (!clientId) return [];
+
+  const projectsRef = db.collection('projects');
+  const q = projectsRef.where('clientId', '==', clientId).orderBy('createdAt', 'desc');
+  const snapshot = await q.get();
+
+  if (snapshot.empty) {
+    return [];
+  }
+
+  const projects: Project[] = snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      title: data.title,
+      description: data.description,
+      budgetType: data.budgetType,
+      budgetAmount: data.budgetAmount,
+      skills: data.skills,
+      createdAt: data.createdAt.toDate().toISOString(),
+      clientId: data.clientId,
+      status: data.status,
+      proposalsCount: data.proposalsCount,
+      freelancerId: data.freelancerId,
+      deadline: data.deadline?.toDate().toISOString(),
+      completedAt: data.completedAt?.toDate().toISOString(),
+    };
+  });
+
+  return projects;
 }

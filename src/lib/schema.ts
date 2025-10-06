@@ -114,9 +114,7 @@ export const projectSchema = z.object({
     (a) => parseFloat(String(a)),
     z.number().positive('Сумма должна быть положительной.')
   ),
-  deadline: z.date({
-    required_error: 'Пожалуйста, выберите дату.',
-  }),
+  deadline: z.date().optional(),
 });
 
 
@@ -150,7 +148,7 @@ export type SurveyState = {
 };
 
 export type ProfileState = {
-    errors?: { [key: string]: string[] }
+    errors?: { [key:string]: string[] }
     message?: string | null;
     success: boolean;
 };
@@ -170,3 +168,19 @@ export type ProjectState = {
   message?: string | null;
   success: boolean;
 };
+
+export interface Project {
+    id: string;
+    title: string;
+    description: string;
+    budgetType: 'fixed' | 'hourly';
+    budgetAmount: number;
+    skills: string[];
+    createdAt: string;
+    clientId: string;
+    status: 'open' | 'in_progress' | 'completed' | 'closed';
+    proposalsCount?: number;
+    freelancerId?: string;
+    deadline?: string;
+    completedAt?: string;
+}

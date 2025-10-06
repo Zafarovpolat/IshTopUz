@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,9 +15,35 @@ import { PlusCircle } from "lucide-react";
 import { CreateProjectForm } from './create-project-form';
 import { ClientActiveProjectsTab } from './client-active-projects-tab';
 import { ClientCompletedProjectsTab } from './client-completed-projects-tab';
+import { getProjectsByClientId } from '@/app/actions';
+import type { Project } from '@/lib/schema';
+import { useAuth } from '@/hooks/use-auth';
+import { Loader2 } from 'lucide-react';
 
 export function ClientProjectsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.uid) {
+      getProjectsByClientId(user.uid)
+        .then(data => {
+          setProjects(data);
+          setIsLoading(false);
+        })
+        .catch(err => {
+            console.error(err);
+            setIsLoading(false);
+        });
+    } else {
+        setIsLoading(false);
+    }
+  }, [user]);
+  
+  const activeProjects = projects.filter(p => p.status === 'open' || p.status === 'in_progress');
+  const completedProjects = projects.filter(p => p.status === 'completed');
 
   return (
     <div className="space-y-6">
@@ -50,10 +76,10 @@ export function ClientProjectsPage() {
           <TabsTrigger value="completed">Завершенные</TabsTrigger>
         </TabsList>
         <TabsContent value="active">
-            <ClientActiveProjectsTab />
+            {isLoading ? <Loader2 className="mt-4 h-8 w-8 animate-spin" /> : <ClientActiveProjectsTab projects={activeProjects} />}
         </TabsContent>
         <TabsContent value="completed">
-            <ClientCompletedProjectsTab />
+            {isLoading ? <Loader2 className="mt-4 h-8 w-8 animate-spin" /> : <ClientCompletedProjectsTab projects={completedProjects} />}
         </TabsContent>
       </Tabs>
     </div>
