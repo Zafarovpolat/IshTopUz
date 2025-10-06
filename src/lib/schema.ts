@@ -117,6 +117,18 @@ export const projectSchema = z.object({
   deadline: z.date().optional(),
 });
 
+export const proposalSchema = z.object({
+  bidAmount: z.preprocess(
+    (a) => parseFloat(String(a)),
+    z.number().positive('Ставка должна быть положительной.')
+  ),
+  bidDuration: z.preprocess(
+    (a) => parseInt(String(a), 10),
+    z.number().int().positive('Срок должен быть положительным числом.')
+  ),
+  coverLetter: z.string().min(20, 'Сопроводительное письмо должно содержать не менее 20 символов.'),
+});
+
 
 export type LeadState = {
   errors?: {
@@ -169,6 +181,13 @@ export type ProjectState = {
   success: boolean;
 };
 
+export type ProposalState = {
+  errors?: z.ZodError<z.infer<typeof proposalSchema>>['formErrors']['fieldErrors'];
+  message?: string | null;
+  success: boolean;
+};
+
+
 export interface Project {
     id: string;
     title: string;
@@ -184,3 +203,18 @@ export interface Project {
     deadline?: string;
     completedAt?: string;
 }
+
+export type Proposal = {
+  id: string;
+  freelancerId: string;
+  bidAmount: number;
+  bidDuration: number;
+  coverLetter: string;
+  createdAt: string;
+  freelancer: {
+    name: string;
+    avatar: string;
+    rating: number;
+    title: string;
+  }
+};

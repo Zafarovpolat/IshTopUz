@@ -31,6 +31,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '../layout/logo';
+import { NotificationBell } from './notification-bell';
 
 export function DashboardHeader({ user }: { user: User | any }) {
     const router = useRouter();
@@ -67,10 +68,7 @@ export function DashboardHeader({ user }: { user: User | any }) {
                 <span className="sr-only">Сообщения</span>
             </Link>
          </Button>
-         <Button variant="ghost" size="icon" className="rounded-full">
-            <Bell className="h-5 w-5" />
-            <span className="sr-only">Уведомления</span>
-         </Button>
+         <NotificationBell userId={user.uid} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

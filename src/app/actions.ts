@@ -2,10 +2,10 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema, type Project } from "@/lib/schema";
-import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState, ProjectState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema, proposalSchema, type Project } from "@/lib/schema";
+import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState, ProjectState, ProposalState } from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, DocumentReference } from "firebase-admin/firestore";
 import { getAuth } from 'firebase-admin/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -435,4 +435,64 @@ export async function getProjectsByClientId(clientId: string): Promise<Project[]
   });
 
   return projects;
+}
+
+export async function submitProposal(
+  freelancerId: string,
+  projectId: string,
+  projectTitle: string,
+  clientId: string,
+  data: z.infer<typeof proposalSchema>
+): Promise<ProposalState> {
+  if (!freelancerId || !projectId || !clientId) {
+    return { success: false, message: 'Ошибка: Необходимы ID фрилансера, проекта и клиента.' };
+  }
+
+  const validatedFields = proposalSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась. Пожалуйста, исправьте ошибки.',
+      success: false,
+    };
+  }
+
+  const projectRef = db.collection('projects').doc(projectId);
+
+  try {
+    // 1. Add proposal to subcollection
+    await projectRef.collection('proposals').add({
+      freelancerId,
+      ...validatedFields.data,
+      createdAt: FieldValue.serverTimestamp(),
+      status: 'submitted',
+    });
+
+    // 2. Increment proposals count on the project
+    await projectRef.update({
+      proposalsCount: FieldValue.increment(1),
+    });
+
+    // 3. Create a notification for the client
+    const freelancerDoc = await db.collection('users').doc(freelancerId).get();
+    const freelancerName = freelancerDoc.exists() ? `${freelancerDoc.data()?.profile.firstName} ${freelancerDoc.data()?.profile.lastName}` : 'Новый исполнитель';
+
+    await db.collection('notifications').add({
+      recipientId: clientId,
+      senderId: freelancerId,
+      senderName: freelancerName,
+      type: 'new_proposal',
+      message: `${freelancerName} оставил отклик на ваш проект "${projectTitle}"`,
+      entityId: projectId,
+      entityType: 'project',
+      isRead: false,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    revalidatePath(`/marketplace/jobs/${projectId}`);
+    return { success: true, message: 'Ваше предложение успешно отправлено!' };
+  } catch (error: any) {
+    console.error('Failed to submit proposal:', error);
+    return { success: false, message: 'Произошла ошибка при отправке предложения.' };
+  }
 }
