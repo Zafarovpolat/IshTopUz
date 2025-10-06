@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, RefreshCw } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@/lib/schema";
+import Link from 'next/link';
 
 // Mock data for freelancer, this should come from a separate query
 const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
@@ -41,7 +42,9 @@ export function ClientCompletedProjectsTab({ projects }: { projects: Project[] }
          return (
             <Card key={project.id}>
             <CardHeader>
-                <CardTitle>{project.title}</CardTitle>
+                <Link href={`/marketplace/jobs/${project.id}`}>
+                    <CardTitle className="hover:text-primary transition-colors">{project.title}</CardTitle>
+                </Link>
                 {freelancer ? (
                     <CardDescription className="flex items-center gap-2 pt-1">
                         <Avatar className="h-6 w-6">

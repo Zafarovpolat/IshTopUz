@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Project } from "@/lib/schema";
+import Link from 'next/link';
 
 // Mock data for freelancer, this should come from a separate query
 const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
@@ -20,7 +21,7 @@ const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
 };
 
 
-export function ClientActiveProjectsTab({ projects }: { projects: Project[] }) {
+export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Project[], onEdit: (project: Project) => void }) {
     if (projects.length === 0) {
         return (
              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
@@ -36,15 +37,23 @@ export function ClientActiveProjectsTab({ projects }: { projects: Project[] }) {
     <div className="grid gap-6 mt-4 md:grid-cols-2">
       {projects.map((project) => {
         const freelancer = project.freelancerId ? mockFreelancers[project.freelancerId] : null;
-        const progress = project.status === 'in_progress' ? 50 : 10; // Placeholder progress
+        let progress = 0;
+        if (project.status === 'in_progress') {
+            progress = 50;
+        } else if (project.status === 'completed') {
+            progress = 100;
+        }
+        
         const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ru-RU') : 'не указан';
 
         return (
             <Card key={project.id}>
             <CardHeader>
-                <CardTitle>{project.title}</CardTitle>
+                <Link href={`/marketplace/jobs/${project.id}`}>
+                    <CardTitle className="hover:text-primary transition-colors">{project.title}</CardTitle>
+                </Link>
                 {freelancer ? (
-                    <CardDescription className="flex items-center gap-2">
+                    <CardDescription className="flex items-center gap-2 pt-1">
                         <Avatar className="h-6 w-6">
                             <AvatarImage src={freelancer.avatar} />
                             <AvatarFallback>{freelancer.name.charAt(0)}</AvatarFallback>
@@ -69,7 +78,7 @@ export function ClientActiveProjectsTab({ projects }: { projects: Project[] }) {
                 </div>
             </CardContent>
             <CardFooter className="flex gap-2">
-                <Button className="w-full">Перейти к проекту</Button>
+                <Button variant="secondary" className="w-full" onClick={() => onEdit(project)}>Редактировать</Button>
                 {freelancer && <Button variant="outline" className="w-full">Чат с исполнителем</Button>}
             </CardFooter>
             </Card>

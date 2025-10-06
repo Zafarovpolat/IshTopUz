@@ -336,7 +336,9 @@ export async function createProject(userId: string, data: z.infer<typeof project
     }
     
     try {
-        const skillsArray = validatedFields.data.skills.split(',').map(s => s.trim()).filter(Boolean);
+        const skillsArray = typeof validatedFields.data.skills === 'string' 
+          ? validatedFields.data.skills.split(',').map(s => s.trim()).filter(Boolean)
+          : [];
 
         await db.collection('projects').add({
             ...validatedFields.data,
@@ -356,6 +358,43 @@ export async function createProject(userId: string, data: z.infer<typeof project
         return { success: false, message: error.message || 'Не удалось создать проект.' };
     }
 }
+
+export async function updateProject(projectId: string, data: z.infer<typeof projectSchema>): Promise<ProjectState> {
+  if (!projectId) {
+    return { success: false, message: 'Ошибка: ID проекта не найден.' };
+  }
+
+  const validatedFields = projectSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась.',
+      success: false,
+    };
+  }
+
+  try {
+    const projectRef = db.collection('projects').doc(projectId);
+    const skillsArray = typeof validatedFields.data.skills === 'string' 
+        ? validatedFields.data.skills.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
+    await projectRef.update({
+      ...validatedFields.data,
+      skills: skillsArray,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    revalidatePath(`/marketplace/jobs/${projectId}`);
+    revalidatePath('/jobs');
+    revalidatePath('/dashboard/projects');
+    return { success: true, message: 'Проект успешно обновлен!' };
+  } catch (error: any) {
+    console.error('Failed to update project:', error);
+    return { success: false, message: error.message || 'Не удалось обновить проект.' };
+  }
+}
+
 
 export async function getProjectsByClientId(clientId: string): Promise<Project[]> {
   if (!clientId) return [];

@@ -4,11 +4,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { createProject } from '@/app/actions';
+import { createProject, updateProject } from '@/app/actions';
 import { useAuth } from '@/hooks/use-auth';
-import { projectSchema } from '@/lib/schema';
+import { projectSchema, type Project } from '@/lib/schema';
 import { Loader2, UploadCloud, X, File as FileIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -24,13 +24,20 @@ import { cn } from '@/lib/utils';
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }) {
+interface ProjectFormProps {
+  project?: Project | null;
+  onFormSubmit: () => void;
+}
+
+export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const { user } = useAuth();
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const isEditMode = !!project;
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -42,6 +49,22 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
       budgetAmount: undefined,
     },
   });
+
+  useEffect(() => {
+    if (project) {
+      form.reset({
+        title: project.title,
+        description: project.description,
+        skills: Array.isArray(project.skills) ? project.skills.join(', ') : '',
+        budgetType: project.budgetType,
+        budgetAmount: project.budgetAmount,
+        deadline: project.deadline ? new Date(project.deadline) : undefined,
+      });
+    } else {
+        form.reset();
+    }
+  }, [project, form]);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -55,7 +78,7 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
 
   const onSubmit = (data: ProjectFormValues) => {
     if (!user) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы должны быть авторизованы для создания проекта.' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы должны быть авторизованы для управления проектом.' });
       return;
     }
 
@@ -63,7 +86,13 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
     // For now, files are ignored.
 
     startTransition(async () => {
-      const result = await createProject(user.uid, data);
+        let result;
+        if (isEditMode && project.id) {
+             result = await updateProject(project.id, data);
+        } else {
+             result = await createProject(user.uid, data);
+        }
+      
       if (result.success) {
         toast({ title: 'Успешно!', description: result.message });
         form.reset();
@@ -148,7 +177,7 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Бюджет (UZS)</FormLabel>
-                    <FormControl><Input type="number" placeholder="500000" {...field} /></FormControl>
+                    <FormControl><Input type="number" placeholder="500000" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -240,7 +269,7 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
             )}
         </div>
         <Button type="submit" className="w-full" disabled={isPending || isUploading}>
-          {isPending ? 'Публикация...' : 'Опубликовать проект'}
+          {isPending ? (isEditMode ? 'Сохранение...' : 'Публикация...') : (isEditMode ? 'Сохранить изменения' : 'Опубликовать проект')}
         </Button>
       </form>
     </Form>
