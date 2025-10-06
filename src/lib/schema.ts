@@ -105,6 +105,20 @@ export type PortfolioItem = {
   createdAt: string;
 };
 
+export const projectSchema = z.object({
+  title: z.string().min(10, 'Заголовок должен быть не менее 10 символов.'),
+  description: z.string().min(50, 'Описание должно быть не менее 50 символов.'),
+  skills: z.string().min(1, 'Укажите хотя бы один навык.'),
+  budgetType: z.enum(['fixed', 'hourly']),
+  budgetAmount: z.preprocess(
+    (a) => parseFloat(z.string().parse(a)),
+    z.number().positive('Сумма должна быть положительной.')
+  ),
+  deadline: z.date({
+    required_error: 'Пожалуйста, выберите дату.',
+  }),
+});
+
 
 export type LeadState = {
   errors?: {
@@ -142,6 +156,14 @@ export type ProfileState = {
 };
 
 export type PortfolioState = {
+  errors?: {
+    [key: string]: string[];
+  };
+  message?: string | null;
+  success: boolean;
+};
+
+export type ProjectState = {
   errors?: {
     [key: string]: string[];
   };

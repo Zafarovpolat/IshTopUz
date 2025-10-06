@@ -3,10 +3,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { useState, useTransition, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-// import { createProject } from '@/app/actions';
+import { createProject } from '@/app/actions';
+import { useAuth } from '@/hooks/use-auth';
+import { projectSchema } from '@/lib/schema';
 import { Loader2, UploadCloud, X, File as FileIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,27 +22,12 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-
-// Mock schema for now
-const projectSchema = z.object({
-  title: z.string().min(10, 'Заголовок должен быть не менее 10 символов.'),
-  description: z.string().min(50, 'Описание должно быть не менее 50 символов.'),
-  skills: z.string().min(1, 'Укажите хотя бы один навык.'),
-  budgetType: z.enum(['fixed', 'hourly']),
-  budgetAmount: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().positive('Сумма должна быть положительной.')
-  ),
-  deadline: z.date({
-    required_error: 'Пожалуйста, выберите дату.',
-  }),
-});
-
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
 export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,9 +54,28 @@ export function CreateProjectForm({ onFormSubmit }: { onFormSubmit: () => void }
   }
 
   const onSubmit = (data: ProjectFormValues) => {
-    console.log(data, files);
-    toast({ title: 'Проект создан (демо)', description: 'В реальном приложении он был бы сохранен.' });
-    onFormSubmit();
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы должны быть авторизованы для создания проекта.' });
+      return;
+    }
+
+    // TODO: Add file upload logic here before submitting.
+    // For now, files are ignored.
+
+    startTransition(async () => {
+      const result = await createProject(user.uid, data);
+      if (result.success) {
+        toast({ title: 'Успешно!', description: result.message });
+        form.reset();
+        setFiles([]);
+        onFormSubmit();
+      } else {
+        toast({ variant: 'destructive', title: 'Ошибка', description: result.message });
+        if (result.errors) {
+            console.log(result.errors);
+        }
+      }
+    });
   };
 
   return (

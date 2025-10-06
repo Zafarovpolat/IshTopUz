@@ -1,7 +1,9 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/hooks/use-auth';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -44,7 +46,9 @@ export default function RootLayout({
   return (
     <html lang="ru" className={`${inter.variable} scroll-smooth`}>
       <body className="font-sans antialiased bg-background text-foreground">
-        <main>{children}</main>
+        <AuthProvider>
+          <main>{children}</main>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

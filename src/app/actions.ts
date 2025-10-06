@@ -2,8 +2,8 @@
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema } from "@/lib/schema";
-import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState } from "@/lib/schema";
+import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema } from "@/lib/schema";
+import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState, ProjectState } from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from 'firebase-admin/auth';
@@ -317,5 +317,41 @@ export async function deletePortfolioItem(userId: string, itemId: string): Promi
     } catch (error: any) {
         console.error('Failed to delete portfolio item:', error);
         return { success: false, message: 'Не удалось удалить работу.' };
+    }
+}
+
+
+export async function createProject(userId: string, data: z.infer<typeof projectSchema>): Promise<ProjectState> {
+    if (!userId) {
+        return { success: false, message: 'Ошибка: Пользователь не найден.' };
+    }
+
+    const validatedFields = projectSchema.safeParse(data);
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Проверка не удалась.',
+            success: false,
+        };
+    }
+    
+    try {
+        const skillsArray = validatedFields.data.skills.split(',').map(s => s.trim()).filter(Boolean);
+
+        await db.collection('projects').add({
+            ...validatedFields.data,
+            skills: skillsArray,
+            clientId: userId,
+            status: 'open',
+            proposalsCount: 0,
+            createdAt: FieldValue.serverTimestamp(),
+        });
+        
+        revalidatePath('/jobs');
+        revalidatePath('/marketplace');
+        return { success: true, message: 'Проект успешно создан!' };
+    } catch (error: any) {
+        console.error('Failed to create project:', error);
+        return { success: false, message: error.message || 'Не удалось создать проект.' };
     }
 }
