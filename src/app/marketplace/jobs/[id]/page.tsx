@@ -266,4 +266,5 @@ export default async function ProjectDetailsPage({ params }: { params: { id: str
             </div>
         </main>
     );
-}
+
+    
