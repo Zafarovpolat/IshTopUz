@@ -1,0 +1,100 @@
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Project } from "@/lib/schema";
+import Link from 'next/link';
+import { Edit } from 'lucide-react';
+
+// Mock data for freelancer, this should come from a separate query
+const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
+    '1': { name: 'Алиса В.', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a' },
+    '2': { name: 'Максим П.', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b' },
+};
+
+
+export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Project[], onEdit: (project: Project) => void }) {
+    if (projects.length === 0) {
+        return (
+             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
+                <h3 className="text-xl font-semibold tracking-tight">Нет активных проектов</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Когда вы наймете исполнителя, ваш проект появится здесь.
+                </p>
+                <Button className="mt-4" onClick={() => onEdit({} as Project)}>Создать проект</Button>
+            </div>
+        )
+    }
+  return (
+    <div className="grid gap-6 mt-4 md:grid-cols-2">
+      {projects.map((project) => {
+        const freelancer = project.freelancerId ? mockFreelancers[project.freelancerId] : null;
+        let progress = 0;
+        if (project.status === 'in_progress') {
+            progress = 50;
+        } else if (project.status === 'completed') {
+            progress = 100;
+        } else if (project.status === 'open') {
+            progress = 0;
+        }
+        
+        const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ru-RU') : 'не указан';
+
+        return (
+            <Card key={project.id}>
+            <CardHeader>
+                <CardTitle className="hover:text-primary transition-colors">
+                    <Link href={`/marketplace/jobs/${project.id}`}>{project.title}</Link>
+                </CardTitle>
+                {freelancer ? (
+                    <CardDescription className="flex items-center gap-2 pt-1">
+                        <Avatar className="h-6 w-6">
+                            <AvatarImage src={freelancer.avatar} />
+                            <AvatarFallback>{freelancer.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        Исполнитель: {freelancer.name}
+                    </CardDescription>
+                ) : (
+                    <CardDescription>Исполнитель еще не назначен</CardDescription>
+                )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div>
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">Прогресс выполнения</span>
+                    <span className="text-sm font-medium">{progress}%</span>
+                </div>
+                <Progress value={progress} />
+                </div>
+                <div className="flex justify-between items-center">
+                    {freelancer && project.deadline && (
+                        <Badge variant="outline">Срок сдачи: {deadline}</Badge>
+                    )}
+                     <Badge variant="outline" className="ml-auto">Откликов: {project.proposalsCount || 0}</Badge>
+                    <span className="text-lg font-bold text-primary ml-4">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
+                </div>
+            </CardContent>
+            <CardFooter className="flex gap-2">
+                 <Button asChild variant="outline" className="w-full">
+                    <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть</Link>
+                </Button>
+                <Button onClick={() => onEdit(project)} className="w-full">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Редактировать
+                </Button>
+            </CardFooter>
+            </Card>
+        )
+        })}
+    </div>
+  );
+}

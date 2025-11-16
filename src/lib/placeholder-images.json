@@ -1,0 +1,68 @@
+{
+  "projects": {
+    "kwork1": {
+      "src": "https://picsum.photos/seed/kwork1/400/300",
+      "width": 400,
+      "height": 300,
+      "hint": "logo design"
+    },
+    "kwork2": {
+      "src": "https://picsum.photos/seed/kwork2/400/300",
+      "width": 400,
+      "height": 300,
+      "hint": "landing page"
+    },
+    "kwork3": {
+      "src": "https://picsum.photos/seed/kwork3/400/300",
+      "width": 400,
+      "height": 300,
+      "hint": "writing articles"
+    }
+  },
+  "hireInUzbekistan": {
+    "tashkentHero": {
+      "src": "https://picsum.photos/seed/tashkent/1200/400",
+      "width": 1200,
+      "height": 400,
+      "hint": "Tashkent city"
+    },
+    "office": {
+      "src": "https://picsum.photos/seed/office/500/400",
+      "width": 500,
+      "height": 400,
+      "hint": "professionals office"
+    }
+  },
+  "about": {
+    "history": {
+      "src": "https://picsum.photos/seed/history/500/600",
+      "width": 500,
+      "height": 600,
+      "hint": "team brainstorming"
+    },
+    "team1": {
+      "src": "https://i.pravatar.cc/150?u=ceo",
+      "hint": "male portrait"
+    },
+    "team2": {
+      "src": "https://i.pravatar.cc/150?u=devlead",
+      "hint": "female portrait"
+    },
+    "team3": {
+      "src": "https://i.pravatar.cc/150?u=marketing",
+      "hint": "male portrait"
+    },
+    "partner1": {
+      "src": "https://picsum.photos/seed/itpark/200/100",
+      "hint": "IT Park logo"
+    },
+    "partner2": {
+      "src": "https://picsum.photos/seed/payme/200/100",
+      "hint": "Payme logo"
+    },
+    "partner3": {
+      "src": "https://picsum.photos/seed/humo/200/100",
+      "hint": "Humo logo"
+    }
+  }
+}
