@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Image from 'next/image';
 import { Badge } from '../ui/badge';
-import { Trash2, ExternalLink } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
 import { useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deletePortfolioItem } from '@/app/actions';
@@ -52,34 +52,31 @@ export function PortfolioList({ initialItems, userId }: { initialItems: Portfoli
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {initialItems.map((item) => (
         <Card key={item.id} className="group flex flex-col overflow-hidden">
-          <CardHeader className="p-0">
-             <div className="relative h-48 w-full">
-                <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                />
-                 {item.projectUrl && (
-                  <Link href={item.projectUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="secondary" size="icon" className="absolute top-2 right-2 h-8 w-8 z-10">
-                        <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
-             </div>
-          </CardHeader>
-          <CardContent className="p-4 flex-grow">
-            <CardTitle className="mb-2 text-lg">{item.title}</CardTitle>
-            <CardDescription className="line-clamp-3">{item.description}</CardDescription>
-          </CardContent>
-          <CardFooter className="p-4 pt-0 flex flex-col items-start gap-4">
-             <div className="flex flex-wrap gap-2">
-                {Array.isArray(item.technologies) && item.technologies.map((tag: string) => (
-                    <Badge key={tag} variant="secondary">{tag}</Badge>
-                ))}
-             </div>
-             <div className="w-full flex justify-end">
+          <Link href={`/portfolio/${item.id}`} className="flex flex-col flex-grow">
+            <CardHeader className="p-0">
+               <div className="relative h-48 w-full">
+                  <Image
+                      src={item.mainImageUrl}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <CardTitle className="absolute bottom-4 left-4 text-lg text-primary-foreground">{item.title}</CardTitle>
+               </div>
+            </CardHeader>
+            <CardContent className="p-4 flex-grow">
+              <CardDescription className="line-clamp-2">{item.description}</CardDescription>
+            </CardContent>
+          </Link>
+          <CardFooter className="p-4 pt-0 flex justify-between items-center">
+             <Link href={`/portfolio/${item.id}`} passHref>
+                <Button variant="outline" size="sm">
+                    <Eye className="mr-2 h-4 w-4"/>
+                    Просмотр
+                </Button>
+             </Link>
+             <div>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">

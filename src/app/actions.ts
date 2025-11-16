@@ -276,6 +276,7 @@ export async function addPortfolioItem(
   
   const validatedFields = portfolioItemSchema.safeParse(data);
   if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Проверка не удалась.',
@@ -313,6 +314,7 @@ export async function deletePortfolioItem(userId: string, itemId: string): Promi
         await itemRef.delete();
         
         revalidatePath('/dashboard/portfolio');
+        revalidatePath(`/portfolio/${itemId}`);
         return { success: true, message: 'Работа успешно удалена!' };
     } catch (error: any) {
         console.error('Failed to delete portfolio item:', error);

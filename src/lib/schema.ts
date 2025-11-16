@@ -89,9 +89,11 @@ export const surveyClientSchema = z.object({
 export const portfolioItemSchema = z.object({
   title: z.string().min(3, "Заголовок должен содержать минимум 3 символа."),
   description: z.string().min(10, "Описание должно содержать минимум 10 символов."),
-  imageUrl: z.string().url("Пожалуйста, загрузите изображение проекта."),
+  mainImageUrl: z.string().url("Пожалуйста, загрузите основное изображение проекта."),
+  galleryImageUrls: z.array(z.string().url()).optional(),
   projectUrl: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
   technologies: z.union([z.string(), z.array(z.string())]).optional(),
+  category: z.string().min(1, "Пожалуйста, выберите категорию."),
 });
 
 // Used for retrieving data, not for forms
@@ -99,9 +101,11 @@ export type PortfolioItem = {
   id: string;
   title: string;
   description: string;
-  imageUrl: string;
+  mainImageUrl: string;
+  galleryImageUrls?: string[];
   projectUrl?: string;
   technologies: string[];
+  category: string;
   createdAt: string;
 };
 
