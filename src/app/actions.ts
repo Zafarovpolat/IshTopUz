@@ -725,7 +725,6 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     // Получаем данные пользователя из Firestore
     const userDoc = await db.collection('users').doc(userId).get();
 
-    // ✅ ИСПРАВЛЕНО: .exists БЕЗ скобок!
     if (!userDoc.exists) {
       return { success: false, message: 'Профиль не найден.' };
     }
@@ -740,7 +739,26 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       };
     }
 
-    // ✅ Обновляем Firebase Auth user: добавляем email и password
+    // ✅ НОВОЕ: Проверяем существует ли пользователь с таким email
+    try {
+      const existingUser = await auth.getUserByEmail(email);
+
+      // Если найден пользователь с таким email И это НЕ текущий пользователь
+      if (existingUser && existingUser.uid !== userId) {
+        return {
+          success: false,
+          message: `Email ${email} уже используется. Попробуйте войти через Email/Password или используйте другой email.`
+        };
+      }
+    } catch (error: any) {
+      // Если error.code === 'auth/user-not-found' - это хорошо, email свободен
+      if (error.code !== 'auth/user-not-found') {
+        console.error('Error checking email:', error);
+        throw error; // Пробрасываем другие ошибки
+      }
+    }
+
+    // ✅ Email свободен или уже принадлежит текущему пользователю
     await auth.updateUser(userId, {
       email: email,
       password: password,
@@ -764,7 +782,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     if (error.code === 'auth/email-already-exists') {
       return {
         success: false,
-        message: 'Этот email уже используется другим пользователем.'
+        message: 'Этот email уже используется другим пользователем. Попробуйте другой email или войдите через существующий аккаунт.'
       };
     }
 
