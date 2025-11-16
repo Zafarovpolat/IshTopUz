@@ -118,7 +118,7 @@ export async function createUserOnboarding(
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
 
-    if (userDoc.exists()) {
+    if (userDoc.exists) {
       // ========================================
       // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ (Telegram/Google)
       // ========================================
