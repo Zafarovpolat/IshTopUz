@@ -118,9 +118,10 @@ export async function createUserOnboarding(
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
 
+    // ✅ ИСПРАВЛЕНО: .exists БЕЗ скобок!
     if (userDoc.exists) {
       // ========================================
-      // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ (Telegram/Google)
+      // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ
       // ========================================
       const existingData = userDoc.data();
 
@@ -131,7 +132,6 @@ export async function createUserOnboarding(
         };
       }
 
-      // ✅ ИСПРАВЛЕНО: Строгая проверка каждого поля
       const updateData: any = {
         userType,
         profileComplete: true,
@@ -140,17 +140,15 @@ export async function createUserOnboarding(
         'profile.lastName': lastName,
       };
 
-      // ✅ ТОЛЬКО если email существует И не пустой
+      // Только если email существует И не пустой
       if (userRecord.email && userRecord.email.trim() !== '') {
         updateData.email = userRecord.email;
       }
 
-      // ✅ ТОЛЬКО если phone существует И не пустой
       if (userRecord.phoneNumber && userRecord.phoneNumber.trim() !== '') {
         updateData.phone = userRecord.phoneNumber;
       }
 
-      // ✅ ТОЛЬКО если avatar существует И не пустой
       if (userRecord.photoURL && userRecord.photoURL.trim() !== '') {
         updateData['profile.avatar'] = userRecord.photoURL;
       }
@@ -191,7 +189,7 @@ export async function createUserOnboarding(
     }
 
     // ========================================
-    // НОВЫЙ ДОКУМЕНТ (не должно произойти после обновления бота)
+    // НОВЫЙ ДОКУМЕНТ
     // ========================================
     console.log('Creating new Firestore document for:', userId);
 

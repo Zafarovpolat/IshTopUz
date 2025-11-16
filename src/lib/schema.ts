@@ -13,6 +13,8 @@ export const onboardingSchema = z.object({
   userType: z.enum(['freelancer', 'client'], {
     required_error: 'Пожалуйста, выберите вашу роль.',
   }),
+  // ✅ НОВОЕ: опциональный email для Telegram users
+  email: z.string().email('Неверный формат email').optional().or(z.literal('')),
 });
 
 const languages = z.union([z.string(), z.array(z.string())]).optional();
@@ -26,7 +28,7 @@ export const profileFreelancerSchema = z.object({
   dateOfBirth: z.string().optional(),
   gender: z.string().optional(),
   languages,
-  
+
   // freelancerProfile
   title: z.string().min(5, "Заголовок должен содержать хотя бы 5 символов.").optional(),
   hourlyRate: z.preprocess(
@@ -41,17 +43,17 @@ export const profileFreelancerSchema = z.object({
 
 
 export const profileClientSchema = z.object({
-    // profile
-    firstName: z.string().min(2, "Имя обязательно."),
-    lastName: z.string().min(2, "Фамилия обязательна."),
-    city: z.string().optional(),
-    country: z.string().optional(),
-    // clientProfile
-    companyName: z.string().optional(),
-    companySize: z.enum(['1', '2-10', '11-50', '51+']).optional(),
-    industry: z.string().optional(),
-    website: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
-    description: z.string().optional(),
+  // profile
+  firstName: z.string().min(2, "Имя обязательно."),
+  lastName: z.string().min(2, "Фамилия обязательна."),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  // clientProfile
+  companyName: z.string().optional(),
+  companySize: z.enum(['1', '2-10', '11-50', '51+']).optional(),
+  industry: z.string().optional(),
+  website: z.string().url("Неверный формат URL-адреса.").optional().or(z.literal('')),
+  description: z.string().optional(),
 });
 
 
@@ -160,9 +162,9 @@ export type SurveyState = {
 };
 
 export type ProfileState = {
-    errors?: { [key:string]: string[] }
-    message?: string | null;
-    success: boolean;
+  errors?: { [key: string]: string[] }
+  message?: string | null;
+  success: boolean;
 };
 
 export type PortfolioState = {
@@ -189,19 +191,19 @@ export type ProposalState = {
 
 
 export interface Project {
-    id: string;
-    title: string;
-    description: string;
-    budgetType: 'fixed' | 'hourly';
-    budgetAmount: number;
-    skills: string[];
-    createdAt: string;
-    clientId: string;
-    status: 'open' | 'in_progress' | 'completed' | 'closed';
-    proposalsCount?: number;
-    freelancerId?: string;
-    deadline?: string;
-    completedAt?: string;
+  id: string;
+  title: string;
+  description: string;
+  budgetType: 'fixed' | 'hourly';
+  budgetAmount: number;
+  skills: string[];
+  createdAt: string;
+  clientId: string;
+  status: 'open' | 'in_progress' | 'completed' | 'closed';
+  proposalsCount?: number;
+  freelancerId?: string;
+  deadline?: string;
+  completedAt?: string;
 }
 
 export type Proposal = {

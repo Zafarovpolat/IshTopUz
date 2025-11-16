@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,13 +9,13 @@ import { useToast } from '@/hooks/use-toast';
 import { onboardingSchema } from '@/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Logo } from './layout/logo';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import { createUserOnboarding } from '@/app/actions';
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
@@ -40,12 +39,16 @@ export function OnboardingForm() {
     return () => unsubscribe();
   }, [router]);
 
+  // ✅ ОПРЕДЕЛЯЕМ: нужно ли показывать поле email
+  const needsEmail = currentUser && !currentUser.email;
+
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
       userType: undefined,
+      email: '', // ✅ НОВОЕ поле
     },
   });
 
@@ -62,7 +65,7 @@ export function OnboardingForm() {
 
     startTransition(async () => {
       const result = await createUserOnboarding(currentUser.uid, data);
-      
+
       if (result.success) {
         toast({
           title: 'Успешно!',
@@ -70,7 +73,7 @@ export function OnboardingForm() {
         });
         router.push('/dashboard');
       } else {
-         toast({
+        toast({
           variant: 'destructive',
           title: 'Ошибка',
           description: result.message || 'Что-то пошло не так. Попробуйте позже.',
@@ -78,20 +81,20 @@ export function OnboardingForm() {
       }
     });
   };
-  
+
   if (isLoadingUser) {
-      return (
-          <div className="flex min-h-screen w-full items-center justify-center">
-             <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-      );
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
     <Card className="w-full max-w-lg mx-auto shadow-lg">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 w-fit">
-         <Logo />
+          <Logo />
         </div>
         <CardTitle className="text-3xl font-bold">Завершение регистрации</CardTitle>
         <CardDescription className="text-muted-foreground">
@@ -129,6 +132,34 @@ export function OnboardingForm() {
                 )}
               />
             </div>
+
+            {/* ✅ НОВОЕ: Показываем email только для Telegram users */}
+            {needsEmail && (
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email (опционально)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Укажите email для получения уведомлений и восстановления доступа.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="userType"
@@ -146,7 +177,7 @@ export function OnboardingForm() {
                       <SelectItem value="client">Нанять специалиста (Я заказчик)</SelectItem>
                     </SelectContent>
                   </Select>
-                   <FormMessage />
+                  <FormMessage />
                 </FormItem>
               )}
             />
