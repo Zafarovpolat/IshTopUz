@@ -1,13 +1,34 @@
-
 "use server";
 
 import { z } from "zod";
-import { leadSchema, surveyClientSchema, surveyFreelancerSchema, profileFreelancerSchema, profileClientSchema, onboardingSchema, portfolioItemSchema, projectSchema, proposalSchema, type Project } from "@/lib/schema";
-import type { LeadState, SurveyState, ProfileState, OnboardingState, PortfolioState, ProjectState, ProposalState } from "@/lib/schema";
+import {
+  leadSchema,
+  surveyClientSchema,
+  surveyFreelancerSchema,
+  profileFreelancerSchema,
+  profileClientSchema,
+  onboardingSchema,
+  portfolioItemSchema,
+  projectSchema,
+  proposalSchema,
+  setPasswordSchema, // ✅ ДОБАВЬ
+  type Project
+} from "@/lib/schema";
+import type {
+  LeadState,
+  SurveyState,
+  ProfileState,
+  OnboardingState,
+  PortfolioState,
+  ProjectState,
+  ProposalState,
+  SetPasswordState // ✅ ДОБАВЬ
+} from "@/lib/schema";
 import { getAdminApp } from "@/lib/firebase-admin";
 import { getFirestore, FieldValue, DocumentReference } from "firebase-admin/firestore";
 import { getAuth } from 'firebase-admin/auth';
 import { revalidatePath } from 'next/cache';
+import { getUserId } from '@/lib/get-user-data'; // ✅ ДОБАВЬ
 
 // Инициализируем Admin SDK
 const adminApp = getAdminApp();
@@ -704,6 +725,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     // Получаем данные пользователя из Firestore
     const userDoc = await db.collection('users').doc(userId).get();
 
+    // ✅ ИСПРАВЛЕНО: .exists БЕЗ скобок!
     if (!userDoc.exists) {
       return { success: false, message: 'Профиль не найден.' };
     }
@@ -722,12 +744,12 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     await auth.updateUser(userId, {
       email: email,
       password: password,
-      emailVerified: false, // Можно потом отправить verification email
+      emailVerified: false,
     });
 
     console.log(`✅ Password set for user ${userId} with email ${email}`);
 
-    // Обновляем Firestore (опционально - отметить что пароль установлен)
+    // Обновляем Firestore
     await db.collection('users').doc(userId).update({
       passwordSet: true,
       updatedAt: FieldValue.serverTimestamp(),
@@ -743,6 +765,13 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       return {
         success: false,
         message: 'Этот email уже используется другим пользователем.'
+      };
+    }
+
+    if (error.code === 'auth/invalid-email') {
+      return {
+        success: false,
+        message: 'Неверный формат email.'
       };
     }
 
