@@ -170,11 +170,80 @@ export async function createUserOnboarding(
         'profile.lastName': lastName,
       };
 
-      // Email: приоритет - из формы, затем из Firebase Auth
+      // ✅ Email обработка с обновлением Firebase Auth
+      let finalEmail = '';
       if (email && email.trim() !== '') {
-        updateData.email = email.trim();
+        finalEmail = email.trim();
+        updateData.email = finalEmail;
+
+        // ✅ Обновляем email в Firebase Auth СРАЗУ
+        try {
+          console.log(`📧 Setting email ${finalEmail} for user ${userId} in Firebase Auth...`);
+
+          // Проверяем существует ли пользователь с таким email
+          try {
+            const existingUserWithEmail = await auth.getUserByEmail(finalEmail);
+
+            if (existingUserWithEmail.uid !== userId) {
+              // Email занят другим пользователем - удаляем конфликтующего
+              console.warn(`⚠️ Email conflict: ${finalEmail} belongs to ${existingUserWithEmail.uid}. Deleting...`);
+
+              try {
+                // Удаляем из Firebase Auth
+                await auth.deleteUser(existingUserWithEmail.uid);
+                console.log(`🗑️ Deleted conflicting Auth user ${existingUserWithEmail.uid}`);
+
+                // Удаляем из Firestore (если есть)
+                try {
+                  await db.collection('users').doc(existingUserWithEmail.uid).delete();
+                  console.log(`🗑️ Deleted conflicting Firestore document ${existingUserWithEmail.uid}`);
+                } catch (firestoreError) {
+                  console.log(`ℹ️ No Firestore document to delete for ${existingUserWithEmail.uid}`);
+                }
+              } catch (deleteError: any) {
+                console.error(`❌ Failed to delete conflicting user:`, deleteError);
+                return {
+                  success: false,
+                  message: `Email ${finalEmail} уже используется другим пользователем. Используйте другой email.`
+                };
+              }
+            } else {
+              console.log(`✅ Email ${finalEmail} already belongs to current user ${userId}`);
+            }
+          } catch (emailCheckError: any) {
+            if (emailCheckError.code === 'auth/user-not-found') {
+              // Email свободен - отлично!
+              console.log(`✅ Email ${finalEmail} is available`);
+            } else {
+              // Неожиданная ошибка
+              throw emailCheckError;
+            }
+          }
+
+          // Теперь безопасно устанавливаем email
+          await auth.updateUser(userId, {
+            email: finalEmail,
+            emailVerified: false,
+          });
+
+          console.log(`✅ Email ${finalEmail} successfully set in Firebase Auth for user ${userId}`);
+
+        } catch (emailError: any) {
+          console.error('Failed to update email in Firebase Auth:', emailError);
+
+          if (emailError.code === 'auth/email-already-exists') {
+            return {
+              success: false,
+              message: `Email ${finalEmail} уже используется. Попробуйте другой email.`
+            };
+          }
+
+          // Для других ошибок продолжаем, но логируем
+          console.warn('Email not set in Firebase Auth, but continuing with Firestore update');
+        }
       } else if (userRecord.email && userRecord.email.trim() !== '') {
-        updateData.email = userRecord.email;
+        finalEmail = userRecord.email;
+        updateData.email = finalEmail;
       }
 
       if (userRecord.phoneNumber && userRecord.phoneNumber.trim() !== '') {
@@ -240,8 +309,50 @@ export async function createUserOnboarding(
     // ========================================
     console.log('Creating new Firestore document for:', userId);
 
+    let finalEmail = '';
+    if (email && email.trim() !== '') {
+      finalEmail = email.trim();
+
+      // ✅ Устанавливаем email в Firebase Auth для нового документа
+      try {
+        // Проверяем конфликты
+        try {
+          const existingUserWithEmail = await auth.getUserByEmail(finalEmail);
+          if (existingUserWithEmail.uid !== userId) {
+            console.warn(`⚠️ Deleting conflicting user ${existingUserWithEmail.uid}`);
+            await auth.deleteUser(existingUserWithEmail.uid);
+            try {
+              await db.collection('users').doc(existingUserWithEmail.uid).delete();
+            } catch (e) {
+              console.log('No Firestore doc to delete');
+            }
+          }
+        } catch (e: any) {
+          if (e.code !== 'auth/user-not-found') throw e;
+        }
+
+        // Устанавливаем email
+        await auth.updateUser(userId, {
+          email: finalEmail,
+          emailVerified: false,
+        });
+
+        console.log(`✅ Email ${finalEmail} set for new user ${userId}`);
+      } catch (emailError: any) {
+        console.error('Failed to set email in Firebase Auth:', emailError);
+        if (emailError.code === 'auth/email-already-exists') {
+          return {
+            success: false,
+            message: `Email ${finalEmail} уже используется.`
+          };
+        }
+      }
+    } else if (userRecord.email) {
+      finalEmail = userRecord.email;
+    }
+
     const userData: any = {
-      email: email && email.trim() !== '' ? email.trim() : (userRecord.email || ''),
+      email: finalEmail,
       phone: userRecord.phoneNumber || '',
       userType,
       isVerified: userRecord.emailVerified || false,
@@ -724,26 +835,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
   }
 
   try {
-    // Получаем данные пользователя из Firestore
-    const userDoc = await db.collection('users').doc(userId).get();
-
-    if (!userDoc.exists) {
-      return { success: false, message: 'Профиль не найден.' };
-    }
-
-    const userData = userDoc.data();
-    const email = userData?.email;
-
-    console.log(`📧 Email from Firestore: ${email}`);
-
-    if (!email || email.trim() === '') {
-      return {
-        success: false,
-        message: 'Email не указан. Пожалуйста, завершите профиль.'
-      };
-    }
-
-    // ✅ Получаем текущего пользователя из Firebase Auth
+    // Получаем текущего пользователя из Firebase Auth
     let currentAuthUser;
     try {
       currentAuthUser = await auth.getUser(userId);
@@ -757,69 +849,42 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       return { success: false, message: 'Не удалось проверить данные пользователя.' };
     }
 
-    // ✅ ИСПРАВЛЕНО: Проверяем существует ли email в Firebase Auth
-    try {
-      const existingUser = await auth.getUserByEmail(email);
-      console.log(`🔎 Found existing user with email ${email}:`, {
-        uid: existingUser.uid,
-        email: existingUser.email,
-        providers: existingUser.providerData.map(p => p.providerId)
-      });
-
-      // Если email принадлежит ДРУГОМУ пользователю
-      if (existingUser.uid !== userId) {
-        console.error(`❌ Email conflict: ${email} belongs to ${existingUser.uid}, but current user is ${userId}`);
-        return {
-          success: false,
-          message: `Email ${email} уже используется другим аккаунтом. Используйте другой email или войдите через существующий аккаунт.`
-        };
-      }
-
-      // ✅ Email принадлежит ТЕКУЩЕМУ пользователю - просто обновляем пароль
-      console.log(`✅ Email ${email} already belongs to current user ${userId}. Updating password...`);
-
-    } catch (error: any) {
-      // Email НЕ найден - это хорошо, можем установить
-      if (error.code === 'auth/user-not-found') {
-        console.log(`✅ Email ${email} is available. Setting email and password...`);
-      } else {
-        console.error('❌ Unexpected error checking email:', error);
-        throw error;
-      }
+    // Проверяем что email уже установлен
+    if (!currentAuthUser.email) {
+      return {
+        success: false,
+        message: 'Email не установлен. Вернитесь на шаг назад.'
+      };
     }
 
-    // ✅ Обновляем email и пароль
+    console.log(`📧 Setting password for user ${userId} with email ${currentAuthUser.email}`);
+
+    // ✅ УПРОЩЕНО: Просто обновляем пароль (email уже есть)
     await auth.updateUser(userId, {
-      email: email,
       password: password,
       emailVerified: false,
     });
 
-    console.log(`✅ Password set successfully for user ${userId} with email ${email}`);
+    console.log(`✅ Password set successfully for user ${userId}`);
 
     // Обновляем Firestore
-    await db.collection('users').doc(userId).update({
-      passwordSet: true,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      await db.collection('users').doc(userId).update({
+        passwordSet: true,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
 
     return { success: true, message: 'Пароль успешно установлен!' };
 
   } catch (error: any) {
     console.error('❌ setUserPassword failed:', error);
 
-    // Обработка специфичных ошибок Firebase
     if (error.code === 'auth/email-already-exists') {
       return {
         success: false,
         message: 'Этот email уже используется. Попробуйте другой email.'
-      };
-    }
-
-    if (error.code === 'auth/invalid-email') {
-      return {
-        success: false,
-        message: 'Неверный формат email.'
       };
     }
 
