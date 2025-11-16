@@ -66,13 +66,19 @@ export function OnboardingForm() {
     startTransition(async () => {
       const result = await createUserOnboarding(currentUser.uid, data);
 
+      console.log('📥 Onboarding result:', result); // ✅ ДОБАВЬ ЭТО
+
       if (result.success) {
         toast({
           title: 'Успешно!',
           description: 'Ваш профиль обновлен.',
         });
-        // ✅ ИЗМЕНЕНО: Используем redirectUrl из результата
-        router.push(result.redirectUrl || '/dashboard');
+
+        // ✅ ПРОВЕРЬ ЧТО ЭТО ЕСТЬ:
+        const redirectPath = result.redirectUrl || '/dashboard';
+        console.log('🚀 Redirecting to:', redirectPath); // ✅ ДОБАВЬ ЭТО
+
+        router.push(redirectPath);
       } else {
         toast({
           variant: 'destructive',

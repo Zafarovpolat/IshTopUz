@@ -290,17 +290,33 @@ export async function createUserOnboarding(
       // ✅ Проверяем нужно ли устанавливать пароль
       let needsPassword = false;
       try {
+        // ВАЖНО: Снова получаем пользователя после обновления email
         const authUser = await auth.getUser(userId);
+
+        console.log(`🔍 Checking if password needed for user ${userId}:`, {
+          email: authUser.email,
+          providers: authUser.providerData.map(p => p.providerId),
+          hasPasswordProvider: authUser.providerData.some(p => p.providerId === 'password'),
+        });
+
         // Если нет password provider - нужен пароль
-        needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
+        const hasPasswordProvider = authUser.providerData.some(p => p.providerId === 'password');
+        needsPassword = !hasPasswordProvider;
+
+        console.log(`🔐 needsPassword: ${needsPassword}`);
+
       } catch (error) {
-        console.log('Could not check providers:', error);
+        console.error('Could not check providers:', error);
+        needsPassword = true; // ✅ По умолчанию требуем пароль если не можем проверить
       }
+
+      const redirectUrl = needsPassword ? '/set-password' : '/dashboard';
+      console.log(`🚀 Redirecting to: ${redirectUrl}`);
 
       return {
         success: true,
         message: "Профиль успешно обновлен.",
-        redirectUrl: needsPassword ? '/set-password' : '/dashboard',
+        redirectUrl: redirectUrl,
       };
     }
 
