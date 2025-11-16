@@ -39,8 +39,20 @@ export function OnboardingForm() {
     return () => unsubscribe();
   }, [router]);
 
-  // ✅ ОПРЕДЕЛЯЕМ: нужно ли показывать поле email
-  const needsEmail = currentUser && !currentUser.email;
+  // ✅ Определяем тип провайдера
+  const isTelegramUser = currentUser?.uid?.startsWith('telegram:') ||
+    currentUser?.providerData?.some(p => p.providerId === 'custom') ||
+    false;
+
+  const isGoogleUser = currentUser?.providerData?.some(p => p.providerId === 'google.com') || false;
+
+  console.log('👤 User info in onboarding:', {
+    uid: currentUser?.uid,
+    email: currentUser?.email,
+    isTelegramUser,
+    isGoogleUser,
+    providers: currentUser?.providerData?.map(p => p.providerId),
+  });
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
@@ -48,7 +60,7 @@ export function OnboardingForm() {
       firstName: '',
       lastName: '',
       userType: undefined,
-      email: '', // ✅ НОВОЕ поле
+      email: currentUser?.email || '',
     },
   });
 
@@ -66,7 +78,7 @@ export function OnboardingForm() {
     startTransition(async () => {
       const result = await createUserOnboarding(currentUser.uid, data);
 
-      console.log('📥 Onboarding result:', result); // ✅ ДОБАВЬ ЭТО
+      console.log('📥 Onboarding result:', result);
 
       if (result.success) {
         toast({
@@ -74,9 +86,8 @@ export function OnboardingForm() {
           description: 'Ваш профиль обновлен.',
         });
 
-        // ✅ ПРОВЕРЬ ЧТО ЭТО ЕСТЬ:
         const redirectPath = result.redirectUrl || '/dashboard';
-        console.log('🚀 Redirecting to:', redirectPath); // ✅ ДОБАВЬ ЭТО
+        console.log('🚀 Redirecting to:', redirectPath);
 
         router.push(redirectPath);
       } else {
@@ -140,7 +151,7 @@ export function OnboardingForm() {
               />
             </div>
 
-            {/* ✅ ИЗМЕНЕНО: Email всегда показывается и обязателен */}
+            {/* ✅ ОБНОВЛЕННОЕ ПОЛЕ EMAIL */}
             <FormField
               control={form.control}
               name="email"
@@ -155,13 +166,17 @@ export function OnboardingForm() {
                       type="email"
                       placeholder="you@example.com"
                       {...field}
-                      defaultValue={currentUser?.email || ''} // ✅ Pre-fill если есть
-                      disabled={!!currentUser?.email} // ✅ Disable если уже есть email (Google users)
+                      disabled={isGoogleUser}
                     />
                   </FormControl>
-                  {!currentUser?.email && (
+                  {isTelegramUser && !currentUser?.email && (
                     <FormDescription className="text-xs">
-                      Используется для входа и восстановления доступа.
+                      ℹ️ Используется для входа и восстановления доступа.
+                    </FormDescription>
+                  )}
+                  {isGoogleUser && currentUser?.email && (
+                    <FormDescription className="text-xs">
+                      ✅ Email из вашего Google аккаунта: <strong>{currentUser.email}</strong>
                     </FormDescription>
                   )}
                   <FormMessage />
