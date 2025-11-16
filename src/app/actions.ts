@@ -708,6 +708,8 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     return { success: false, message: 'Ошибка: Пользователь не найден.' };
   }
 
+  console.log(`🔍 setUserPassword called for userId: ${userId}`);
+
   const validatedFields = setPasswordSchema.safeParse({
     password,
     confirmPassword: password
@@ -732,6 +734,8 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     const userData = userDoc.data();
     const email = userData?.email;
 
+    console.log(`📧 Email from Firestore: ${email}`);
+
     if (!email || email.trim() === '') {
       return {
         success: false,
@@ -739,33 +743,59 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       };
     }
 
-    // ✅ НОВОЕ: Проверяем существует ли пользователь с таким email
+    // ✅ Получаем текущего пользователя из Firebase Auth
+    let currentAuthUser;
+    try {
+      currentAuthUser = await auth.getUser(userId);
+      console.log(`👤 Current Auth User:`, {
+        uid: currentAuthUser.uid,
+        email: currentAuthUser.email,
+        providers: currentAuthUser.providerData.map(p => p.providerId)
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to get current auth user:', error);
+      return { success: false, message: 'Не удалось проверить данные пользователя.' };
+    }
+
+    // ✅ ИСПРАВЛЕНО: Проверяем существует ли email в Firebase Auth
     try {
       const existingUser = await auth.getUserByEmail(email);
+      console.log(`🔎 Found existing user with email ${email}:`, {
+        uid: existingUser.uid,
+        email: existingUser.email,
+        providers: existingUser.providerData.map(p => p.providerId)
+      });
 
-      // Если найден пользователь с таким email И это НЕ текущий пользователь
-      if (existingUser && existingUser.uid !== userId) {
+      // Если email принадлежит ДРУГОМУ пользователю
+      if (existingUser.uid !== userId) {
+        console.error(`❌ Email conflict: ${email} belongs to ${existingUser.uid}, but current user is ${userId}`);
         return {
           success: false,
-          message: `Email ${email} уже используется. Попробуйте войти через Email/Password или используйте другой email.`
+          message: `Email ${email} уже используется другим аккаунтом. Используйте другой email или войдите через существующий аккаунт.`
         };
       }
+
+      // ✅ Email принадлежит ТЕКУЩЕМУ пользователю - просто обновляем пароль
+      console.log(`✅ Email ${email} already belongs to current user ${userId}. Updating password...`);
+
     } catch (error: any) {
-      // Если error.code === 'auth/user-not-found' - это хорошо, email свободен
-      if (error.code !== 'auth/user-not-found') {
-        console.error('Error checking email:', error);
-        throw error; // Пробрасываем другие ошибки
+      // Email НЕ найден - это хорошо, можем установить
+      if (error.code === 'auth/user-not-found') {
+        console.log(`✅ Email ${email} is available. Setting email and password...`);
+      } else {
+        console.error('❌ Unexpected error checking email:', error);
+        throw error;
       }
     }
 
-    // ✅ Email свободен или уже принадлежит текущему пользователю
+    // ✅ Обновляем email и пароль
     await auth.updateUser(userId, {
       email: email,
       password: password,
       emailVerified: false,
     });
 
-    console.log(`✅ Password set for user ${userId} with email ${email}`);
+    console.log(`✅ Password set successfully for user ${userId} with email ${email}`);
 
     // Обновляем Firestore
     await db.collection('users').doc(userId).update({
@@ -776,13 +806,13 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     return { success: true, message: 'Пароль успешно установлен!' };
 
   } catch (error: any) {
-    console.error('setUserPassword failed:', error);
+    console.error('❌ setUserPassword failed:', error);
 
     // Обработка специфичных ошибок Firebase
     if (error.code === 'auth/email-already-exists') {
       return {
         success: false,
-        message: 'Этот email уже используется другим пользователем. Попробуйте другой email или войдите через существующий аккаунт.'
+        message: 'Этот email уже используется. Попробуйте другой email.'
       };
     }
 
@@ -790,6 +820,13 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       return {
         success: false,
         message: 'Неверный формат email.'
+      };
+    }
+
+    if (error.code === 'auth/invalid-password') {
+      return {
+        success: false,
+        message: 'Пароль слишком слабый. Используйте минимум 6 символов.'
       };
     }
 
