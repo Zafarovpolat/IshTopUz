@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session')?.value;
   const { pathname } = request.nextUrl;
 
-  const protectedPaths = ['/dashboard', '/onboarding'];
+  const protectedPaths = ['/dashboard', '/onboarding', '/set-password']; // ✅ ДОБАВЬ
   const isProtectedPath = protectedPaths.some(p => pathname.startsWith(p));
 
   // Если нет cookie и пытается зайти на защищенный роут
@@ -27,5 +27,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/onboarding', '/auth'],
+  matcher: ['/dashboard/:path*', '/onboarding', '/auth', '/set-password'],
 };

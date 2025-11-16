@@ -101,7 +101,7 @@ export async function createUserOnboarding(
     };
   }
 
-  const { firstName, lastName, userType } = validatedFields.data;
+  const { firstName, lastName, userType, email } = validatedFields.data;
 
   try {
     let userRecord;
@@ -118,17 +118,26 @@ export async function createUserOnboarding(
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
 
-    // ✅ ИСПРАВЛЕНО: .exists БЕЗ скобок!
+    // ========================================
+    // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ
+    // ========================================
     if (userDoc.exists) {
-      // ========================================
-      // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ
-      // ========================================
       const existingData = userDoc.data();
 
       if (existingData?.profileComplete) {
+        // Профиль уже заполнен, проверяем нужен ли пароль
+        let needsPassword = false;
+        try {
+          const authUser = await auth.getUser(userId);
+          needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
+        } catch (error) {
+          console.log('Could not check providers:', error);
+        }
+
         return {
           success: true,
-          message: "Профиль уже заполнен."
+          message: "Профиль уже заполнен.",
+          redirectUrl: needsPassword ? '/set-password' : '/dashboard',
         };
       }
 
@@ -140,8 +149,10 @@ export async function createUserOnboarding(
         'profile.lastName': lastName,
       };
 
-      // Только если email существует И не пустой
-      if (userRecord.email && userRecord.email.trim() !== '') {
+      // Email: приоритет - из формы, затем из Firebase Auth
+      if (email && email.trim() !== '') {
+        updateData.email = email.trim();
+      } else if (userRecord.email && userRecord.email.trim() !== '') {
         updateData.email = userRecord.email;
       }
 
@@ -185,16 +196,31 @@ export async function createUserOnboarding(
       }
 
       await userRef.update(updateData);
-      return { success: true, message: "Профиль успешно обновлен." };
+
+      // ✅ Проверяем нужно ли устанавливать пароль
+      let needsPassword = false;
+      try {
+        const authUser = await auth.getUser(userId);
+        // Если нет password provider - нужен пароль
+        needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
+      } catch (error) {
+        console.log('Could not check providers:', error);
+      }
+
+      return {
+        success: true,
+        message: "Профиль успешно обновлен.",
+        redirectUrl: needsPassword ? '/set-password' : '/dashboard',
+      };
     }
 
     // ========================================
-    // НОВЫЙ ДОКУМЕНТ
+    // НОВЫЙ ДОКУМЕНТ (не должно произойти, но на всякий случай)
     // ========================================
     console.log('Creating new Firestore document for:', userId);
 
     const userData: any = {
-      email: userRecord.email || '',
+      email: email && email.trim() !== '' ? email.trim() : (userRecord.email || ''),
       phone: userRecord.phoneNumber || '',
       userType,
       isVerified: userRecord.emailVerified || false,
@@ -251,7 +277,21 @@ export async function createUserOnboarding(
     }
 
     await userRef.set(userData);
-    return { success: true, message: "Профиль успешно создан." };
+
+    // ✅ Проверяем нужно ли устанавливать пароль
+    let needsPassword = false;
+    try {
+      const authUser = await auth.getUser(userId);
+      needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
+    } catch (error) {
+      needsPassword = true; // По умолчанию требуем пароль для новых пользователей
+    }
+
+    return {
+      success: true,
+      message: "Профиль успешно создан.",
+      redirectUrl: needsPassword ? '/set-password' : '/dashboard',
+    };
 
   } catch (error: any) {
     console.error("Onboarding failed:", error);
@@ -637,5 +677,78 @@ export async function deleteProposal(
   } catch (error: any) {
     console.error("Failed to delete proposal:", error);
     return { success: false, message: 'Произошла ошибка при удалении предложения.' };
+  }
+}
+
+export async function setUserPassword(password: string): Promise<SetPasswordState> {
+  const userId = await getUserId();
+
+  if (!userId) {
+    return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  }
+
+  const validatedFields = setPasswordSchema.safeParse({
+    password,
+    confirmPassword: password
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Проверка не удалась.',
+      success: false,
+    };
+  }
+
+  try {
+    // Получаем данные пользователя из Firestore
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      return { success: false, message: 'Профиль не найден.' };
+    }
+
+    const userData = userDoc.data();
+    const email = userData?.email;
+
+    if (!email || email.trim() === '') {
+      return {
+        success: false,
+        message: 'Email не указан. Пожалуйста, завершите профиль.'
+      };
+    }
+
+    // ✅ Обновляем Firebase Auth user: добавляем email и password
+    await auth.updateUser(userId, {
+      email: email,
+      password: password,
+      emailVerified: false, // Можно потом отправить verification email
+    });
+
+    console.log(`✅ Password set for user ${userId} with email ${email}`);
+
+    // Обновляем Firestore (опционально - отметить что пароль установлен)
+    await db.collection('users').doc(userId).update({
+      passwordSet: true,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { success: true, message: 'Пароль успешно установлен!' };
+
+  } catch (error: any) {
+    console.error('setUserPassword failed:', error);
+
+    // Обработка специфичных ошибок Firebase
+    if (error.code === 'auth/email-already-exists') {
+      return {
+        success: false,
+        message: 'Этот email уже используется другим пользователем.'
+      };
+    }
+
+    return {
+      success: false,
+      message: error.message || 'Не удалось установить пароль.'
+    };
   }
 }

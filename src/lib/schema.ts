@@ -13,9 +13,29 @@ export const onboardingSchema = z.object({
   userType: z.enum(['freelancer', 'client'], {
     required_error: 'Пожалуйста, выберите вашу роль.',
   }),
-  // ✅ НОВОЕ: опциональный email для Telegram users
-  email: z.string().email('Неверный формат email').optional().or(z.literal('')),
+  // ✅ ИЗМЕНЕНО: email обязателен
+  email: z.string().email('Неверный формат email').min(1, 'Email обязателен'),
 });
+
+export const setPasswordSchema = z.object({
+  password: z.string()
+    .min(6, 'Пароль должен содержать минимум 6 символов')
+    .regex(/[A-Za-z]/, 'Пароль должен содержать хотя бы одну букву')
+    .regex(/[0-9]/, 'Пароль должен содержать хотя бы одну цифру'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Пароли не совпадают",
+  path: ["confirmPassword"],
+});
+
+export type SetPasswordState = {
+  errors?: {
+    password?: string[];
+    confirmPassword?: string[];
+  };
+  message?: string | null;
+  success: boolean;
+};
 
 const languages = z.union([z.string(), z.array(z.string())]).optional();
 
@@ -148,9 +168,11 @@ export type OnboardingState = {
     firstName?: string[];
     lastName?: string[];
     userType?: string[];
+    email?: string[]; // ✅ ДОБАВЬ
   };
   message?: string | null;
   success: boolean;
+  redirectUrl?: string; // ✅ ДОБАВЬ
 };
 
 export type SurveyState = {

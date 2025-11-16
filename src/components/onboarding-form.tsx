@@ -69,9 +69,10 @@ export function OnboardingForm() {
       if (result.success) {
         toast({
           title: 'Успешно!',
-          description: 'Ваш профиль обновлен. Добро пожаловать!',
+          description: 'Ваш профиль обновлен.',
         });
-        router.push('/dashboard');
+        // ✅ ИЗМЕНЕНО: Используем redirectUrl из результата
+        router.push(result.redirectUrl || '/dashboard');
       } else {
         toast({
           variant: 'destructive',
@@ -133,32 +134,34 @@ export function OnboardingForm() {
               />
             </div>
 
-            {/* ✅ НОВОЕ: Показываем email только для Telegram users */}
-            {needsEmail && (
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      Email (опционально)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        {...field}
-                      />
-                    </FormControl>
+            {/* ✅ ИЗМЕНЕНО: Email всегда показывается и обязателен */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      {...field}
+                      defaultValue={currentUser?.email || ''} // ✅ Pre-fill если есть
+                      disabled={!!currentUser?.email} // ✅ Disable если уже есть email (Google users)
+                    />
+                  </FormControl>
+                  {!currentUser?.email && (
                     <FormDescription className="text-xs">
-                      Укажите email для получения уведомлений и восстановления доступа.
+                      Используется для входа и восстановления доступа.
                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
