@@ -80,7 +80,7 @@ function FreelancerProfileForm({ user }: { user: any }) {
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
-    const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
+    const storageRef = ref(storage, `users/${user.uid}/avatars/${fileName}`);
 
     try {
       const snapshot = await uploadBytes(storageRef, file);
@@ -371,7 +371,7 @@ function ClientProfileForm({ user }: { user: any }) {
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
-    const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
+    const storageRef = ref(storage, `users/${user.uid}/avatars/${fileName}`);
 
     try {
       const snapshot = await uploadBytes(storageRef, file);

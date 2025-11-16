@@ -60,7 +60,7 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
 
     try {
         if (fieldName === 'mainImageUrl') {
-            const url = await uploadFile(files[0], `portfolio/${userId}`);
+            const url = await uploadFile(files[0], `users/${userId}/portfolio`);
             form.setValue('mainImageUrl', url, { shouldValidate: true });
         } else {
             const currentGallery = form.getValues('galleryImageUrls') || [];
@@ -70,7 +70,7 @@ export function PortfolioForm({ userId, onFormSubmit }: { userId: string, onForm
                  return;
             }
             const urls = await Promise.all(
-                Array.from(files).map(file => uploadFile(file, `portfolio-gallery/${userId}`))
+                Array.from(files).map(file => uploadFile(file, `users/${userId}/portfolio/gallery`))
             );
             form.setValue('galleryImageUrls', [...currentGallery, ...urls], { shouldValidate: true });
         }
