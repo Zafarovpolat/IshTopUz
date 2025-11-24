@@ -545,20 +545,32 @@ export async function updateProfile(
   userType: 'freelancer' | 'client',
   data: z.infer<typeof profileFreelancerSchema> | z.infer<typeof profileClientSchema> | { avatar: string }
 ): Promise<ProfileState> {
-  if (!userId) {
-    return { success: false, message: 'Ошибка: Пользователь не найден.' };
+  // ✅ SECURITY: Проверяем что текущий пользователь = владелец профиля
+  const currentUserId = await getUserId();
+
+  if (!currentUserId) {
+    console.error('❌ [updateProfile] No authenticated user');
+    return { success: false, message: 'Ошибка: Необходима авторизация.' };
   }
+
+  if (currentUserId !== userId) {
+    console.error(`❌ [updateProfile] Permission denied: ${currentUserId} tried to update profile of ${userId}`);
+    return { success: false, message: 'Ошибка: У вас нет прав на редактирование этого профиля.' };
+  }
+
+  console.log(`✏️ [updateProfile] User ${currentUserId} updating profile`);
 
   const userRef = db.collection('users').doc(userId);
 
   // Special case for only updating the avatar
   if ('avatar' in data && Object.keys(data).length === 1) {
     try {
+      console.log(`🖼️ [updateProfile] Updating avatar for user ${userId}`);
       await userRef.update({ 'profile.avatar': data.avatar });
       revalidatePath('/dashboard/profile');
       return { success: true, message: 'Аватар успешно обновлен!' };
     } catch (e) {
-      console.error('Failed to update avatar:', e);
+      console.error('❌ [updateProfile] Failed to update avatar:', e);
       return { success: false, message: 'Не удалось обновить аватар.' };
     }
   }
@@ -567,7 +579,7 @@ export async function updateProfile(
   const validatedFields = schema.safeParse(data);
 
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
+    console.log('❌ [updateProfile] Validation errors:', validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.',
@@ -604,6 +616,8 @@ export async function updateProfile(
       updateData['freelancerProfile.isAvailable'] = freelancerProfileData.isAvailable;
       updateData['freelancerProfile.description'] = freelancerProfileData.description;
       updateData['freelancerProfile.skills'] = skillsArray;
+
+      console.log(`👨‍💻 [updateProfile] Updating freelancer profile with ${Object.keys(updateData).length} fields`);
     } else { // client
       const { firstName, lastName, city, country, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
       updateData['profile.firstName'] = firstName;
@@ -615,16 +629,20 @@ export async function updateProfile(
       updateData['clientProfile.industry'] = clientProfileData.industry;
       updateData['clientProfile.website'] = clientProfileData.website;
       updateData['clientProfile.description'] = clientProfileData.description;
+
+      console.log(`👔 [updateProfile] Updating client profile with ${Object.keys(updateData).length} fields`);
     }
 
     await userRef.update(updateData);
+
+    console.log(`✅ [updateProfile] Profile updated successfully for user ${userId}`);
     revalidatePath('/dashboard/profile');
     return {
       success: true,
       message: 'Профиль успешно обновлен!',
     };
   } catch (e) {
-    console.error('Failed to update profile:', e);
+    console.error('❌ [updateProfile] Failed to update profile:', e);
     return {
       success: false,
       message: 'Что-то пошло не так. Пожалуйста, повторите попытку позже.',
@@ -670,22 +688,44 @@ export async function addPortfolioItem(
 }
 
 export async function deletePortfolioItem(userId: string, itemId: string): Promise<PortfolioState> {
-  if (!userId || !itemId) {
-    return { success: false, message: 'Ошибка: Необходим ID пользователя и ID работы.' };
+  // ✅ SECURITY: Проверяем что текущий пользователь = владелец портфолио
+  const currentUserId = await getUserId();
+
+  if (!currentUserId) {
+    console.error('❌ [deletePortfolioItem] No authenticated user');
+    return { success: false, message: 'Ошибка: Необходима авторизация.' };
+  }
+
+  if (currentUserId !== userId) {
+    console.error(`❌ [deletePortfolioItem] Permission denied: ${currentUserId} tried to delete item from ${userId}`);
+    return { success: false, message: 'Ошибка: У вас нет прав на удаление этой работы.' };
+  }
+
+  if (!itemId) {
+    return { success: false, message: 'Ошибка: Необходим ID работы.' };
   }
 
   try {
+    console.log(`🗑️ [deletePortfolioItem] User ${currentUserId} deleting item ${itemId}`);
+
     const itemRef = db.collection('users').doc(userId).collection('portfolio').doc(itemId);
+
+    // Дополнительная проверка: существует ли документ
+    const itemDoc = await itemRef.get();
+    if (!itemDoc.exists) {
+      return { success: false, message: 'Ошибка: Работа не найдена.' };
+    }
+
     await itemRef.delete();
 
+    console.log(`✅ [deletePortfolioItem] Item ${itemId} deleted successfully`);
     revalidatePath('/dashboard/portfolio');
     return { success: true, message: 'Работа успешно удалена!' };
   } catch (error: any) {
-    console.error('Failed to delete portfolio item:', error);
+    console.error('❌ [deletePortfolioItem] Failed:', error);
     return { success: false, message: 'Не удалось удалить работу.' };
   }
 }
-
 
 export async function createProject(userId: string, data: z.infer<typeof projectSchema>): Promise<ProjectState> {
   if (!userId) {
@@ -918,6 +958,504 @@ export async function deleteProposal(
   } catch (error: any) {
     console.error("Failed to delete proposal:", error);
     return { success: false, message: 'Произошла ошибка при удалении предложения.' };
+  }
+}
+
+// ========================================
+// PROPOSALS - GET DATA
+// ========================================
+
+/**
+ * Получить все proposals фрилансера (для SentOffersTab)
+ */
+export async function getProposalsByFreelancer(freelancerId: string) {
+  if (!freelancerId) return [];
+
+  // ✅ SECURITY: Проверяем что запрашивающий = фрилансер
+  const currentUserId = await getUserId();
+  if (!currentUserId || currentUserId !== freelancerId) {
+    console.error(`❌ [getProposalsByFreelancer] Permission denied: ${currentUserId} tried to access ${freelancerId}`);
+    return [];
+  }
+
+  try {
+    console.log(`🔍 [getProposalsByFreelancer] Fetching proposals for freelancer ${freelancerId}`);
+
+    // Используем Collection Group Query для поиска по всем proposals
+    const proposalsSnapshot = await db.collectionGroup('proposals')
+      .where('freelancerId', '==', freelancerId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    if (proposalsSnapshot.empty) {
+      console.log(`ℹ️ [getProposalsByFreelancer] No proposals found for ${freelancerId}`);
+      return [];
+    }
+
+    console.log(`✅ [getProposalsByFreelancer] Found ${proposalsSnapshot.size} proposals`);
+
+    // Собираем данные proposals вместе с данными проекта
+    const proposalsWithProjects = await Promise.all(
+      proposalsSnapshot.docs.map(async (proposalDoc) => {
+        const proposalData = proposalDoc.data();
+
+        // Получаем projectId из пути документа: projects/{projectId}/proposals/{proposalId}
+        const projectId = proposalDoc.ref.parent.parent?.id;
+
+        if (!projectId) {
+          console.warn(`⚠️ [getProposalsByFreelancer] Could not extract projectId for proposal ${proposalDoc.id}`);
+          return null;
+        }
+
+        // Получаем данные проекта
+        const projectDoc = await db.collection('projects').doc(projectId).get();
+        const projectData = projectDoc.exists ? projectDoc.data() : null;
+
+        return {
+          id: proposalDoc.id,
+          projectId,
+          projectTitle: projectData?.title || 'Неизвестный проект',
+          bidAmount: proposalData.bidAmount,
+          bidDuration: proposalData.bidDuration,
+          coverLetter: proposalData.coverLetter,
+          status: proposalData.status || 'submitted',
+          createdAt: proposalData.createdAt?.toDate().toISOString() || new Date().toISOString(),
+        };
+      })
+    );
+
+    // Фильтруем null значения
+    return proposalsWithProjects.filter(p => p !== null);
+
+  } catch (error: any) {
+    console.error('❌ [getProposalsByFreelancer] Error:', error);
+    return [];
+  }
+}
+
+/**
+ * Получить все proposals на проекты клиента (для ReceivedOffersTab)
+ */
+export async function getProposalsByClient(clientId: string) {
+  if (!clientId) return [];
+
+  // ✅ SECURITY: Проверяем что запрашивающий = клиент
+  const currentUserId = await getUserId();
+  if (!currentUserId || currentUserId !== clientId) {
+    console.error(`❌ [getProposalsByClient] Permission denied: ${currentUserId} tried to access ${clientId}`);
+    return [];
+  }
+
+  try {
+    console.log(`🔍 [getProposalsByClient] Fetching proposals for client ${clientId}`);
+
+    // 1. Получаем все проекты клиента
+    const projectsSnapshot = await db.collection('projects')
+      .where('clientId', '==', clientId)
+      .get();
+
+    if (projectsSnapshot.empty) {
+      console.log(`ℹ️ [getProposalsByClient] No projects found for client ${clientId}`);
+      return [];
+    }
+
+    console.log(`📂 [getProposalsByClient] Found ${projectsSnapshot.size} projects`);
+
+    // 2. Для каждого проекта получаем proposals
+    const allProposals = await Promise.all(
+      projectsSnapshot.docs.map(async (projectDoc) => {
+        const projectData = projectDoc.data();
+        const projectId = projectDoc.id;
+
+        // Получаем proposals для этого проекта
+        const proposalsSnapshot = await db.collection('projects')
+          .doc(projectId)
+          .collection('proposals')
+          .orderBy('createdAt', 'desc')
+          .get();
+
+        if (proposalsSnapshot.empty) return [];
+
+        // Для каждого proposal получаем данные фрилансера
+        const proposalsWithFreelancer = await Promise.all(
+          proposalsSnapshot.docs.map(async (proposalDoc) => {
+            const proposalData = proposalDoc.data();
+
+            // Получаем данные фрилансера
+            const freelancerDoc = await db.collection('users').doc(proposalData.freelancerId).get();
+            const freelancerData = freelancerDoc.exists ? freelancerDoc.data() : null;
+
+            return {
+              id: proposalDoc.id,
+              projectId,
+              projectTitle: projectData.title,
+              freelancerId: proposalData.freelancerId,
+              freelancerName: freelancerData
+                ? `${freelancerData.profile?.firstName || ''} ${freelancerData.profile?.lastName || ''}`.trim()
+                : 'Неизвестный фрилансер',
+              freelancerAvatar: freelancerData?.profile?.avatar || '',
+              freelancerRating: freelancerData?.freelancerProfile?.rating || 0,
+              freelancerTitle: freelancerData?.freelancerProfile?.title || '',
+              bidAmount: proposalData.bidAmount,
+              bidDuration: proposalData.bidDuration,
+              coverLetter: proposalData.coverLetter,
+              status: proposalData.status || 'submitted',
+              createdAt: proposalData.createdAt?.toDate().toISOString() || new Date().toISOString(),
+            };
+          })
+        );
+
+        return proposalsWithFreelancer;
+      })
+    );
+
+    // Объединяем все proposals и сортируем по дате
+    const flattenedProposals = allProposals.flat().sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    console.log(`✅ [getProposalsByClient] Found ${flattenedProposals.length} total proposals`);
+
+    return flattenedProposals;
+
+  } catch (error: any) {
+    console.error('❌ [getProposalsByClient] Error:', error);
+    return [];
+  }
+}
+
+// ========================================
+// DASHBOARD - GET STATS & DATA
+// ========================================
+
+/**
+ * Получить статистику для Dashboard
+ */
+export async function getDashboardStats(userId: string, userType: 'freelancer' | 'client') {
+  // ✅ SECURITY: Проверяем права доступа
+  const currentUserId = await getUserId();
+  if (!currentUserId || currentUserId !== userId) {
+    console.error(`❌ [getDashboardStats] Permission denied`);
+    return null;
+  }
+
+  try {
+    console.log(`📊 [getDashboardStats] Fetching stats for ${userType} ${userId}`);
+
+    if (userType === 'freelancer') {
+      // === FREELANCER STATS ===
+
+      // 1. Получаем данные пользователя
+      const userDoc = await db.collection('users').doc(userId).get();
+      const userData = userDoc.data();
+
+      // 2. Получаем ВСЕ проекты
+      const projectsSnapshot = await db.collection('projects').get();
+
+      // 3. Для каждого проекта проверяем есть ли proposals от этого фрилансера
+      let totalProposals = 0;
+      let activeProjects = 0;
+
+      await Promise.all(
+        projectsSnapshot.docs.map(async (projectDoc) => {
+          const proposalsSnapshot = await db.collection('projects')
+            .doc(projectDoc.id)
+            .collection('proposals')
+            .where('freelancerId', '==', userId)
+            .get();
+
+          totalProposals += proposalsSnapshot.size;
+
+          // Считаем принятые proposals (активные проекты)
+          const accepted = proposalsSnapshot.docs.filter(
+            doc => doc.data().status === 'accepted'
+          );
+          activeProjects += accepted.length;
+        })
+      );
+
+      // 4. Остальные данные из профиля
+      const rating = userData?.freelancerProfile?.rating || 0;
+      const reviewsCount = userData?.freelancerProfile?.reviewsCount || 0;
+      const earnings = userData?.wallet?.balance || 0;
+      const invitations = 0; // Будет в будущем
+
+      return {
+        earnings,
+        activeProjects,
+        rating,
+        reviewsCount,
+        totalProposals,
+        invitations,
+      };
+
+    } else {
+      // === CLIENT STATS ===
+
+      // 1. Получаем данные пользователя
+      const userDoc = await db.collection('users').doc(userId).get();
+      const userData = userDoc.data();
+
+      // 2. Получаем проекты клиента
+      const projectsSnapshot = await db.collection('projects')
+        .where('clientId', '==', userId)
+        .get();
+
+      const totalProjects = projectsSnapshot.size;
+
+      // Считаем проекты по статусам
+      const activeProjects = projectsSnapshot.docs.filter(
+        doc => doc.data().status === 'in_progress'
+      ).length;
+
+      const openProjects = projectsSnapshot.docs.filter(
+        doc => doc.data().status === 'open'
+      ).length;
+
+      const completedProjects = projectsSnapshot.docs.filter(
+        doc => doc.data().status === 'completed'
+      ).length;
+
+      // 3. Считаем уникальных нанятых фрилансеров
+      const hiredFreelancers = new Set(
+        projectsSnapshot.docs
+          .map(doc => doc.data().freelancerId)
+          .filter(id => id)
+      ).size;
+
+      // 4. Потраченные деньги
+      const moneySpent = userData?.clientProfile?.moneySpent || 0;
+
+      // 5. Считаем proposals на все проекты
+      const proposalsCountPromises = projectsSnapshot.docs.map(async (projectDoc) => {
+        const proposalsSnapshot = await db.collection('projects')
+          .doc(projectDoc.id)
+          .collection('proposals')
+          .get();
+        return proposalsSnapshot.size;
+      });
+
+      const proposalsCounts = await Promise.all(proposalsCountPromises);
+      const totalProposalsReceived = proposalsCounts.reduce((sum, count) => sum + count, 0);
+
+      return {
+        moneySpent,
+        activeProjects,
+        openProjects,
+        completedProjects,
+        hiredFreelancers,
+        totalProjects,
+        totalProposalsReceived,
+      };
+    }
+
+  } catch (error: any) {
+    console.error('❌ [getDashboardStats] Error:', error);
+    return null;
+  }
+}
+
+/**
+ * Получить последние проекты для Dashboard
+ */
+export async function getRecentProjects(userId: string, userType: 'freelancer' | 'client', limit: number = 5) {
+  const currentUserId = await getUserId();
+  if (!currentUserId || currentUserId !== userId) {
+    console.error(`❌ [getRecentProjects] Permission denied`);
+    return [];
+  }
+
+  try {
+    console.log(`📂 [getRecentProjects] Fetching recent projects for ${userType} ${userId}`);
+
+    if (userType === 'freelancer') {
+      // === FREELANCER: Проекты где он работает (БЕЗ COLLECTION GROUP QUERY) ===
+
+      // 1. Получаем ВСЕ проекты
+      const allProjectsSnapshot = await db.collection('projects').get();
+
+      // 2. Для каждого проекта проверяем есть ли accepted proposal от фрилансера
+      const projectsData = await Promise.all(
+        allProjectsSnapshot.docs.map(async (projectDoc) => {
+          const projectData = projectDoc.data();
+          const projectId = projectDoc.id;
+
+          // Ищем accepted proposal от этого фрилансера
+          const proposalSnapshot = await db.collection('projects')
+            .doc(projectId)
+            .collection('proposals')
+            .where('freelancerId', '==', userId)
+            .limit(1) // Только 1 proposal от фрилансера на проект
+            .get();
+
+          if (proposalSnapshot.empty) {
+            return null;
+          }
+
+          const proposalDoc = proposalSnapshot.docs[0];
+          const proposalData = proposalDoc.data();
+
+          // Только accepted proposals
+          if (proposalData.status !== 'accepted') {
+            return null;
+          }
+
+          // Получаем данные клиента
+          const clientDoc = await db.collection('users').doc(projectData.clientId).get();
+          const clientData = clientDoc.exists ? clientDoc.data() : null;
+
+          return {
+            id: projectId,
+            title: projectData.title,
+            status: projectData.status || 'in_progress',
+            budgetAmount: proposalData.bidAmount || projectData.budgetAmount,
+            skills: projectData.skills || [],
+            clientName: clientData
+              ? `${clientData.profile?.firstName || ''} ${clientData.profile?.lastName || ''}`.trim()
+              : 'Неизвестный клиент',
+            createdAt: projectData.createdAt?.toDate().getTime() || 0,
+          };
+        })
+      );
+
+      // Фильтруем null, сортируем и ограничиваем
+      const filteredProjects = projectsData
+        .filter(p => p !== null)
+        .sort((a, b) => b!.createdAt - a!.createdAt)
+        .slice(0, limit);
+
+      return filteredProjects;
+
+    } else {
+      // === CLIENT: Проекты которые он создал ===
+
+      const projectsSnapshot = await db.collection('projects')
+        .where('clientId', '==', userId)
+        .get();
+
+      if (projectsSnapshot.empty) {
+        return [];
+      }
+
+      // Сортируем вручную
+      const sortedDocs = projectsSnapshot.docs.sort((a, b) => {
+        const timeA = a.data().createdAt?.toMillis() || 0;
+        const timeB = b.data().createdAt?.toMillis() || 0;
+        return timeB - timeA;
+      });
+
+      const projectsData = await Promise.all(
+        sortedDocs.slice(0, limit).map(async (projectDoc) => {
+          const projectData = projectDoc.data();
+
+          // Если есть назначенный фрилансер - получаем его данные
+          let freelancerName = null;
+          if (projectData.freelancerId) {
+            const freelancerDoc = await db.collection('users').doc(projectData.freelancerId).get();
+            const freelancerData = freelancerDoc.exists ? freelancerDoc.data() : null;
+
+            freelancerName = freelancerData
+              ? `${freelancerData.profile?.firstName || ''} ${freelancerData.profile?.lastName || ''}`.trim()
+              : 'Неизвестный фрилансер';
+          }
+
+          return {
+            id: projectDoc.id,
+            title: projectData.title,
+            status: projectData.status || 'open',
+            budgetAmount: projectData.budgetAmount,
+            skills: projectData.skills || [],
+            freelancerName,
+            proposalsCount: projectData.proposalsCount || 0,
+            createdAt: projectData.createdAt?.toDate().toISOString() || new Date().toISOString(),
+          };
+        })
+      );
+
+      return projectsData;
+    }
+
+  } catch (error: any) {
+    console.error('❌ [getRecentProjects] Error:', error);
+    return [];
+  }
+}
+
+/**
+ * Получить рекомендованные проекты для фрилансера
+ */
+export async function getRecommendedProjects(userId: string, limit: number = 5) {
+  const currentUserId = await getUserId();
+  if (!currentUserId || currentUserId !== userId) {
+    return [];
+  }
+
+  try {
+    console.log(`🎯 [getRecommendedProjects] Fetching for freelancer ${userId}`);
+
+    // Получаем навыки фрилансера
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const userSkills = userData?.freelancerProfile?.skills || [];
+
+    // Получаем открытые проекты (БЕЗ orderBy чтобы не нужен индекс)
+    const projectsSnapshot = await db.collection('projects')
+      .where('status', '==', 'open')
+      .limit(50) // Берем первые 50
+      .get();
+
+    if (projectsSnapshot.empty) {
+      return [];
+    }
+
+    // Сортируем вручную по createdAt
+    const sortedDocs = projectsSnapshot.docs.sort((a, b) => {
+      const timeA = a.data().createdAt?.toMillis() || 0;
+      const timeB = b.data().createdAt?.toMillis() || 0;
+      return timeB - timeA;
+    });
+
+    // Если нет навыков - возвращаем просто последние
+    if (userSkills.length === 0) {
+      return sortedDocs.slice(0, limit).map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        budgetAmount: doc.data().budgetAmount,
+        skills: doc.data().skills || [],
+      }));
+    }
+
+    // Ищем проекты с совпадающими навыками
+    const matchedProjects = sortedDocs
+      .map(doc => {
+        const projectData = doc.data();
+        const projectSkills = projectData.skills || [];
+
+        // Считаем количество совпадающих навыков
+        const matchCount = projectSkills.filter((skill: string) =>
+          userSkills.some((userSkill: string) =>
+            userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+            skill.toLowerCase().includes(userSkill.toLowerCase())
+          )
+        ).length;
+
+        return {
+          id: doc.id,
+          title: projectData.title,
+          budgetAmount: projectData.budgetAmount,
+          skills: projectSkills,
+          matchCount,
+        };
+      })
+      .filter(p => p.matchCount > 0) // Только с совпадениями
+      .sort((a, b) => b.matchCount - a.matchCount) // Сортируем по совпадениям
+      .slice(0, limit);
+
+    return matchedProjects;
+
+  } catch (error: any) {
+    console.error('❌ [getRecommendedProjects] Error:', error);
+    return [];
   }
 }
 

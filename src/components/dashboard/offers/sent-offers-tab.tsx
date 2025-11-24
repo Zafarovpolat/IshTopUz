@@ -1,88 +1,135 @@
+"use client";
 
+import { useEffect, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getProposalsByFreelancer } from "@/app/actions";
+import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
-const sentOffers = [
-    {
-        id: 1,
-        projectTitle: "Разработка дизайна для сайта e-commerce",
-        sentDate: "2024-08-01",
-        status: "viewed",
-        budget: "5,000,000 UZS"
-    },
-    {
-        id: 2,
-        projectTitle: "Написать 5 SEO-статей про туризм в Узбекистане",
-        sentDate: "2024-07-28",
-        status: "sent",
-        budget: "1,500,000 UZS"
-    },
-     {
-        id: 3,
-        projectTitle: "Создать анимационный ролик для рекламы",
-        sentDate: "2024-07-25",
-        status: "accepted",
-        budget: "4,000,000 UZS"
-    },
-];
-
-const statusMap: { [key: string]: { label: string; variant: "default" | "secondary" | "outline" } } = {
-    sent: { label: "Отправлено", variant: "outline" },
-    viewed: { label: "Просмотрено", variant: "secondary" },
-    accepted: { label: "Принято", variant: "default" },
-    declined: { label: "Отклонено", variant: "destructive" as any},
+type Proposal = {
+    id: string;
+    projectId: string;
+    projectTitle: string;
+    bidAmount: number;
+    bidDuration: number;
+    status: string;
+    createdAt: string;
 };
 
+const statusMap: { [key: string]: { label: string; variant: "default" | "secondary" | "outline" | "destructive" } } = {
+    submitted: { label: "Отправлено", variant: "outline" },
+    viewed: { label: "Просмотрено", variant: "secondary" },
+    accepted: { label: "Принято", variant: "default" },
+    rejected: { label: "Отклонено", variant: "destructive" },
+};
 
 export function SentOffersTab() {
-    if (sentOffers.length === 0) {
+    const { user } = useAuth();
+    const [proposals, setProposals] = useState<Proposal[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchProposals() {
+            if (!user?.uid) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const data = await getProposalsByFreelancer(user.uid);
+                setProposals(data as Proposal[]);
+            } catch (error) {
+                console.error("Failed to fetch proposals:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchProposals();
+    }, [user]);
+
+    if (isLoading) {
         return (
-             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
+            <Card className="mt-4">
+                <CardContent className="pt-6">
+                    <div className="space-y-3">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (proposals.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
                 <h3 className="text-xl font-semibold tracking-tight">Вы еще не отправляли заявок</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Найдите интересный проект и отправьте свое предложение.
                 </p>
-                 <Button className="mt-4">Найти проект</Button>
+                <Button className="mt-4" asChild>
+                    <Link href="/jobs">Найти проект</Link>
+                </Button>
             </div>
-        )
+        );
     }
-  return (
-    <Card className="mt-4">
-        <CardContent>
-            <Table>
-            <TableHeader>
-                <TableRow>
-                <TableHead>Проект</TableHead>
-                <TableHead>Дата отправки</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-right">Предложенный бюджет</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {sentOffers.map((offer) => (
-                    <TableRow key={offer.id}>
-                        <TableCell className="font-medium">{offer.projectTitle}</TableCell>
-                        <TableCell>{new Date(offer.sentDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                            <Badge variant={statusMap[offer.status].variant}>
-                                {statusMap[offer.status].label}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{offer.budget}</TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-            </Table>
-      </CardContent>
-    </Card>
-  );
+
+    return (
+        <Card className="mt-4">
+            <CardContent className="pt-6">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Проект</TableHead>
+                            <TableHead>Дата отправки</TableHead>
+                            <TableHead>Статус</TableHead>
+                            <TableHead className="text-right">Предложенный бюджет</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {proposals.map((proposal) => (
+                            <TableRow key={proposal.id}>
+                                <TableCell className="font-medium">
+                                    <Link
+                                        href={`/marketplace/jobs/${proposal.projectId}`}
+                                        className="hover:underline"
+                                    >
+                                        {proposal.projectTitle}
+                                    </Link>
+                                </TableCell>
+                                <TableCell>
+                                    {new Date(proposal.createdAt).toLocaleDateString('ru-RU', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })}
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant={statusMap[proposal.status]?.variant || "outline"}>
+                                        {statusMap[proposal.status]?.label || proposal.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    {proposal.bidAmount.toLocaleString('ru-RU')} UZS
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
 }

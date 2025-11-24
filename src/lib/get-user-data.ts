@@ -56,5 +56,9 @@ export async function getUserData() {
     return value;
   }));
 
-  return serializedUserData;
+  // ✅ ДОБАВЛЯЕМ uid в возвращаемый объект
+  return {
+    uid: userId, // ✅ Добавили uid
+    ...serializedUserData,
+  };
 }

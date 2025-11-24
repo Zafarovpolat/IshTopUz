@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -13,21 +13,28 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Google avatars
+      },
+      // ✅ ДОБАВЬТЕ ЭТО:
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc', // Pravatar avatars
+      },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com', // UI Avatars (на всякий случай)
+      },
     ],
   },
 };

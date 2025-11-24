@@ -2,6 +2,7 @@ import { getUserData } from '@/lib/get-user-data';
 import { ClientDashboard } from '@/components/dashboard/client-dashboard';
 import { FreelancerDashboard } from '@/components/dashboard/freelancer-dashboard';
 import { redirect } from 'next/navigation';
+import { getDashboardStats, getRecentProjects, getRecommendedProjects } from '@/app/actions';
 
 export default async function DashboardPage() {
   const userData = await getUserData();
@@ -10,14 +11,34 @@ export default async function DashboardPage() {
     return redirect('/auth');
   }
 
-  const { userType } = userData;
+  const { userType, uid } = userData;
+
+  // ✅ Получаем данные для Dashboard
+  const stats = await getDashboardStats(uid, userType);
+  const recentProjects = await getRecentProjects(uid, userType, 5);
 
   if (userType === 'freelancer') {
-    return <FreelancerDashboard />;
+    // ✅ Получаем рекомендованные проекты только для фрилансеров
+    const recommendedProjects = await getRecommendedProjects(uid, 3);
+
+    return (
+      <FreelancerDashboard
+        userData={userData}
+        stats={stats}
+        recentProjects={recentProjects}
+        recommendedProjects={recommendedProjects}
+      />
+    );
   }
 
   if (userType === 'client') {
-    return <ClientDashboard userData={userData} />;
+    return (
+      <ClientDashboard
+        userData={userData}
+        stats={stats}
+        recentProjects={recentProjects}
+      />
+    );
   }
 
   // Fallback for users with no type or 'both'
