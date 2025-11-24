@@ -13,11 +13,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Logo } from './layout/logo';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { auth } from '@/lib/firebase';
 
 type SetPasswordFormValues = z.infer<typeof setPasswordSchema>;
 
-export function SetPasswordForm({ email }: { email: string }) {
+export function SetPasswordForm({ email, fullName }: { email: string; fullName?: string }) {
     const [isPending, startTransition] = useTransition();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,19 +35,56 @@ export function SetPasswordForm({ email }: { email: string }) {
 
     const onSubmit = (data: SetPasswordFormValues) => {
         startTransition(async () => {
-            const result = await setUserPassword(data.password);
+            try {
+                console.log('🔐 Submitting password...');
 
-            if (result.success) {
-                toast({
-                    title: 'Пароль установлен!',
-                    description: 'Теперь вы можете входить используя email и пароль.',
-                });
-                router.push('/dashboard');
-            } else {
+                const result = await setUserPassword(data.password);
+
+                console.log('📥 Set password result:', result);
+
+                if (result.success) {
+                    if (result.requiresReauth) {
+                        toast({
+                            title: 'Пароль установлен!',
+                            description: 'Сейчас вы будете перенаправлены на страницу входа.',
+                        });
+
+                        console.log('🚪 Logging out and cleaning up...');
+
+                        try {
+                            await fetch('/api/auth/signout', { method: 'POST' });
+                            console.log('✅ Server session cookie deleted');
+                        } catch (error) {
+                            console.error('⚠️ Failed to delete server session:', error);
+                        }
+
+                        try {
+                            await auth.signOut();
+                            console.log('✅ Client auth signed out');
+                        } catch (error) {
+                            console.error('⚠️ Failed to sign out on client:', error);
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 500));
+
+                        console.log('🚀 Redirecting to /auth');
+                        router.push('/auth?message=password-set');
+                    } else {
+                        router.push('/dashboard');
+                    }
+                } else {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Ошибка',
+                        description: result.message || 'Не удалось установить пароль.',
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Unexpected error:', error);
                 toast({
                     variant: 'destructive',
                     title: 'Ошибка',
-                    description: result.message || 'Не удалось установить пароль.',
+                    description: 'Произошла непредвиденная ошибка.',
                 });
             }
         });
@@ -58,7 +96,9 @@ export function SetPasswordForm({ email }: { email: string }) {
                 <div className="mx-auto mb-4 w-fit">
                     <Logo />
                 </div>
-                <CardTitle className="text-3xl font-bold">Создайте пароль</CardTitle>
+                <CardTitle className="text-3xl font-bold">
+                    {fullName ? `Привет, ${fullName}! 👋` : 'Создайте пароль'}
+                </CardTitle>
                 <CardDescription className="text-muted-foreground">
                     Установите пароль для входа через email: <strong>{email}</strong>
                 </CardDescription>
@@ -81,6 +121,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                                 type={showPassword ? 'text' : 'password'}
                                                 placeholder="Минимум 6 символов"
                                                 {...field}
+                                                disabled={isPending}
                                             />
                                             <Button
                                                 type="button"
@@ -88,6 +129,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                                 size="sm"
                                                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                                                 onClick={() => setShowPassword(!showPassword)}
+                                                disabled={isPending}
                                             >
                                                 {showPassword ? (
                                                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -98,7 +140,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                         </div>
                                     </FormControl>
                                     <FormDescription className="text-xs">
-                                        Минимум 6 символов, должен содержать буквы и цифры
+                                        Минимум 6 символов
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -120,6 +162,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                                 type={showConfirmPassword ? 'text' : 'password'}
                                                 placeholder="Повторите пароль"
                                                 {...field}
+                                                disabled={isPending}
                                             />
                                             <Button
                                                 type="button"
@@ -127,6 +170,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                                 size="sm"
                                                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                disabled={isPending}
                                             >
                                                 {showConfirmPassword ? (
                                                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -142,7 +186,14 @@ export function SetPasswordForm({ email }: { email: string }) {
                         />
 
                         <Button type="submit" className="w-full" size="lg" disabled={isPending}>
-                            {isPending ? 'Сохранение...' : 'Установить пароль'}
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Сохранение...
+                                </>
+                            ) : (
+                                'Установить пароль'
+                            )}
                         </Button>
 
                         <div className="text-center">
@@ -151,6 +202,7 @@ export function SetPasswordForm({ email }: { email: string }) {
                                 variant="link"
                                 onClick={() => router.push('/dashboard')}
                                 className="text-sm text-muted-foreground"
+                                disabled={isPending}
                             >
                                 Пропустить (сделать позже)
                             </Button>

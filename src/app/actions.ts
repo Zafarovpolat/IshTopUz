@@ -125,11 +125,19 @@ export async function createUserOnboarding(
   const { firstName, lastName, userType, email } = validatedFields.data;
 
   try {
+    // ========================================
+    // ШАГ 1: Получаем данные пользователя из Firebase Auth
+    // ========================================
     let userRecord;
     try {
       userRecord = await auth.getUser(userId);
+      console.log('👤 [Onboarding] Got user record:', {
+        uid: userRecord.uid,
+        email: userRecord.email,
+        providers: userRecord.providerData.map(p => p.providerId)
+      });
     } catch (error) {
-      console.error('getUser failed:', error);
+      console.error('❌ [Onboarding] getUser failed:', error);
       return {
         success: false,
         message: 'Ошибка аутентификации. Попробуйте войти снова.'
@@ -140,28 +148,29 @@ export async function createUserOnboarding(
     const userDoc = await userRef.get();
 
     // ========================================
-    // СУЩЕСТВУЮЩИЙ ДОКУМЕНТ
+    // ШАГ 2: СУЩЕСТВУЮЩИЙ ДОКУМЕНТ
     // ========================================
     if (userDoc.exists) {
       const existingData = userDoc.data();
 
-      if (existingData?.profileComplete) {
-        // Профиль уже заполнен, проверяем нужен ли пароль
-        let needsPassword = false;
-        try {
-          const authUser = await auth.getUser(userId);
-          needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
-        } catch (error) {
-          console.log('Could not check providers:', error);
-        }
+      console.log('📄 [Onboarding] Existing user data:', {
+        profileComplete: existingData?.profileComplete,
+        passwordSet: existingData?.passwordSet,
+        email: existingData?.email,
+        userType: existingData?.userType,
+      });
 
+      // Проверка: если профиль уже заполнен И пароль установлен
+      if (existingData?.profileComplete && existingData?.passwordSet === true) {
+        console.log('✅ [Onboarding] Profile already complete with password');
         return {
           success: true,
           message: "Профиль уже заполнен.",
-          redirectUrl: needsPassword ? '/set-password' : '/dashboard',
+          redirectUrl: '/dashboard',
         };
       }
 
+      // Подготовка данных для обновления
       const updateData: any = {
         userType,
         profileComplete: true,
@@ -170,82 +179,94 @@ export async function createUserOnboarding(
         'profile.lastName': lastName,
       };
 
-      // ✅ Email обработка с обновлением Firebase Auth
+      // ✅ ВАЖНО: Явно устанавливаем passwordSet в false если его нет
+      if (existingData.passwordSet === undefined) {
+        updateData.passwordSet = false;
+        console.log('🔐 [Onboarding] Initializing passwordSet to false');
+      }
+
+      // ========================================
+      // ШАГ 3: Email обработка
+      // ========================================
       let finalEmail = '';
+      let emailWasUpdated = false; // ✅ Флаг обновления email
+
       if (email && email.trim() !== '') {
         finalEmail = email.trim();
         updateData.email = finalEmail;
 
-        // ✅ Обновляем email в Firebase Auth СРАЗУ
-        try {
-          console.log(`📧 Setting email ${finalEmail} for user ${userId} in Firebase Auth...`);
+        console.log(`📧 [Onboarding] Processing email: ${finalEmail}`);
 
+        try {
           // Проверяем существует ли пользователь с таким email
           try {
             const existingUserWithEmail = await auth.getUserByEmail(finalEmail);
 
             if (existingUserWithEmail.uid !== userId) {
-              // Email занят другим пользователем - удаляем конфликтующего
-              console.warn(`⚠️ Email conflict: ${finalEmail} belongs to ${existingUserWithEmail.uid}. Deleting...`);
+              console.warn(`⚠️ [Onboarding] Email conflict: ${finalEmail} belongs to ${existingUserWithEmail.uid}`);
 
+              // Удаляем конфликтующего пользователя
               try {
-                // Удаляем из Firebase Auth
                 await auth.deleteUser(existingUserWithEmail.uid);
-                console.log(`🗑️ Deleted conflicting Auth user ${existingUserWithEmail.uid}`);
+                console.log(`🗑️ [Onboarding] Deleted conflicting Auth user ${existingUserWithEmail.uid}`);
 
-                // Удаляем из Firestore (если есть)
+                // Удаляем из Firestore
                 try {
                   await db.collection('users').doc(existingUserWithEmail.uid).delete();
-                  console.log(`🗑️ Deleted conflicting Firestore document ${existingUserWithEmail.uid}`);
+                  console.log(`🗑️ [Onboarding] Deleted conflicting Firestore document`);
                 } catch (firestoreError) {
-                  console.log(`ℹ️ No Firestore document to delete for ${existingUserWithEmail.uid}`);
+                  console.log('ℹ️ [Onboarding] No Firestore document to delete');
                 }
               } catch (deleteError: any) {
-                console.error(`❌ Failed to delete conflicting user:`, deleteError);
+                console.error(`❌ [Onboarding] Failed to delete conflicting user:`, deleteError);
                 return {
                   success: false,
-                  message: `Email ${finalEmail} уже используется другим пользователем. Используйте другой email.`
+                  message: `Email ${finalEmail} уже используется другим пользователем.`
                 };
               }
             } else {
-              console.log(`✅ Email ${finalEmail} already belongs to current user ${userId}`);
+              console.log(`✅ [Onboarding] Email ${finalEmail} already belongs to current user`);
             }
           } catch (emailCheckError: any) {
             if (emailCheckError.code === 'auth/user-not-found') {
-              // Email свободен - отлично!
-              console.log(`✅ Email ${finalEmail} is available`);
+              console.log(`✅ [Onboarding] Email ${finalEmail} is available`);
             } else {
-              // Неожиданная ошибка
               throw emailCheckError;
             }
           }
 
-          // Теперь безопасно устанавливаем email
+          // ✅ Устанавливаем email в Firebase Auth
           await auth.updateUser(userId, {
             email: finalEmail,
             emailVerified: false,
           });
 
-          console.log(`✅ Email ${finalEmail} successfully set in Firebase Auth for user ${userId}`);
+          emailWasUpdated = true; // ✅ Email был обновлен
+          console.log(`✅ [Onboarding] Email ${finalEmail} set in Firebase Auth`);
 
         } catch (emailError: any) {
-          console.error('Failed to update email in Firebase Auth:', emailError);
+          console.error('❌ [Onboarding] Failed to update email in Firebase Auth:', emailError);
 
           if (emailError.code === 'auth/email-already-exists') {
             return {
               success: false,
-              message: `Email ${finalEmail} уже используется. Попробуйте другой email.`
+              message: `Email ${finalEmail} уже используется. Попробуйте другой.`
             };
           }
 
-          // Для других ошибок продолжаем, но логируем
-          console.warn('Email not set in Firebase Auth, but continuing with Firestore update');
+          console.warn('⚠️ [Onboarding] Continuing despite email error...');
         }
       } else if (userRecord.email && userRecord.email.trim() !== '') {
         finalEmail = userRecord.email;
         updateData.email = finalEmail;
+        console.log(`📧 [Onboarding] Using email from Auth: ${finalEmail}`);
+      } else {
+        console.warn('⚠️ [Onboarding] No email provided');
       }
 
+      // ========================================
+      // ШАГ 4: Дополнительные данные
+      // ========================================
       if (userRecord.phoneNumber && userRecord.phoneNumber.trim() !== '') {
         updateData.phone = userRecord.phoneNumber;
       }
@@ -254,7 +275,9 @@ export async function createUserOnboarding(
         updateData['profile.avatar'] = userRecord.photoURL;
       }
 
-      // Добавляем профиль в зависимости от типа
+      // ========================================
+      // ШАГ 5: Добавляем профиль в зависимости от типа
+      // ========================================
       if (userType === 'freelancer' && !existingData?.freelancerProfile) {
         updateData.freelancerProfile = {
           title: '',
@@ -269,6 +292,7 @@ export async function createUserOnboarding(
           isAvailable: true,
           lastActiveAt: FieldValue.serverTimestamp(),
         };
+        console.log('👨‍💻 [Onboarding] Adding freelancer profile');
       }
 
       if (userType === 'client' && !existingData?.clientProfile) {
@@ -283,35 +307,85 @@ export async function createUserOnboarding(
           rating: 0,
           reviewsCount: 0,
         };
+        console.log('👔 [Onboarding] Adding client profile');
       }
 
+      console.log('💾 [Onboarding] Updating Firestore with fields:', Object.keys(updateData));
+
+      // ========================================
+      // ШАГ 6: Сохраняем в Firestore
+      // ========================================
       await userRef.update(updateData);
 
-      // ✅ Проверяем нужно ли устанавливать пароль
-      let needsPassword = false;
-      try {
-        // ВАЖНО: Снова получаем пользователя после обновления email
-        const authUser = await auth.getUser(userId);
+      console.log('✅ [Onboarding] Firestore updated successfully');
 
-        console.log(`🔍 Checking if password needed for user ${userId}:`, {
-          email: authUser.email,
-          providers: authUser.providerData.map(p => p.providerId),
-          hasPasswordProvider: authUser.providerData.some(p => p.providerId === 'password'),
+      // ========================================
+      // ШАГ 7: ✅ ВАЖНО! Создаем новый custom token если email был обновлен
+      // ========================================
+      if (emailWasUpdated) {
+        try {
+          console.log('🔑 [Onboarding] Email was updated, creating new custom token...');
+          const newCustomToken = await auth.createCustomToken(userId);
+          console.log('✅ [Onboarding] New custom token created');
+
+          // ✅ Проверяем нужен ли пароль
+          let needsPassword = false;
+          try {
+            const updatedAuthUser = await auth.getUser(userId);
+            const hasPasswordProvider = updatedAuthUser.providerData.some(
+              p => p.providerId === 'password'
+            );
+            needsPassword = !hasPasswordProvider;
+            console.log(`🔐 [Onboarding] needsPassword: ${needsPassword}`);
+          } catch (error) {
+            console.error('⚠️ [Onboarding] Could not check providers:', error);
+            needsPassword = true;
+          }
+
+          const redirectUrl = needsPassword ? '/set-password' : '/dashboard';
+          console.log(`🚀 [Onboarding] Returning new token, redirecting to: ${redirectUrl}`);
+
+          // ✅ Возвращаем новый токен клиенту
+          return {
+            success: true,
+            message: "Профиль успешно обновлен.",
+            redirectUrl: redirectUrl,
+            newToken: newCustomToken, // ✅ Новый токен для переавторизации
+          };
+        } catch (tokenError) {
+          console.error('❌ [Onboarding] Failed to create new token:', tokenError);
+          // Не критично, продолжаем без нового токена
+        }
+      }
+
+      // ========================================
+      // ШАГ 8: Проверка необходимости установки пароля (если email НЕ был обновлен)
+      // ========================================
+      let needsPassword = false;
+
+      try {
+        const updatedAuthUser = await auth.getUser(userId);
+
+        console.log(`🔍 [Onboarding] Checking password provider:`, {
+          email: updatedAuthUser.email,
+          providers: updatedAuthUser.providerData.map(p => p.providerId),
         });
 
-        // Если нет password provider - нужен пароль
-        const hasPasswordProvider = authUser.providerData.some(p => p.providerId === 'password');
+        const hasPasswordProvider = updatedAuthUser.providerData.some(
+          p => p.providerId === 'password'
+        );
+
         needsPassword = !hasPasswordProvider;
 
-        console.log(`🔐 needsPassword: ${needsPassword}`);
+        console.log(`🔐 [Onboarding] hasPasswordProvider: ${hasPasswordProvider}, needsPassword: ${needsPassword}`);
 
       } catch (error) {
-        console.error('Could not check providers:', error);
-        needsPassword = true; // ✅ По умолчанию требуем пароль если не можем проверить
+        console.error('⚠️ [Onboarding] Could not check providers:', error);
+        needsPassword = true;
       }
 
       const redirectUrl = needsPassword ? '/set-password' : '/dashboard';
-      console.log(`🚀 Redirecting to: ${redirectUrl}`);
+      console.log(`🚀 [Onboarding] Complete! Redirecting to: ${redirectUrl}`);
 
       return {
         success: true,
@@ -321,26 +395,27 @@ export async function createUserOnboarding(
     }
 
     // ========================================
-    // НОВЫЙ ДОКУМЕНТ (не должно произойти, но на всякий случай)
+    // ШАГ 9: НОВЫЙ ДОКУМЕНТ (маловероятно для Telegram)
     // ========================================
-    console.log('Creating new Firestore document for:', userId);
+    console.log('📝 [Onboarding] Creating new Firestore document for:', userId);
 
     let finalEmail = '';
+    let emailWasSet = false;
+
     if (email && email.trim() !== '') {
       finalEmail = email.trim();
 
-      // ✅ Устанавливаем email в Firebase Auth для нового документа
       try {
         // Проверяем конфликты
         try {
           const existingUserWithEmail = await auth.getUserByEmail(finalEmail);
           if (existingUserWithEmail.uid !== userId) {
-            console.warn(`⚠️ Deleting conflicting user ${existingUserWithEmail.uid}`);
+            console.warn(`⚠️ [Onboarding] Deleting conflicting user ${existingUserWithEmail.uid}`);
             await auth.deleteUser(existingUserWithEmail.uid);
             try {
               await db.collection('users').doc(existingUserWithEmail.uid).delete();
             } catch (e) {
-              console.log('No Firestore doc to delete');
+              console.log('ℹ️ [Onboarding] No Firestore doc to delete');
             }
           }
         } catch (e: any) {
@@ -353,9 +428,10 @@ export async function createUserOnboarding(
           emailVerified: false,
         });
 
-        console.log(`✅ Email ${finalEmail} set for new user ${userId}`);
+        emailWasSet = true;
+        console.log(`✅ [Onboarding] Email ${finalEmail} set for new user`);
       } catch (emailError: any) {
-        console.error('Failed to set email in Firebase Auth:', emailError);
+        console.error('❌ [Onboarding] Failed to set email:', emailError);
         if (emailError.code === 'auth/email-already-exists') {
           return {
             success: false,
@@ -392,6 +468,7 @@ export async function createUserOnboarding(
         transactions: [],
       },
       profileComplete: true,
+      passwordSet: false, // ✅ ВАЖНО: Изначально пароль не установлен
     };
 
     if (userType === 'freelancer') {
@@ -426,24 +503,40 @@ export async function createUserOnboarding(
 
     await userRef.set(userData);
 
-    // ✅ Проверяем нужно ли устанавливать пароль
-    let needsPassword = false;
-    try {
-      const authUser = await auth.getUser(userId);
-      needsPassword = !authUser.providerData.some(p => p.providerId === 'password');
-    } catch (error) {
-      needsPassword = true; // По умолчанию требуем пароль для новых пользователей
+    console.log('✅ [Onboarding] New user document created');
+
+    // ✅ Если email был установлен - создаем новый токен
+    if (emailWasSet) {
+      try {
+        console.log('🔑 [Onboarding] Creating new custom token for new user...');
+        const newCustomToken = await auth.createCustomToken(userId);
+        console.log('✅ [Onboarding] New custom token created');
+
+        return {
+          success: true,
+          message: "Профиль успешно создан.",
+          redirectUrl: '/set-password',
+          newToken: newCustomToken,
+        };
+      } catch (tokenError) {
+        console.error('❌ [Onboarding] Failed to create new token:', tokenError);
+      }
     }
+
+    console.log(`🚀 [Onboarding] New user setup complete, redirecting to /set-password`);
 
     return {
       success: true,
       message: "Профиль успешно создан.",
-      redirectUrl: needsPassword ? '/set-password' : '/dashboard',
+      redirectUrl: '/set-password',
     };
 
   } catch (error: any) {
-    console.error("Onboarding failed:", error);
-    return { success: false, message: error.message || 'Не удалось сохранить данные.' };
+    console.error("❌ [Onboarding] Failed:", error);
+    return {
+      success: false,
+      message: error.message || 'Не удалось сохранить данные.'
+    };
   }
 }
 
@@ -851,7 +944,6 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
   }
 
   try {
-    // Получаем текущего пользователя из Firebase Auth
     let currentAuthUser;
     try {
       currentAuthUser = await auth.getUser(userId);
@@ -865,7 +957,6 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       return { success: false, message: 'Не удалось проверить данные пользователя.' };
     }
 
-    // Проверяем что email уже установлен
     if (!currentAuthUser.email) {
       return {
         success: false,
@@ -875,7 +966,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
 
     console.log(`📧 Setting password for user ${userId} with email ${currentAuthUser.email}`);
 
-    // ✅ УПРОЩЕНО: Просто обновляем пароль (email уже есть)
+    // ✅ Устанавливаем пароль
     await auth.updateUser(userId, {
       password: password,
       emailVerified: false,
@@ -887,12 +978,18 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     const userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.exists) {
       await db.collection('users').doc(userId).update({
-        passwordSet: true,
+        passwordSet: true,  // ✅ Устанавливаем в true
         updatedAt: FieldValue.serverTimestamp(),
       });
+      console.log(`✅ passwordSet flag updated in Firestore for user ${userId}`);
     }
 
-    return { success: true, message: 'Пароль успешно установлен!' };
+    // ✅ ВСЕГДА требуем реавторизацию после установки пароля
+    return {
+      success: true,
+      message: 'Пароль установлен! Войдите с новым паролем.',
+      requiresReauth: true, // ✅ Обязательная реавторизация
+    };
 
   } catch (error: any) {
     console.error('❌ setUserPassword failed:', error);

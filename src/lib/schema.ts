@@ -32,9 +32,11 @@ export type SetPasswordState = {
   errors?: {
     password?: string[];
     confirmPassword?: string[];
+    [key: string]: string[] | undefined;
   };
-  message?: string | null;
+  message?: string;
   success: boolean;
+  requiresReauth?: boolean; // ✅ Флаг для реавторизации
 };
 
 const languages = z.union([z.string(), z.array(z.string())]).optional();
@@ -173,6 +175,7 @@ export type OnboardingState = {
   message?: string | null;
   success: boolean;
   redirectUrl?: string; // ✅ ДОБАВЬ
+  newToken?: string; // ✅ Новый токен для переавторизации
 };
 
 export type SurveyState = {

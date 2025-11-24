@@ -1,21 +1,18 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    // ✅ AWAIT для cookies()
     const cookieStore = await cookies();
-    cookieStore.set('session', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: -1, // Немедленно истекает
-      path: '/',
-    });
 
-    return NextResponse.json({ status: 'success' }, { status: 200 });
+    // ✅ Удаляем session cookie
+    cookieStore.delete('session');
+
+    console.log('✅ Session cookie deleted');
+
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error('Error during sign out:', error);
-    return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });
+    console.error('❌ Error deleting session cookie:', error);
+    return NextResponse.json({ error: 'Failed to logout' }, { status: 500 });
   }
 }

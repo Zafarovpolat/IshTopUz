@@ -4,7 +4,6 @@ import { getAdminApp } from '@/lib/firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 
 export async function getUserId() {
-  // ✅ AWAIT для cookies() в Next.js 15
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('session')?.value;
 
@@ -17,8 +16,11 @@ export async function getUserId() {
     const auth = getAuth(adminApp);
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;
-  } catch (error) {
-    console.error('getUserId: Invalid session cookie:', error);
+  } catch (error: any) {
+    // ✅ Логируем только если это не "revoked" (ожидаемая ошибка после установки пароля)
+    if (error.code !== 'auth/session-cookie-revoked') {
+      console.error('getUserId: Invalid session cookie:', error);
+    }
     return null;
   }
 }
@@ -44,7 +46,6 @@ export async function getUserData() {
 
   const userData = userDoc.data();
 
-  // Конвертируем Timestamp в ISO strings
   const serializedUserData = JSON.parse(JSON.stringify(userData, (key, value) => {
     if (value && typeof value === 'object' && '_seconds' in value && '_nanoseconds' in value) {
       return new Date(value._seconds * 1000 + value._nanoseconds / 1000000).toISOString();
