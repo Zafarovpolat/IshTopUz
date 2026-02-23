@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,11 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Star, Clock, MessageSquare } from "lucide-react";
 import Link from "next/link";
-import { getProposalsByClient } from "@/app/actions";
-import { useAuth } from "@/hooks/use-auth";
 
 type ProposalWithFreelancer = {
   id: string;
@@ -33,32 +31,28 @@ type ProposalWithFreelancer = {
   createdAt: string;
 };
 
-export function ReceivedOffersTab() {
-  const { user } = useAuth();
-  const [proposals, setProposals] = useState<ProposalWithFreelancer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const statusMap: {
+  [key: string]: {
+    label: string;
+    variant: "default" | "secondary" | "outline" | "destructive";
+  };
+} = {
+  submitted: { label: "Новая", variant: "outline" },
+  viewed: { label: "Просмотрено", variant: "secondary" },
+  accepted: { label: "Принято", variant: "default" },
+  rejected: { label: "Отклонено", variant: "destructive" },
+};
 
-  useEffect(() => {
-    async function fetchProposals() {
-      if (!user?.uid) {
-        setIsLoading(false);
-        return;
-      }
+// ✅ Props вместо useAuth — данные приходят с сервера
+type ReceivedOffersTabProps = {
+  initialProposals: ProposalWithFreelancer[];
+};
 
-      try {
-        const data = await getProposalsByClient(user.uid);
-        setProposals(data as ProposalWithFreelancer[]);
-      } catch (error) {
-        console.error("Failed to fetch proposals:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
+export function ReceivedOffersTab({
+  initialProposals,
+}: ReceivedOffersTabProps) {
+  const [proposals] = useState<ProposalWithFreelancer[]>(initialProposals);
 
-    fetchProposals();
-  }, [user]);
-
-  // Функция для форматирования даты
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -71,44 +65,25 @@ export function ReceivedOffersTab() {
     if (diffHours < 24) return `${diffHours} ч назад`;
     if (diffDays < 7) return `${diffDays} дн назад`;
 
-    return date.toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'short'
+    return date.toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "short",
     });
   };
-
-  if (isLoading) {
-    return (
-      <div className="grid gap-6 mt-4">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-20 w-full" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-20 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (proposals.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
-        <h3 className="text-xl font-semibold tracking-tight">Заявок пока нет</h3>
+        <h3 className="text-xl font-semibold tracking-tight">
+          Заявок пока нет
+        </h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Как только фрилансеры откликнутся на ваши проекты, вы увидите их заявки здесь.
+          Как только фрилансеры откликнутся на ваши проекты, вы увидите их
+          заявки здесь.
         </p>
+        <Button className="mt-4" asChild>
+          <Link href="/dashboard/projects">Создать проект</Link>
+        </Button>
       </div>
     );
   }
@@ -116,56 +91,94 @@ export function ReceivedOffersTab() {
   return (
     <div className="grid gap-6 mt-4">
       {proposals.map((proposal) => (
-        <Card key={proposal.id}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardDescription>Заявка на проект:</CardDescription>
-                <CardTitle className="text-lg hover:underline">
-                  <Link href={`/marketplace/jobs/${proposal.projectId}`}>
+        <Card key={proposal.id} className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+              <div className="space-y-1">
+                <CardDescription className="flex items-center gap-2">
+                  Заявка на проект
+                  <Badge
+                    variant={statusMap[proposal.status]?.variant || "outline"}
+                    className="text-xs"
+                  >
+                    {statusMap[proposal.status]?.label || proposal.status}
+                  </Badge>
+                </CardDescription>
+                <CardTitle className="text-lg">
+                  <Link
+                    href={`/marketplace/jobs/${proposal.projectId}`}
+                    className="hover:underline"
+                  >
                     {proposal.projectTitle}
                   </Link>
                 </CardTitle>
               </div>
-              <div className="text-right">
-                <p className="text-xl font-bold">
-                  {proposal.bidAmount.toLocaleString('ru-RU')} UZS
+              <div className="text-left sm:text-right">
+                <p className="text-xl font-bold text-primary">
+                  {proposal.bidAmount.toLocaleString("ru-RU")} UZS
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {getRelativeTime(proposal.createdAt)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Срок: {proposal.bidDuration} дн.
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 rounded-lg border p-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={proposal.freelancerAvatar} />
-                <AvatarFallback>
-                  {proposal.freelancerName.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-semibold">{proposal.freelancerName}</p>
-                <p className="text-sm text-muted-foreground">{proposal.freelancerTitle || 'Фрилансер'}</p>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>{proposal.freelancerRating.toFixed(1)}</span>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground sm:justify-end">
+                  <Clock className="h-3 w-3" />
+                  <span>{proposal.bidDuration} дн.</span>
+                  <span className="mx-1">•</span>
+                  <span>{getRelativeTime(proposal.createdAt)}</span>
                 </div>
               </div>
             </div>
-            <div className="border-l-2 pl-3">
-              <p className="text-sm text-muted-foreground italic">
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4 rounded-lg border p-4 bg-muted/30">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={proposal.freelancerAvatar} />
+                <AvatarFallback>
+                  {proposal.freelancerName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <Link
+                  href={`/talents/${proposal.freelancerId}`}
+                  className="font-semibold hover:underline"
+                >
+                  {proposal.freelancerName}
+                </Link>
+                <p className="text-sm text-muted-foreground truncate">
+                  {proposal.freelancerTitle || "Фрилансер"}
+                </p>
+                {proposal.freelancerRating > 0 && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="font-medium">
+                      {proposal.freelancerRating.toFixed(1)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-l-2 border-primary/20 pl-4">
+              <p className="text-sm text-muted-foreground italic line-clamp-3">
                 "{proposal.coverLetter}"
               </p>
             </div>
           </CardContent>
-          <CardFooter className="flex gap-2">
-            <Button className="w-full">Принять и нанять</Button>
-            <Button variant="outline" className="w-full">Написать в чат</Button>
+
+          <CardFooter className="flex flex-col sm:flex-row gap-2 bg-muted/20 pt-4">
+            <Button className="w-full sm:w-auto">Принять и нанять</Button>
+            <Button variant="outline" className="w-full sm:w-auto">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Написать
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto text-destructive hover:text-destructive"
+            >
+              Отклонить
+            </Button>
           </CardFooter>
         </Card>
       ))}

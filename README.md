@@ -1,108 +1,250 @@
-оIshTop.Uz - Freelance Marketplace for Uzbekistan
-Overview
-IshTop.Uz is the first localized freelance marketplace in Uzbekistan, designed to connect freelancers (web developers, designers, copywriters, SMM specialists, etc.) with clients (individuals and small businesses). The platform addresses local market challenges, such as high commissions, payment security, and lack of localization, by offering:
+# 🇺🇿 IshTop.Uz — Freelance Marketplace for Uzbekistan
 
-5% commission (vs. 10–20% on Upwork/Fiverr).
-Escrow system for secure transactions.
-Integration with local payment systems (HUMO, Payme, Uzcard).
-Telegram integration for order notifications and communication.
-Multilingual interface (Uzbek, Russian, English).
+> Платформа для поиска фрилансеров и заказчиков в Узбекистане. Аналог Upwork, адаптированный под местный рынок с поддержкой Payme и локальных платёжных систем.
 
-The project is in the MVP development stage, aiming to validate demand and launch a beta version for 100–200 users.
-Features
-Must-Have (MVP)
+[![Next.js](https://img.shields.io/badge/Next.js-15.3-black?logo=nextdotjs)](https://nextjs.org)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange?logo=firebase)](https://firebase.google.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-User registration and profile creation (freelancers and clients).
-Order posting and browsing with category filters.
-Escrow-based payment system integrated with HUMO/Payme.
-Telegram bot for notifications and order imports.
-Rating and review system for trust-building.
+---
 
-Planned Features
+## ✨ Основные возможности
 
-AI-powered order matching (using Grok API).
-Premium subscriptions for freelancers (priority visibility).
-Real-time chat via WebSocket.
-Mobile app for iOS and Android.
+| Для фрилансеров                 | Для заказчиков                    |
+| ------------------------------- | --------------------------------- |
+| Создание профиля с портфолио    | Публикация и управление проектами |
+| Поиск проектов с фильтрами      | Поиск фрилансеров с фильтрами     |
+| Подача предложений (proposals)  | Получение и просмотр предложений  |
+| Отслеживание заработка (wallet) | История расходов                  |
+| Dashboard со статистикой        | Dashboard со статистикой          |
+| Уведомления о новых проектах    | Уведомления о новых откликах      |
 
-Tech Stack
+---
 
-Frontend: Next.js (TypeScript) + Tailwind CSS for a responsive UI.
-Backend: Node.js (Express/Fastify) for API and transaction handling.
-Database: PostgreSQL (user profiles, orders, transactions) + Redis (sessions, cache).
-Payments: Integration with HUMO, Payme, Uzcard APIs.
-Realtime: WebSocket for chat and notifications.
-Hosting: PS Cloud or Render for deployment.
-Tools: ESLint, Prettier, Firebase Firestore (for lead collection).
+## 🛠 Технологический стек
 
-Project Goals
+- **Framework:** [Next.js 15](https://nextjs.org) (App Router, Server Actions)
+- **Language:** TypeScript 5
+- **Styling:** Tailwind CSS + [Radix UI](https://radix-ui.com)
+- **Forms:** React Hook Form + Zod
+- **Charts:** Recharts
+- **Database:** Firebase Firestore
+- **Auth:** Firebase Authentication (Email, Google, Telegram)
+- **Storage:** Firebase Storage
+- **AI:** Google Genkit + Gemini 2.0 Flash _(configured, flows in progress)_
+- **Hosting:** Firebase App Hosting
 
-Idea Validation (1–2 months): Conduct surveys (100+ freelancers, 50+ clients) via Telegram (e.g., Myfreelance.uz) and create a landing page to collect leads.
-MVP Development (3–6 months): Build core features (registration, escrow, Telegram bot) and launch a beta for 100–200 users.
-Beta Testing (6–9 months): Onboard early users, gather feedback, and fix bugs.
-Scaling (12–24 months): Add AI features, expand to international markets (e.g., Kazakhstan, Kyrgyzstan), and integrate new payment systems.
+---
 
-Getting Started
-Prerequisites
+## 🚀 Быстрый старт
 
-Node.js (v18+)
-PostgreSQL (v15+)
-Redis (v7+)
-Firebase account (for Firestore)
-API keys for HUMO/Payme (contact providers for sandbox access)
+### Требования
 
-Installation
+- Node.js 18+
+- npm или yarn
+- Firebase проект с включёнными сервисами: Auth, Firestore, Storage
 
-Clone the repository:git clone https://github.com/ishtopuz/ishtop.git
-cd ishtop
+### Установка
 
+```bash
+# Клонировать репозиторий
+git clone https://github.com/Zafarovpolat/IshTopUz
+cd IshTopUz
 
-Install dependencies:npm install
+# Установить зависимости
+npm install
 
+# Создать файл с переменными окружения
+cp .env.local.example .env.local
+# Заполни .env.local своими Firebase credentials
 
-Set up environment variables in .env:DATABASE_URL=postgresql://user:password@localhost:5432/ishtop
-REDIS_URL=redis://localhost:6379
-FIREBASE_CONFIG={your_firebase_config}
-PAYMENT_API_KEY={humo_or_payme_key}
-TELEGRAM_BOT_TOKEN={your_bot_token}
+# Запустить в режиме разработки
+npm run dev
+```
 
+Откройте [http://localhost:9002](http://localhost:9002)
 
-Run database migrations:npx prisma migrate dev
+### Переменные окружения (`.env.local`)
 
+```env
+# Firebase Client SDK
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-Start the development server:npm run dev
+# Firebase Admin SDK (Server-side)
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxx@your_project.iam.gserviceaccount.com
 
+# Google AI (для Genkit)
+GOOGLE_GENAI_API_KEY=your_genai_api_key
 
+# Telegram Bot (для Telegram Auth)
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+```
 
-Local Development
+---
 
-Frontend: Run npm run dev to start the Next.js app at http://localhost:3000.
-Backend: Ensure PostgreSQL and Redis are running, then start the server with npm run start:server.
-Telegram Bot: Configure the bot using the Telegram Bot API and test notifications locally.
+## 📁 Структура проекта
 
-Contributing
-We welcome contributions! To get started:
+```
+src/
+├── ai/                    # Genkit AI конфигурация
+│   ├── genkit.ts          # Инициализация (Gemini 2.0 Flash)
+│   └── dev.ts
+├── app/                   # Next.js App Router
+│   ├── actions.ts         # Все Server Actions (~1554 строк, 30+ функций)
+│   ├── page.tsx           # Landing Page
+│   ├── auth/              # Страница входа/регистрации
+│   ├── onboarding/        # Онбординг (выбор роли)
+│   ├── set-password/      # Установка пароля (для OAuth)
+│   ├── dashboard/         # Приватный дашборд
+│   │   ├── layout.tsx     # Sidebar + Header
+│   │   ├── page.tsx       # Главная дашборда
+│   │   ├── profile/       # Профиль пользователя
+│   │   ├── projects/      # Мои проекты
+│   │   ├── offers/        # Предложения и заявки
+│   │   ├── portfolio/     # Портфолио фрилансера
+│   │   ├── finances/      # Финансы / Wallet
+│   │   ├── settings/      # Настройки аккаунта
+│   │   └── messages/      # Чат (заглушка)
+│   ├── jobs/              # Биржа проектов
+│   ├── talents/           # Каталог фрилансеров
+│   ├── marketplace/       # Детали проектов + Kworks
+│   ├── survey/            # Опросник для новых пользователей
+│   └── ...                # About, Contacts, Legal pages
+├── components/
+│   ├── ui/                # Radix UI компоненты (35 штук)
+│   ├── layout/            # Header, Footer, Navigation
+│   ├── sections/          # Секции Landing Page
+│   ├── dashboard/         # Компоненты дашборда
+│   │   ├── freelancer-dashboard.tsx
+│   │   ├── client-dashboard.tsx
+│   │   ├── projects/      # Табы проектов
+│   │   ├── offers/        # Табы предложений
+│   │   ├── finances/      # Финансовые компоненты
+│   │   ├── settings/      # Табы настроек
+│   │   └── notification-bell.tsx
+│   ├── auth-form.tsx      # Форма входа/регистрации
+│   ├── onboarding-form.tsx
+│   ├── profile-form.tsx
+│   └── project-details-client.tsx
+├── hooks/
+│   ├── use-auth.ts        # useAuth hook (Firebase client)
+│   ├── use-mobile.tsx     # isMobile hook
+│   └── use-toast.ts       # Toast уведомления
+└── lib/
+    ├── schema.ts          # Zod схемы + TypeScript типы
+    ├── firebase.ts        # Firebase Client SDK
+    ├── firebase-admin.ts  # Firebase Admin SDK
+    ├── auth.ts            # Server-side auth helpers
+    ├── get-user-data.ts   # getUserId() helper
+    ├── dashboard-nav.ts   # Навигация дашборда
+    └── survey-questions.ts
+```
 
-Fork the repository.
-Create a feature branch (git checkout -b feature/your-feature).
-Commit your changes (git commit -m "Add your feature").
-Push to the branch (git push origin feature/your-feature).
-Open a Pull Request.
+---
 
-Please follow our Code of Conduct and use ESLint/Prettier for code consistency.
-Roadmap
+## 🔑 Аутентификация
 
-Q4 2025: Launch landing page and collect 100+ survey responses.
-Q1 2026: Release MVP with core features and onboard 100 beta testers.
-Q2 2026: Integrate AI order matching and expand payment options.
-Q3 2026: Pitch to investors (IT-Park Uzbekistan, local accelerators) for scaling.
+Платформа использует **Firebase Authentication** с тремя провайдерами:
 
-Contact
+1. **Email/Password** — стандартный вход
+2. **Google OAuth** — один клик
+3. **Telegram** — через Telegram Bot API
 
-Email: info@ishtop.uz
-Telegram: @IshTopUz
-Website: [Insert Landing Page URL]
-Issues: Report bugs or suggest features in the Issues section.
+Сессия хранится в **cookie** (server-side, `httpOnly`). Middleware (`src/middleware.ts`) защищает маршруты `/dashboard`, `/onboarding`, `/set-password`.
 
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
+Для Google/Telegram пользователей предусмотрен flow установки пароля (`/set-password`), чтобы пользователь мог войти на любом устройстве.
+
+---
+
+## 📜 Доступные скрипты
+
+```bash
+npm run dev          # Запуск dev-сервера (порт 9002, Turbopack)
+npm run build        # Production сборка
+npm run start        # Запуск production сервера
+npm run lint         # ESLint проверка
+npm run typecheck    # TypeScript проверка без сборки
+npm run genkit:dev   # Запуск Genkit dev UI
+npm run genkit:watch # Genkit в режиме watch
+```
+
+---
+
+## 🗃 Firestore Data Model
+
+```
+users/{uid}
+  profile: { firstName, lastName, avatar, city, country, ... }
+  freelancerProfile?: { title, hourlyRate, skills[], rating, isAvailable }
+  clientProfile?: { companyName, industry, moneySpent }
+  wallet: { balance: UZS, paymentMethods[], transactions[] }
+  portfolio/ → { title, imageUrl, technologies[], projectUrl }
+
+projects/{id}
+  status: open | in_progress | completed | closed
+  proposals/ → { freelancerId, bidAmount, coverLetter, status }
+
+notifications/{id}
+  type: new_proposal | proposal_accepted | project_completed
+  recipientId, isRead, createdAt
+
+leads/{id}     → Landing page sign-ups
+surveys/{id}   → Freelancer/Client survey responses
+```
+
+---
+
+## 🤖 AI (Genkit)
+
+Проект использует [Google Genkit](https://firebase.google.com/docs/genkit) с моделью **Gemini 2.0 Flash**. Конфигурация готова (`src/ai/genkit.ts`).
+
+**В планах:**
+
+- AI-матчинг фрилансеров к проектам
+- Умные рекомендации
+- Автоматическая проверка портфолио
+
+---
+
+## 📊 Текущий прогресс
+
+| Модуль              | Готовность |
+| ------------------- | ---------- |
+| Аутентификация      | ✅ 100%    |
+| Профили             | ✅ 100%    |
+| Проекты (CRUD)      | ✅ 100%    |
+| Proposals           | ✅ 100%    |
+| Портфолио           | ✅ 100%    |
+| Dashboard           | ✅ 95%     |
+| Финансы (базовые)   | ✅ 90%     |
+| Уведомления         | ✅ 85%     |
+| Настройки           | ✅ 100%    |
+| Биржа талантов      | ✅ 80%     |
+| Чат/Сообщения       | ❌ 0%      |
+| Реальные платежи    | ❌ 0%      |
+| Escrow              | ❌ 0%      |
+| AI Flows            | ❌ 10%     |
+| Локализация (uz/en) | ❌ 0%      |
+
+---
+
+## 🤝 Участие в разработке
+
+1. Fork репозитория
+2. Создай ветку: `git checkout -b feature/your-feature`
+3. Закоммить изменения: `git commit -m 'Add: your feature'`
+4. Push: `git push origin feature/your-feature`
+5. Открой Pull Request
+
+---
+
+## 📝 Лицензия
+
+[MIT](LICENSE) © 2024-2026 IshTop.Uz Team

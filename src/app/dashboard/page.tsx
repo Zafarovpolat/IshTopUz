@@ -1,25 +1,28 @@
-import { getUserData } from '@/lib/get-user-data';
-import { ClientDashboard } from '@/components/dashboard/client-dashboard';
-import { FreelancerDashboard } from '@/components/dashboard/freelancer-dashboard';
-import { redirect } from 'next/navigation';
-import { getDashboardStats, getRecentProjects, getRecommendedProjects } from '@/app/actions';
+import { getUserData } from "@/lib/get-user-data";
+import { ClientDashboard } from "@/components/dashboard/client-dashboard";
+import { FreelancerDashboard } from "@/components/dashboard/freelancer-dashboard";
+import { redirect } from "next/navigation";
+import {
+  getDashboardStats,
+  getRecentProjects,
+  getRecommendedProjects,
+} from "@/app/actions";
 
 export default async function DashboardPage() {
   const userData = await getUserData();
 
   if (!userData) {
-    return redirect('/auth');
+    return redirect("/auth");
   }
 
-  const { userType, uid } = userData;
+  const { userType } = userData;
 
-  // ✅ Получаем данные для Dashboard
-  const stats = await getDashboardStats(uid, userType);
-  const recentProjects = await getRecentProjects(uid, userType, 5);
+  // ✅ Убрали uid — теперь получается на сервере в actions
+  const stats = await getDashboardStats(userType);
+  const recentProjects = await getRecentProjects(userType, 5);
 
-  if (userType === 'freelancer') {
-    // ✅ Получаем рекомендованные проекты только для фрилансеров
-    const recommendedProjects = await getRecommendedProjects(uid, 3);
+  if (userType === "freelancer") {
+    const recommendedProjects = await getRecommendedProjects(3);
 
     return (
       <FreelancerDashboard
@@ -31,7 +34,7 @@ export default async function DashboardPage() {
     );
   }
 
-  if (userType === 'client') {
+  if (userType === "client") {
     return (
       <ClientDashboard
         userData={userData}
@@ -41,7 +44,6 @@ export default async function DashboardPage() {
     );
   }
 
-  // Fallback for users with no type or 'both'
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold">Добро пожаловать!</h1>

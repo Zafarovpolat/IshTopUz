@@ -1,26 +1,24 @@
+"use client";
 
-'use client';
-
-import { useState } from 'react';
-import type { PortfolioItem } from '@/lib/schema';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { useState } from "react";
+import type { PortfolioItem } from "@/lib/schema";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { PortfolioForm } from './portfolio-form';
-import { PortfolioList } from './portfolio-list';
+} from "@/components/ui/dialog";
+import { PortfolioForm } from "./portfolio-form";
+import { PortfolioList } from "./portfolio-list";
 
 export function PortfolioClientPage({
   initialItems,
-  userId,
 }: {
   initialItems: PortfolioItem[];
-  userId: string;
+  // ✅ Убрали userId — получается на сервере в actions
 }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -44,12 +42,14 @@ export function PortfolioClientPage({
             <DialogHeader>
               <DialogTitle>Новая работа в портфолио</DialogTitle>
             </DialogHeader>
-            <PortfolioForm userId={userId} onFormSubmit={() => setIsFormOpen(false)} />
+            {/* ✅ Убрали userId */}
+            <PortfolioForm onFormSubmit={() => setIsFormOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>
 
-      <PortfolioList initialItems={initialItems} userId={userId} />
+      {/* ✅ Убрали userId */}
+      <PortfolioList initialItems={initialItems} />
     </div>
   );
 }

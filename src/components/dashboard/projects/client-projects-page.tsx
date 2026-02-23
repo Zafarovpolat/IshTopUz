@@ -1,7 +1,6 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,45 +10,39 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle } from "lucide-react";
-import { ProjectForm } from './project-form';
-import { ClientActiveProjectsTab } from './client-active-projects-tab';
-import { ClientCompletedProjectsTab } from './client-completed-projects-tab';
-import { getProjectsByClientId, updateProject } from '@/app/actions';
-import type { Project } from '@/lib/schema';
-import { useAuth } from '@/hooks/use-auth';
-import { Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2 } from "lucide-react";
+import { ProjectForm } from "./project-form";
+import { ClientActiveProjectsTab } from "./client-active-projects-tab";
+import { ClientCompletedProjectsTab } from "./client-completed-projects-tab";
+import { getProjectsByClientId } from "@/app/actions";
+import type { Project } from "@/lib/schema";
 
 export function ClientProjectsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   const fetchProjects = () => {
-    if (user?.uid) {
-        setIsLoading(true);
-        getProjectsByClientId(user.uid)
-            .then(data => {
-                setProjects(data);
-            })
-            .catch(err => {
-                console.error(err);
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    } else {
+    setIsLoading(true);
+    // ✅ Убрали user.uid — получается на сервере в actions
+    getProjectsByClientId()
+      .then((data) => {
+        setProjects(data);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
         setIsLoading(false);
-    }
-  }
+      });
+  };
 
   useEffect(() => {
     fetchProjects();
-  }, [user]);
-  
+  }, []);
+
   const handleEdit = (project: Project) => {
     setSelectedProject(project.id ? project : null);
     setIsFormOpen(true);
@@ -57,19 +50,20 @@ export function ClientProjectsPage() {
 
   const handleFormClose = () => {
     setIsFormOpen(false);
-    setSelectedProject(null); // Reset selected project on close
-  }
+    setSelectedProject(null);
+  };
 
   const handleFormSubmit = () => {
     handleFormClose();
-    // Refresh project list after submission
     startTransition(() => {
-        fetchProjects();
+      fetchProjects();
     });
-  }
+  };
 
-  const activeProjects = projects.filter(p => p.status === 'open' || p.status === 'in_progress');
-  const completedProjects = projects.filter(p => p.status === 'completed');
+  const activeProjects = projects.filter(
+    (p) => p.status === "open" || p.status === "in_progress",
+  );
+  const completedProjects = projects.filter((p) => p.status === "completed");
 
   return (
     <div className="space-y-6">
@@ -89,11 +83,13 @@ export function ClientProjectsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[725px]">
             <DialogHeader>
-              <DialogTitle>{selectedProject ? 'Редактировать проект' : 'Новый проект'}</DialogTitle>
+              <DialogTitle>
+                {selectedProject?.id ? "Редактировать проект" : "Новый проект"}
+              </DialogTitle>
             </DialogHeader>
-            <ProjectForm 
-                project={selectedProject} 
-                onFormSubmit={handleFormSubmit} 
+            <ProjectForm
+              project={selectedProject}
+              onFormSubmit={handleFormSubmit}
             />
           </DialogContent>
         </Dialog>
@@ -101,14 +97,33 @@ export function ClientProjectsPage() {
 
       <Tabs defaultValue="active">
         <TabsList className="grid w-full grid-cols-2 sm:max-w-sm">
-          <TabsTrigger value="active">Активные</TabsTrigger>
-          <TabsTrigger value="completed">Завершенные</TabsTrigger>
+          <TabsTrigger value="active">
+            Активные ({activeProjects.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Завершенные ({completedProjects.length})
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="active">
-            {isLoading || isPending ? <div className="flex justify-center mt-4"><Loader2 className="h-8 w-8 animate-spin" /></div> : <ClientActiveProjectsTab projects={activeProjects} onEdit={handleEdit} />}
+          {isLoading || isPending ? (
+            <div className="flex justify-center mt-4">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <ClientActiveProjectsTab
+              projects={activeProjects}
+              onEdit={handleEdit}
+            />
+          )}
         </TabsContent>
         <TabsContent value="completed">
-            {isLoading || isPending ? <div className="flex justify-center mt-4"><Loader2 className="h-8 w-8 animate-spin" /></div> : <ClientCompletedProjectsTab projects={completedProjects} />}
+          {isLoading || isPending ? (
+            <div className="flex justify-center mt-4">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <ClientCompletedProjectsTab projects={completedProjects} />
+          )}
         </TabsContent>
       </Tabs>
     </div>
