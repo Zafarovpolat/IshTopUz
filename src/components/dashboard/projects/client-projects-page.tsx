@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Loader2 } from "lucide-react";
@@ -26,7 +25,6 @@ export function ClientProjectsPage() {
 
   const fetchProjects = () => {
     setIsLoading(true);
-    // ✅ Убрали user.uid — получается на сервере в actions
     getProjectsByClientId()
       .then((data) => {
         setProjects(data);
@@ -43,8 +41,14 @@ export function ClientProjectsPage() {
     fetchProjects();
   }, []);
 
+  // ✅ Исправлено: отдельная функция для открытия формы создания
+  const handleCreateNew = () => {
+    setSelectedProject(null);
+    setIsFormOpen(true);
+  };
+
   const handleEdit = (project: Project) => {
-    setSelectedProject(project.id ? project : null);
+    setSelectedProject(project);
     setIsFormOpen(true);
   };
 
@@ -74,26 +78,27 @@ export function ClientProjectsPage() {
             Управляйте вашими проектами и находите лучших исполнителей.
           </p>
         </div>
-        <Dialog open={isFormOpen} onOpenChange={handleFormClose}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleEdit({} as Project)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Создать новый проект
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[725px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedProject?.id ? "Редактировать проект" : "Новый проект"}
-              </DialogTitle>
-            </DialogHeader>
-            <ProjectForm
-              project={selectedProject}
-              onFormSubmit={handleFormSubmit}
-            />
-          </DialogContent>
-        </Dialog>
+        {/* ✅ Исправлено: убрали DialogTrigger, используем обычную кнопку */}
+        <Button onClick={handleCreateNew}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Создать новый проект
+        </Button>
       </div>
+
+      {/* ✅ Dialog отдельно от кнопки */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[725px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedProject?.id ? "Редактировать проект" : "Новый проект"}
+            </DialogTitle>
+          </DialogHeader>
+          <ProjectForm
+            project={selectedProject}
+            onFormSubmit={handleFormSubmit}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="active">
         <TabsList className="grid w-full grid-cols-2 sm:max-w-sm">
