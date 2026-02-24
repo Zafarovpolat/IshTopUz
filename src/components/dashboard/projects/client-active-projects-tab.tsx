@@ -1,4 +1,3 @@
-
 import {
   Card,
   CardContent,
@@ -6,95 +5,171 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Project } from "@/lib/schema";
-import Link from 'next/link';
-import { Edit } from 'lucide-react';
+import Link from "next/link";
+import { Edit, Trash2, Loader2 } from "lucide-react";
+import { useTransition } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { deleteProject } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
-// Mock data for freelancer, this should come from a separate query
-const mockFreelancers: { [key: string]: { name: string, avatar: string } } = {
-    '1': { name: 'Алиса В.', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704a' },
-    '2': { name: 'Максим П.', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704b' },
-};
+export function ClientActiveProjectsTab({
+  projects,
+  onEdit,
+}: {
+  projects: Project[];
+  onEdit: (project: Project) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+  const router = useRouter();
 
+  const handleDelete = (projectId: string) => {
+    startTransition(async () => {
+      const result = await deleteProject(projectId);
+      if (result.success) {
+        toast({ title: "Успешно!", description: result.message });
+        router.refresh();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: result.message,
+        });
+      }
+    });
+  };
 
-export function ClientActiveProjectsTab({ projects, onEdit }: { projects: Project[], onEdit: (project: Project) => void }) {
-    if (projects.length === 0) {
-        return (
-             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
-                <h3 className="text-xl font-semibold tracking-tight">Нет активных проектов</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Когда вы наймете исполнителя, ваш проект появится здесь.
-                </p>
-                <Button className="mt-4" onClick={() => onEdit({} as Project)}>Создать проект</Button>
-            </div>
-        )
-    }
+  if (projects.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
+        <h3 className="text-xl font-semibold tracking-tight">
+          Нет активных проектов
+        </h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Когда вы создадите проект, он появится здесь.
+        </p>
+        <Button className="mt-4" onClick={() => onEdit({} as Project)}>
+          Создать проект
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6 mt-4 md:grid-cols-2">
       {projects.map((project) => {
-        const freelancer = project.freelancerId ? mockFreelancers[project.freelancerId] : null;
         let progress = 0;
-        if (project.status === 'in_progress') {
-            progress = 50;
-        } else if (project.status === 'completed') {
-            progress = 100;
-        } else if (project.status === 'open') {
-            progress = 0;
+        if (project.status === "in_progress") {
+          progress = 50;
+        } else if (project.status === "completed") {
+          progress = 100;
+        } else if (project.status === "open") {
+          progress = 0;
         }
-        
-        const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ru-RU') : 'не указан';
+
+        const deadline = project.deadline
+          ? new Date(project.deadline).toLocaleDateString("ru-RU")
+          : "не указан";
 
         return (
-            <Card key={project.id}>
+          <Card key={project.id}>
             <CardHeader>
-                <CardTitle className="hover:text-primary transition-colors">
-                    <Link href={`/marketplace/jobs/${project.id}`}>{project.title}</Link>
-                </CardTitle>
-                {freelancer ? (
-                    <CardDescription className="flex items-center gap-2 pt-1">
-                        <Avatar className="h-6 w-6">
-                            <AvatarImage src={freelancer.avatar} />
-                            <AvatarFallback>{freelancer.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        Исполнитель: {freelancer.name}
-                    </CardDescription>
-                ) : (
-                    <CardDescription>Исполнитель еще не назначен</CardDescription>
-                )}
+              <CardTitle className="hover:text-primary transition-colors">
+                <Link href={`/marketplace/jobs/${project.id}`}>
+                  {project.title}
+                </Link>
+              </CardTitle>
+              <CardDescription>
+                {project.freelancerId
+                  ? "Исполнитель назначен"
+                  : "Исполнитель еще не назначен"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div>
+              <div>
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-muted-foreground">Прогресс выполнения</span>
-                    <span className="text-sm font-medium">{progress}%</span>
+                  <span className="text-sm text-muted-foreground">
+                    Прогресс выполнения
+                  </span>
+                  <span className="text-sm font-medium">{progress}%</span>
                 </div>
                 <Progress value={progress} />
-                </div>
-                <div className="flex justify-between items-center">
-                    {freelancer && project.deadline && (
-                        <Badge variant="outline">Срок сдачи: {deadline}</Badge>
-                    )}
-                     <Badge variant="outline" className="ml-auto">Откликов: {project.proposalsCount || 0}</Badge>
-                    <span className="text-lg font-bold text-primary ml-4">{project.budgetAmount.toLocaleString('ru-RU')} UZS</span>
-                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <Badge variant="outline">
+                  Откликов: {project.proposalsCount || 0}
+                </Badge>
+                <span className="text-lg font-bold text-primary">
+                  {project.budgetAmount.toLocaleString("ru-RU")} UZS
+                </span>
+              </div>
             </CardContent>
             <CardFooter className="flex gap-2">
-                 <Button asChild variant="outline" className="w-full">
-                    <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть</Link>
-                </Button>
-                <Button onClick={() => onEdit(project)} className="w-full">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Редактировать
-                </Button>
+              <Button asChild variant="outline" className="flex-1">
+                <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть</Link>
+              </Button>
+              <Button
+                onClick={() => onEdit(project)}
+                variant="outline"
+                size="icon"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Удалить проект?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Это действие нельзя отменить. Проект и все отклики на него
+                      будут удалены.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDelete(project.id)}
+                      disabled={isPending}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      {isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Удалить"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardFooter>
-            </Card>
-        )
-        })}
+          </Card>
+        );
+      })}
     </div>
   );
 }

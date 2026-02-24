@@ -1558,3 +1558,52 @@ export async function getProjectsByFreelancer() {
     return { active: [], completed: [] };
   }
 }
+
+export async function deleteProject(projectId: string): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId();
+  
+  if (!userId) {
+    return { success: false, message: 'Ошибка: Необходима авторизация.' };
+  }
+
+  if (!projectId) {
+    return { success: false, message: 'Ошибка: ID проекта не найден.' };
+  }
+
+  try {
+    const projectRef = db.collection('projects').doc(projectId);
+    const projectDoc = await projectRef.get();
+    
+    if (!projectDoc.exists) {
+      return { success: false, message: 'Ошибка: Проект не найден.' };
+    }
+    
+    if (projectDoc.data()?.clientId !== userId) {
+      return { success: false, message: 'Ошибка: У вас нет прав на удаление этого проекта.' };
+    }
+
+    // Удаляем все proposals проекта
+    const proposalsSnapshot = await projectRef.collection('proposals').get();
+    const batch = db.batch();
+    
+    proposalsSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    
+    // Удаляем сам проект
+    batch.delete(projectRef);
+    
+    await batch.commit();
+
+    console.log(`✅ [deleteProject] Project ${projectId} deleted by ${userId}`);
+    
+    revalidatePath('/dashboard/projects');
+    revalidatePath('/marketplace');
+    revalidatePath('/jobs');
+    
+    return { success: true, message: 'Проект успешно удален.' };
+  } catch (error: any) {
+    console.error('❌ [deleteProject] Error:', error);
+    return { success: false, message: 'Не удалось удалить проект.' };
+  }
+}
