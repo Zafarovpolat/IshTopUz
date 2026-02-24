@@ -1,12 +1,12 @@
-
-'use client';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActiveProjectsTab } from "@/components/dashboard/projects/active-projects-tab";
-import { CompletedProjectsTab } from "@/components/dashboard/projects/completed-projects-tab";
-import { DraftsTab } from "@/components/dashboard/projects/drafts-tab";
+import { FreelancerActiveProjectsTab } from "@/components/dashboard/projects/freelancer-active-projects-tab";
+import { FreelancerCompletedProjectsTab } from "@/components/dashboard/projects/freelancer-completed-projects-tab";
+import { getProjectsByFreelancer } from "@/app/actions";
 
-export function FreelancerProjectsPage() {
+// ✅ Серверный компонент
+export async function FreelancerProjectsPage() {
+  const { active, completed } = await getProjectsByFreelancer();
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,19 +16,17 @@ export function FreelancerProjectsPage() {
         </p>
       </div>
       <Tabs defaultValue="active">
-        <TabsList className="grid w-full grid-cols-3 sm:max-w-md">
-          <TabsTrigger value="active">Активные</TabsTrigger>
-          <TabsTrigger value="completed">Завершенные</TabsTrigger>
-          <TabsTrigger value="drafts">Черновики</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:max-w-sm">
+          <TabsTrigger value="active">Активные ({active.length})</TabsTrigger>
+          <TabsTrigger value="completed">
+            Завершенные ({completed.length})
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="active">
-          <ActiveProjectsTab />
+          <FreelancerActiveProjectsTab projects={active} />
         </TabsContent>
         <TabsContent value="completed">
-          <CompletedProjectsTab />
-        </TabsContent>
-        <TabsContent value="drafts">
-          <DraftsTab />
+          <FreelancerCompletedProjectsTab projects={completed} />
         </TabsContent>
       </Tabs>
     </div>

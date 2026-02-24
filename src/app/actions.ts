@@ -1474,3 +1474,90 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     };
   }
 }
+
+/**
+ * Получить проекты фрилансера (где его proposal принят)
+ */
+export async function getProjectsByFreelancer() {
+  const userId = await getUserId();
+  if (!userId) return { active: [], completed: [] };
+
+  try {
+    console.log(`📂 [getProjectsByFreelancer] Fetching projects for freelancer ${userId}`);
+
+    // Получаем все accepted proposals фрилансера
+    const proposalsSnapshot = await db.collectionGroup('proposals')
+      .where('freelancerId', '==', userId)
+      .where('status', '==', 'accepted')
+      .get();
+
+    if (proposalsSnapshot.empty) {
+      console.log(`ℹ️ [getProjectsByFreelancer] No accepted proposals for ${userId}`);
+      return { active: [], completed: [] };
+    }
+
+    console.log(`✅ [getProjectsByFreelancer] Found ${proposalsSnapshot.size} accepted proposals`);
+
+    // Получаем данные проектов
+    const projects = await Promise.all(
+      proposalsSnapshot.docs.map(async (proposalDoc) => {
+        const proposalData = proposalDoc.data();
+        const projectId = proposalDoc.ref.parent.parent?.id;
+
+        if (!projectId) return null;
+
+        const projectDoc = await db.collection('projects').doc(projectId).get();
+        if (!projectDoc.exists) return null;
+
+        const projectData = projectDoc.data();
+        if (!projectData) return null;
+
+        // Получаем данные клиента
+        const clientDoc = await db.collection('users').doc(projectData.clientId).get();
+        const clientData = clientDoc.exists ? clientDoc.data() : null;
+
+        return {
+          id: projectId,
+          title: projectData.title,
+          description: projectData.description,
+          status: projectData.status || 'in_progress',
+          budgetAmount: proposalData.bidAmount || projectData.budgetAmount,
+          budgetType: projectData.budgetType,
+          skills: projectData.skills || [],
+          deadline: projectData.deadline?.toDate?.()?.toISOString(),
+          completedAt: projectData.completedAt?.toDate?.()?.toISOString(),
+          createdAt: projectData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          clientId: projectData.clientId,
+          clientName: clientData
+            ? `${clientData.profile?.firstName || ''} ${clientData.profile?.lastName || ''}`.trim() 
+              || clientData.clientProfile?.companyName 
+              || 'Неизвестный клиент'
+            : 'Неизвестный клиент',
+          clientAvatar: clientData?.profile?.avatar || '',
+          // Данные из proposal
+          bidAmount: proposalData.bidAmount,
+          bidDuration: proposalData.bidDuration,
+        };
+      })
+    );
+
+    // Фильтруем null и разделяем по статусу
+    const validProjects = projects.filter(p => p !== null);
+    
+    const active = validProjects.filter(p => 
+      p.status === 'in_progress' || p.status === 'open'
+    );
+    
+    const completed = validProjects.filter(p => 
+      p.status === 'completed'
+    );
+
+    console.log(`✅ [getProjectsByFreelancer] Active: ${active.length}, Completed: ${completed.length}`);
+
+    return { active, completed };
+
+  } catch (error: any) {
+    console.error('❌ [getProjectsByFreelancer] Error:', error);
+    return { active: [], completed: [] };
+  }
+}
