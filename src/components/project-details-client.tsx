@@ -53,6 +53,7 @@ import {
   Loader2,
   Edit,
   Trash2,
+  Paperclip,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
@@ -392,6 +393,39 @@ export function ProjectDetailsClient({
                   </Badge>
                 ))}
               </div>
+
+              {project.files && project.files.length > 0 && (
+                <>
+                  <Separator className="my-6" />
+                  <h3 className="font-semibold mb-3">Прикреплённые файлы</h3>
+                  <div className="space-y-2">
+                    {project.files.map((file, index) => (
+                      <a
+                        key={index}
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-md border bg-muted/30 hover:bg-muted/60 transition-colors"
+                      >
+                        <Paperclip className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {file.size < 1024
+                              ? file.size + " B"
+                              : file.size < 1024 * 1024
+                                ? (file.size / 1024).toFixed(1) + " KB"
+                                : (file.size / (1024 * 1024)).toFixed(1) +
+                                  " MB"}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

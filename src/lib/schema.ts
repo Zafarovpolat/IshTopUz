@@ -229,6 +229,7 @@ export interface Project {
   freelancerId?: string;
   deadline?: string;
   completedAt?: string;
+  files?: { name: string; url: string; size: number }[];
 }
 
 export type Proposal = {
