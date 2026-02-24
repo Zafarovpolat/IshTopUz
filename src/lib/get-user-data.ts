@@ -17,7 +17,6 @@ export async function getUserId() {
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;
   } catch (error: any) {
-    // ✅ Логируем только если это не "revoked" (ожидаемая ошибка после установки пароля)
     if (error.code !== 'auth/session-cookie-revoked') {
       console.error('getUserId: Invalid session cookie:', error);
     }
@@ -40,8 +39,34 @@ export async function getUserData() {
   const db = adminApp.firestore();
   const userDoc = await db.collection('users').doc(userId).get();
 
+  // ✅ ИСПРАВЛЕНИЕ: Если документа нет — возвращаем базовые данные
+  // чтобы onboarding мог отработать
   if (!userDoc.exists) {
-    return null;
+    console.log(`📄 [getUserData] No Firestore doc for user ${userId}, returning minimal data`);
+    
+    // Получаем данные из Firebase Auth
+    try {
+      const auth = getAuth(adminApp);
+      const authUser = await auth.getUser(userId);
+      
+      return {
+        uid: userId,
+        email: authUser.email || '',
+        profileComplete: false, // ✅ Важно — чтобы не редиректило на dashboard
+        userType: null,
+        profile: {
+          firstName: '',
+          lastName: '',
+          avatar: authUser.photoURL || '',
+        },
+      };
+    } catch (error) {
+      console.error('getUserData: Failed to get auth user:', error);
+      return {
+        uid: userId,
+        profileComplete: false,
+      };
+    }
   }
 
   const userData = userDoc.data();
@@ -56,9 +81,8 @@ export async function getUserData() {
     return value;
   }));
 
-  // ✅ ДОБАВЛЯЕМ uid в возвращаемый объект
   return {
-    uid: userId, // ✅ Добавили uid
+    uid: userId,
     ...serializedUserData,
   };
 }
