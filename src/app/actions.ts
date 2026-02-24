@@ -722,15 +722,13 @@ export async function deletePortfolioItem(itemId: string): Promise<PortfolioStat
   }
 }
 
-export async function createProject(data: z.infer<typeof projectSchema>): Promise<ProjectState> {
-  // ✅ SECURITY: Получаем userId на сервере
+export async function createProject(data: z.infer<typeof projectSchema> & { files?: any[] }): Promise<ProjectState> {
   const userId = await getUserId();
   
   if (!userId) {
     return { success: false, message: 'Ошибка: Необходима авторизация.' };
   }
 
-  // ✅ Проверяем что пользователь — клиент
   const userDoc = await db.collection('users').doc(userId).get();
   if (!userDoc.exists || userDoc.data()?.userType !== 'client') {
     return { success: false, message: 'Ошибка: Только клиенты могут создавать проекты.' };
@@ -753,7 +751,8 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
     await db.collection('projects').add({
       ...validatedFields.data,
       skills: skillsArray,
-      clientId: userId, // ✅ Используем серверный userId
+      files: data.files || [], // ✅ Сохраняем файлы
+      clientId: userId,
       status: 'open',
       proposalsCount: 0,
       createdAt: FieldValue.serverTimestamp(),
@@ -769,8 +768,7 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
   }
 }
 
-export async function updateProject(projectId: string, data: z.infer<typeof projectSchema>): Promise<ProjectState> {
-  // ✅ SECURITY: Получаем userId на сервере
+export async function updateProject(projectId: string, data: z.infer<typeof projectSchema> & { files?: any[] }): Promise<ProjectState> {
   const userId = await getUserId();
   
   if (!userId) {
@@ -781,7 +779,6 @@ export async function updateProject(projectId: string, data: z.infer<typeof proj
     return { success: false, message: 'Ошибка: ID проекта не найден.' };
   }
 
-  // ✅ Проверяем что пользователь — владелец проекта
   const projectRef = db.collection('projects').doc(projectId);
   const projectDoc = await projectRef.get();
   
@@ -790,7 +787,6 @@ export async function updateProject(projectId: string, data: z.infer<typeof proj
   }
   
   if (projectDoc.data()?.clientId !== userId) {
-    console.error(`❌ [updateProject] Permission denied: ${userId} tried to update project of ${projectDoc.data()?.clientId}`);
     return { success: false, message: 'Ошибка: У вас нет прав на редактирование этого проекта.' };
   }
 
@@ -811,6 +807,7 @@ export async function updateProject(projectId: string, data: z.infer<typeof proj
     await projectRef.update({
       ...validatedFields.data,
       skills: skillsArray,
+      files: data.files || [], // ✅ Сохраняем файлы
       updatedAt: FieldValue.serverTimestamp(),
     });
 

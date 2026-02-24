@@ -7,7 +7,13 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createProject, updateProject } from "@/app/actions";
 import { projectSchema, type Project } from "@/lib/schema";
-import { Loader2, UploadCloud, X, File as FileIcon } from "lucide-react";
+import {
+  Loader2,
+  UploadCloud,
+  X,
+  File as FileIcon,
+  CheckCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -31,8 +37,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
+
+interface UploadedFile {
+  name: string;
+  url: string;
+  size: number;
+}
 
 interface ProjectFormProps {
   project?: Project | null;
@@ -42,8 +57,8 @@ interface ProjectFormProps {
 export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  // ✅ Убрали useAuth — userId получается на сервере
-  const [files, setFiles] = useState<File[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +85,10 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
         budgetAmount: project.budgetAmount,
         deadline: project.deadline ? new Date(project.deadline) : undefined,
       });
+      // Загружаем существующие файлы если есть
+      if ((project as any).files) {
+        setUploadedFiles((project as any).files);
+      }
     } else {
       form.reset({
         title: "",
@@ -78,39 +97,117 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
         budgetType: "fixed",
         budgetAmount: undefined,
       });
+      setUploadedFiles([]);
+      setPendingFiles([]);
     }
   }, [project, form]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFiles((prevFiles) => [
-        ...prevFiles,
-        ...Array.from(event.target.files as FileList),
-      ]);
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+
+    // Проверка лимитов
+    const totalFiles =
+      uploadedFiles.length + pendingFiles.length + fileArray.length;
+    if (totalFiles > 5) {
+      toast({
+        variant: "destructive",
+        title: "Слишком много файлов",
+        description: "Максимум 5 файлов на проект.",
+      });
+      return;
+    }
+
+    // Проверка размера
+    for (const file of fileArray) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Файл слишком большой",
+          description: `${file.name} превышает 10MB.`,
+        });
+        return;
+      }
+    }
+
+    setIsUploading(true);
+    toast({
+      title: "Загрузка файлов...",
+      description: "Пожалуйста, подождите.",
+    });
+
+    try {
+      const uploaded: UploadedFile[] = [];
+
+      for (const file of fileArray) {
+        const fileExtension = file.name.split(".").pop();
+        const fileName = `${uuidv4()}.${fileExtension}`;
+        const storageRef = ref(storage, `projects/${uuidv4()}/${fileName}`);
+
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        uploaded.push({
+          name: file.name,
+          url: downloadURL,
+          size: file.size,
+        });
+      }
+
+      setUploadedFiles((prev) => [...prev, ...uploaded]);
+      toast({
+        title: "Успешно!",
+        description: `Загружено ${uploaded.length} файл(ов).`,
+      });
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Ошибка загрузки",
+        description: error.message || "Не удалось загрузить файлы.",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   const removeFile = (index: number) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
   const onSubmit = (data: ProjectFormValues) => {
-    // TODO: Add file upload logic here before submitting.
-
     startTransition(async () => {
+      // Добавляем файлы к данным
+      const projectData = {
+        ...data,
+        files: uploadedFiles,
+      };
+
       let result;
       if (isEditMode && project?.id) {
-        // ✅ updateProject принимает только projectId и data
-        result = await updateProject(project.id, data);
+        result = await updateProject(project.id, projectData);
       } else {
-        // ✅ createProject теперь без userId — получается на сервере
-        result = await createProject(data);
+        result = await createProject(projectData);
       }
 
       if (result.success) {
         toast({ title: "Успешно!", description: result.message });
         form.reset();
-        setFiles([]);
+        setUploadedFiles([]);
+        setPendingFiles([]);
         onFormSubmit();
       } else {
         toast({
@@ -278,11 +375,18 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
             </FormItem>
           )}
         />
+
+        {/* Файлы и материалы */}
         <div>
           <FormLabel>Файлы и материалы</FormLabel>
           <div
-            className="mt-2 relative flex justify-center items-center h-32 w-full border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "mt-2 relative flex justify-center items-center h-32 w-full border-2 border-dashed rounded-lg cursor-pointer transition-colors",
+              isUploading
+                ? "border-primary/50 bg-primary/5"
+                : "border-muted-foreground/30 hover:bg-muted/50",
+            )}
+            onClick={() => !isUploading && fileInputRef.current?.click()}
           >
             <input
               type="file"
@@ -291,12 +395,13 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
               className="hidden"
               multiple
               disabled={isUploading}
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
             />
             {isUploading ? (
               <div className="text-center">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Загрузка...
+                  Загрузка файлов...
                 </p>
               </div>
             ) : (
@@ -311,24 +416,33 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
               </div>
             )}
           </div>
-          {files.length > 0 && (
+
+          {/* Список загруженных файлов */}
+          {uploadedFiles.length > 0 && (
             <div className="mt-4 space-y-2">
-              {files.map((file, index) => (
+              {uploadedFiles.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2 rounded-md border bg-muted/50"
+                  className="flex items-center justify-between p-3 rounded-md border bg-muted/30"
                 >
-                  <div className="flex items-center gap-2">
-                    <FileIcon className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm font-medium truncate max-w-xs">
-                      {file.name}
-                    </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-destructive"
                     onClick={() => removeFile(index)}
                   >
                     <X className="h-4 w-4" />
@@ -338,6 +452,7 @@ export function ProjectForm({ project, onFormSubmit }: ProjectFormProps) {
             </div>
           )}
         </div>
+
         <Button
           type="submit"
           className="w-full"
