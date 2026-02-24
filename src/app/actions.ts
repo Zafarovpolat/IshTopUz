@@ -1439,17 +1439,16 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     const userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.exists) {
       await db.collection('users').doc(userId).update({
-        passwordSet: true,  // ✅ Устанавливаем в true
+        passwordSet: true,
         updatedAt: FieldValue.serverTimestamp(),
       });
       console.log(`✅ passwordSet flag updated in Firestore for user ${userId}`);
     }
 
-    // ✅ ВСЕГДА требуем реавторизацию после установки пароля
+    // ✅ Убрали requiresReauth — клиент сам выполнит автовход
     return {
       success: true,
-      message: 'Пароль установлен! Войдите с новым паролем.',
-      requiresReauth: true, // ✅ Обязательная реавторизация
+      message: 'Пароль установлен!',
     };
 
   } catch (error: any) {
