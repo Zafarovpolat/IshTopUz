@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { getAdminApp } from '@/lib/firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
+import { logger } from '@/lib/logger';
 
 export async function getUserId() {
   const cookieStore = await cookies();
@@ -42,7 +43,7 @@ export async function getUserData() {
   // ✅ ИСПРАВЛЕНИЕ: Если документа нет — возвращаем базовые данные
   // чтобы onboarding мог отработать
   if (!userDoc.exists) {
-    console.log(`📄 [getUserData] No Firestore doc for user ${userId}, returning minimal data`);
+    logger.debug(`📄 [getUserData] No Firestore doc for user ${userId}, returning minimal data`);
     
     // Получаем данные из Firebase Auth
     try {

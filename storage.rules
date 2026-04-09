@@ -1,18 +1,55 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // Разрешаем любому пользователю читать аватары
-    // Разрешаем аутентифицированному пользователю записывать/обновлять/удалять ТОЛЬКО свой аватар
-    match /avatars/{userId}/{allPaths=**} {
-      allow read;
-      allow write: if request.auth != null && request.auth.uid == userId;
+
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Разрешаем любому пользователю читать изображения портфолио
-    // Разрешаем аутентифицированному пользователю записывать/обновлять/удалять работы ТОЛЬКО в своем портфолио
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Валидация загрузки изображений: <= 5 МБ, image/*.
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Аватары: читают только аутентифицированные пользователи,
+    // писать может только сам владелец.
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
+    }
+
+    // Портфолио: читают только аутентифицированные пользователи,
+    // писать/удалять — только владелец.
     match /portfolio/{userId}/{allPaths=**} {
-      allow read;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
+    }
+
+    // Файлы проектов: размер до 20 МБ, читают аутентифицированные.
+    match /projects/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId)
+        && request.resource.size < 20 * 1024 * 1024;
+      allow delete: if isOwner(userId);
+    }
+
+    // Вложения в чате (опционально, до 10 МБ).
+    match /chat/{conversationId}/{allPaths=**} {
+      allow read, write: if isSignedIn()
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Всё остальное запрещено по умолчанию.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

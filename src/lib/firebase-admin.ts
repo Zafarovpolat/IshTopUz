@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { logger } from '@/lib/logger';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -31,7 +32,7 @@ function initializeAdminApp(): admin.app.App {
     });
 
     global.__firebaseAdminApp__ = app;
-    console.log('✅ Firebase Admin SDK initialized successfully');
+    logger.debug('✅ Firebase Admin SDK initialized successfully');
 
     return app;
   } catch (e: any) {

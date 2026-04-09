@@ -1,4 +1,5 @@
 
+import { logger } from '@/lib/logger';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -32,7 +33,7 @@ const checkUserProfile = async (user: User, additionalData = {}) => {
 export async function signUpWithEmail(email: string, password: string): Promise<{ user: User; isNewUser: boolean } | null> {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    console.log("Success: User registered:", userCredential.user);
+    logger.debug("Success: User registered:", userCredential.user);
     // Profile document is now created in the onboarding server action
     return { user: userCredential.user, isNewUser: true };
   } catch (error: any) {
@@ -44,7 +45,7 @@ export async function signUpWithEmail(email: string, password: string): Promise<
 export async function signInWithEmail(email: string, password: string): Promise<{ user: User; isNewUser: boolean } | null> {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("Success: User signed in:", userCredential.user);
+    logger.debug("Success: User signed in:", userCredential.user);
 
     const profileComplete = await checkUserProfile(userCredential.user);
     const isNewUser = !profileComplete;
@@ -62,7 +63,7 @@ export async function doSignOut(): Promise<void> {
     await fetch('/api/auth/signout', { method: 'POST' });
     // Выходим из Firebase на клиенте
     await signOut(auth);
-    console.log("Success: User signed out from client and server.");
+    logger.debug("Success: User signed out from client and server.");
   } catch (error: any) {
     console.error("Error: Sign-out failed:", error.message, `(Code: ${error.code})`);
   }
@@ -71,7 +72,7 @@ export async function doSignOut(): Promise<void> {
 async function socialSignIn(provider: AuthProvider): Promise<{ user: User; isNewUser: boolean } | null> {
   try {
     const result = await signInWithPopup(auth, provider);
-    console.log("Success: Social sign-in successful:", result.user);
+    logger.debug("Success: Social sign-in successful:", result.user);
 
     const profileComplete = await checkUserProfile(result.user);
     const isNewUser = !profileComplete;
@@ -91,7 +92,7 @@ export function signInWithGoogle(): Promise<{ user: User; isNewUser: boolean } |
 export async function resetPassword(email: string): Promise<boolean> {
   try {
     await sendPasswordResetEmail(auth, email);
-    console.log("Success: Password reset email sent to", email);
+    logger.debug("Success: Password reset email sent to", email);
     return true;
   } catch (error: any) {
     console.error("Error: Password reset failed:", error.message, `(Code: ${error.code})`);
@@ -107,7 +108,7 @@ export async function sendVerificationEmail(): Promise<boolean> {
   if (user) {
     try {
       await sendEmailVerification(user);
-      console.log("Success: Verification email sent.");
+      logger.debug("Success: Verification email sent.");
       return true;
     } catch (error: any) {
       console.error("Error: Could not send verification email:", error.message, `(Code: ${error.code})`);
@@ -126,7 +127,7 @@ export function onAuthStateChange(callback: (user: User | null) => void): import
 export async function signInWithCustomTokenFunc(token: string): Promise<{ user: User, isNewUser: boolean } | null> {
   try {
     const userCredential = await signInWithCustomToken(auth, token);
-    console.log("Success: Signed in with custom token:", userCredential.user);
+    logger.debug("Success: Signed in with custom token:", userCredential.user);
 
     const profileComplete = await checkUserProfile(userCredential.user);
     const isNewUser = !profileComplete;

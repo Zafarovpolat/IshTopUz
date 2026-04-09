@@ -29,6 +29,9 @@ import { getFirestore, FieldValue, DocumentReference } from "firebase-admin/fire
 import { getAuth } from 'firebase-admin/auth';
 import { revalidatePath } from 'next/cache';
 import { getUserId } from '@/lib/get-user-data'; // ✅ ДОБАВЬ
+import { createNotification, markAllNotificationsRead } from '@/lib/notifications';
+import { logger } from '@/lib/logger';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Инициализируем Admin SDK
 const adminApp = getAdminApp();
@@ -78,7 +81,7 @@ export async function submitSurvey(
   const validatedFields = schema.safeParse(data);
 
   if (!validatedFields.success) {
-    console.log('Validation errors:', validatedFields.error.flatten().fieldErrors);
+    logger.debug('Validation errors:', validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.',
@@ -131,7 +134,7 @@ export async function createUserOnboarding(
     let userRecord;
     try {
       userRecord = await auth.getUser(userId);
-      console.log('👤 [Onboarding] Got user record:', {
+      logger.debug('👤 [Onboarding] Got user record:', {
         uid: userRecord.uid,
         email: userRecord.email,
         providers: userRecord.providerData.map(p => p.providerId)
@@ -153,7 +156,7 @@ export async function createUserOnboarding(
     if (userDoc.exists) {
       const existingData = userDoc.data();
 
-      console.log('📄 [Onboarding] Existing user data:', {
+      logger.debug('📄 [Onboarding] Existing user data:', {
         profileComplete: existingData?.profileComplete,
         passwordSet: existingData?.passwordSet,
         email: existingData?.email,
@@ -162,7 +165,7 @@ export async function createUserOnboarding(
 
       // Проверка: если профиль уже заполнен И пароль установлен
       if (existingData?.profileComplete && existingData?.passwordSet === true) {
-        console.log('✅ [Onboarding] Profile already complete with password');
+        logger.debug('✅ [Onboarding] Profile already complete with password');
         return {
           success: true,
           message: "Профиль уже заполнен.",
@@ -182,7 +185,7 @@ export async function createUserOnboarding(
       // ✅ ВАЖНО: Явно устанавливаем passwordSet в false если его нет
       if (existingData.passwordSet === undefined) {
         updateData.passwordSet = false;
-        console.log('🔐 [Onboarding] Initializing passwordSet to false');
+        logger.debug('🔐 [Onboarding] Initializing passwordSet to false');
       }
 
       // ========================================
@@ -195,7 +198,7 @@ export async function createUserOnboarding(
         finalEmail = email.trim();
         updateData.email = finalEmail;
 
-        console.log(`📧 [Onboarding] Processing email: ${finalEmail}`);
+        logger.debug(`📧 [Onboarding] Processing email: ${finalEmail}`);
 
         try {
           // Проверяем существует ли пользователь с таким email
@@ -208,14 +211,14 @@ export async function createUserOnboarding(
               // Удаляем конфликтующего пользователя
               try {
                 await auth.deleteUser(existingUserWithEmail.uid);
-                console.log(`🗑️ [Onboarding] Deleted conflicting Auth user ${existingUserWithEmail.uid}`);
+                logger.debug(`🗑️ [Onboarding] Deleted conflicting Auth user ${existingUserWithEmail.uid}`);
 
                 // Удаляем из Firestore
                 try {
                   await db.collection('users').doc(existingUserWithEmail.uid).delete();
-                  console.log(`🗑️ [Onboarding] Deleted conflicting Firestore document`);
+                  logger.debug(`🗑️ [Onboarding] Deleted conflicting Firestore document`);
                 } catch (firestoreError) {
-                  console.log('ℹ️ [Onboarding] No Firestore document to delete');
+                  logger.debug('ℹ️ [Onboarding] No Firestore document to delete');
                 }
               } catch (deleteError: any) {
                 console.error(`❌ [Onboarding] Failed to delete conflicting user:`, deleteError);
@@ -225,11 +228,11 @@ export async function createUserOnboarding(
                 };
               }
             } else {
-              console.log(`✅ [Onboarding] Email ${finalEmail} already belongs to current user`);
+              logger.debug(`✅ [Onboarding] Email ${finalEmail} already belongs to current user`);
             }
           } catch (emailCheckError: any) {
             if (emailCheckError.code === 'auth/user-not-found') {
-              console.log(`✅ [Onboarding] Email ${finalEmail} is available`);
+              logger.debug(`✅ [Onboarding] Email ${finalEmail} is available`);
             } else {
               throw emailCheckError;
             }
@@ -242,7 +245,7 @@ export async function createUserOnboarding(
           });
 
           emailWasUpdated = true; // ✅ Email был обновлен
-          console.log(`✅ [Onboarding] Email ${finalEmail} set in Firebase Auth`);
+          logger.debug(`✅ [Onboarding] Email ${finalEmail} set in Firebase Auth`);
 
         } catch (emailError: any) {
           console.error('❌ [Onboarding] Failed to update email in Firebase Auth:', emailError);
@@ -259,7 +262,7 @@ export async function createUserOnboarding(
       } else if (userRecord.email && userRecord.email.trim() !== '') {
         finalEmail = userRecord.email;
         updateData.email = finalEmail;
-        console.log(`📧 [Onboarding] Using email from Auth: ${finalEmail}`);
+        logger.debug(`📧 [Onboarding] Using email from Auth: ${finalEmail}`);
       } else {
         console.warn('⚠️ [Onboarding] No email provided');
       }
@@ -292,7 +295,7 @@ export async function createUserOnboarding(
           isAvailable: true,
           lastActiveAt: FieldValue.serverTimestamp(),
         };
-        console.log('👨‍💻 [Onboarding] Adding freelancer profile');
+        logger.debug('👨‍💻 [Onboarding] Adding freelancer profile');
       }
 
       if (userType === 'client' && !existingData?.clientProfile) {
@@ -307,26 +310,26 @@ export async function createUserOnboarding(
           rating: 0,
           reviewsCount: 0,
         };
-        console.log('👔 [Onboarding] Adding client profile');
+        logger.debug('👔 [Onboarding] Adding client profile');
       }
 
-      console.log('💾 [Onboarding] Updating Firestore with fields:', Object.keys(updateData));
+      logger.debug('💾 [Onboarding] Updating Firestore with fields:', Object.keys(updateData));
 
       // ========================================
       // ШАГ 6: Сохраняем в Firestore
       // ========================================
       await userRef.update(updateData);
 
-      console.log('✅ [Onboarding] Firestore updated successfully');
+      logger.debug('✅ [Onboarding] Firestore updated successfully');
 
       // ========================================
       // ШАГ 7: ✅ ВАЖНО! Создаем новый custom token если email был обновлен
       // ========================================
       if (emailWasUpdated) {
         try {
-          console.log('🔑 [Onboarding] Email was updated, creating new custom token...');
+          logger.debug('🔑 [Onboarding] Email was updated, creating new custom token...');
           const newCustomToken = await auth.createCustomToken(userId);
-          console.log('✅ [Onboarding] New custom token created');
+          logger.debug('✅ [Onboarding] New custom token created');
 
           // ✅ Проверяем нужен ли пароль
           let needsPassword = false;
@@ -336,14 +339,14 @@ export async function createUserOnboarding(
               p => p.providerId === 'password'
             );
             needsPassword = !hasPasswordProvider;
-            console.log(`🔐 [Onboarding] needsPassword: ${needsPassword}`);
+            logger.debug(`🔐 [Onboarding] needsPassword: ${needsPassword}`);
           } catch (error) {
             console.error('⚠️ [Onboarding] Could not check providers:', error);
             needsPassword = true;
           }
 
           const redirectUrl = needsPassword ? '/set-password' : '/dashboard';
-          console.log(`🚀 [Onboarding] Returning new token, redirecting to: ${redirectUrl}`);
+          logger.debug(`🚀 [Onboarding] Returning new token, redirecting to: ${redirectUrl}`);
 
           // ✅ Возвращаем новый токен клиенту
           return {
@@ -366,7 +369,7 @@ export async function createUserOnboarding(
       try {
         const updatedAuthUser = await auth.getUser(userId);
 
-        console.log(`🔍 [Onboarding] Checking password provider:`, {
+        logger.debug(`🔍 [Onboarding] Checking password provider:`, {
           email: updatedAuthUser.email,
           providers: updatedAuthUser.providerData.map(p => p.providerId),
         });
@@ -377,7 +380,7 @@ export async function createUserOnboarding(
 
         needsPassword = !hasPasswordProvider;
 
-        console.log(`🔐 [Onboarding] hasPasswordProvider: ${hasPasswordProvider}, needsPassword: ${needsPassword}`);
+        logger.debug(`🔐 [Onboarding] hasPasswordProvider: ${hasPasswordProvider}, needsPassword: ${needsPassword}`);
 
       } catch (error) {
         console.error('⚠️ [Onboarding] Could not check providers:', error);
@@ -385,7 +388,7 @@ export async function createUserOnboarding(
       }
 
       const redirectUrl = needsPassword ? '/set-password' : '/dashboard';
-      console.log(`🚀 [Onboarding] Complete! Redirecting to: ${redirectUrl}`);
+      logger.debug(`🚀 [Onboarding] Complete! Redirecting to: ${redirectUrl}`);
 
       return {
         success: true,
@@ -397,7 +400,7 @@ export async function createUserOnboarding(
     // ========================================
     // ШАГ 9: НОВЫЙ ДОКУМЕНТ (маловероятно для Telegram)
     // ========================================
-    console.log('📝 [Onboarding] Creating new Firestore document for:', userId);
+    logger.debug('📝 [Onboarding] Creating new Firestore document for:', userId);
 
     let finalEmail = '';
     let emailWasSet = false;
@@ -415,7 +418,7 @@ export async function createUserOnboarding(
             try {
               await db.collection('users').doc(existingUserWithEmail.uid).delete();
             } catch (e) {
-              console.log('ℹ️ [Onboarding] No Firestore doc to delete');
+              logger.debug('ℹ️ [Onboarding] No Firestore doc to delete');
             }
           }
         } catch (e: any) {
@@ -429,7 +432,7 @@ export async function createUserOnboarding(
         });
 
         emailWasSet = true;
-        console.log(`✅ [Onboarding] Email ${finalEmail} set for new user`);
+        logger.debug(`✅ [Onboarding] Email ${finalEmail} set for new user`);
       } catch (emailError: any) {
         console.error('❌ [Onboarding] Failed to set email:', emailError);
         if (emailError.code === 'auth/email-already-exists') {
@@ -503,14 +506,14 @@ export async function createUserOnboarding(
 
     await userRef.set(userData);
 
-    console.log('✅ [Onboarding] New user document created');
+    logger.debug('✅ [Onboarding] New user document created');
 
     // ✅ Если email был установлен - создаем новый токен
     if (emailWasSet) {
       try {
-        console.log('🔑 [Onboarding] Creating new custom token for new user...');
+        logger.debug('🔑 [Onboarding] Creating new custom token for new user...');
         const newCustomToken = await auth.createCustomToken(userId);
-        console.log('✅ [Onboarding] New custom token created');
+        logger.debug('✅ [Onboarding] New custom token created');
 
         return {
           success: true,
@@ -523,7 +526,7 @@ export async function createUserOnboarding(
       }
     }
 
-    console.log(`🚀 [Onboarding] New user setup complete, redirecting to /set-password`);
+    logger.debug(`🚀 [Onboarding] New user setup complete, redirecting to /set-password`);
 
     return {
       success: true,
@@ -558,14 +561,14 @@ export async function updateProfile(
     return { success: false, message: 'Ошибка: У вас нет прав на редактирование этого профиля.' };
   }
 
-  console.log(`✏️ [updateProfile] User ${currentUserId} updating profile`);
+  logger.debug(`✏️ [updateProfile] User ${currentUserId} updating profile`);
 
   const userRef = db.collection('users').doc(userId);
 
   // Special case for only updating the avatar
   if ('avatar' in data && Object.keys(data).length === 1) {
     try {
-      console.log(`🖼️ [updateProfile] Updating avatar for user ${userId}`);
+      logger.debug(`🖼️ [updateProfile] Updating avatar for user ${userId}`);
       await userRef.update({ 'profile.avatar': data.avatar });
       revalidatePath('/dashboard/profile');
       return { success: true, message: 'Аватар успешно обновлен!' };
@@ -579,7 +582,7 @@ export async function updateProfile(
   const validatedFields = schema.safeParse(data);
 
   if (!validatedFields.success) {
-    console.log('❌ [updateProfile] Validation errors:', validatedFields.error.flatten().fieldErrors);
+    logger.debug('❌ [updateProfile] Validation errors:', validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Проверка не удалась. Пожалуйста, исправьте ошибки и попробуйте снова.',
@@ -617,7 +620,7 @@ export async function updateProfile(
       updateData['freelancerProfile.description'] = freelancerProfileData.description;
       updateData['freelancerProfile.skills'] = skillsArray;
 
-      console.log(`👨‍💻 [updateProfile] Updating freelancer profile with ${Object.keys(updateData).length} fields`);
+      logger.debug(`👨‍💻 [updateProfile] Updating freelancer profile with ${Object.keys(updateData).length} fields`);
     } else { // client
       const { firstName, lastName, city, country, ...clientProfileData } = validatedFields.data as z.infer<typeof profileClientSchema>;
       updateData['profile.firstName'] = firstName;
@@ -630,12 +633,12 @@ export async function updateProfile(
       updateData['clientProfile.website'] = clientProfileData.website;
       updateData['clientProfile.description'] = clientProfileData.description;
 
-      console.log(`👔 [updateProfile] Updating client profile with ${Object.keys(updateData).length} fields`);
+      logger.debug(`👔 [updateProfile] Updating client profile with ${Object.keys(updateData).length} fields`);
     }
 
     await userRef.update(updateData);
 
-    console.log(`✅ [updateProfile] Profile updated successfully for user ${userId}`);
+    logger.debug(`✅ [updateProfile] Profile updated successfully for user ${userId}`);
     revalidatePath('/dashboard/profile');
     return {
       success: true,
@@ -658,6 +661,11 @@ export async function addPortfolioItem(
   
   if (!userId) {
     return { success: false, message: 'Ошибка: Необходима авторизация.' };
+  }
+
+  const rl = rateLimit(`addPortfolio:${userId}`, RATE_LIMITS.addPortfolio);
+  if (!rl.success) {
+    return { success: false, message: 'Слишком много запросов.' };
   }
 
   const validatedFields = portfolioItemSchema.safeParse(data);
@@ -702,7 +710,7 @@ export async function deletePortfolioItem(itemId: string): Promise<PortfolioStat
   }
 
   try {
-    console.log(`🗑️ [deletePortfolioItem] User ${userId} deleting item ${itemId}`);
+    logger.debug(`🗑️ [deletePortfolioItem] User ${userId} deleting item ${itemId}`);
 
     const itemRef = db.collection('users').doc(userId).collection('portfolio').doc(itemId);
 
@@ -713,7 +721,7 @@ export async function deletePortfolioItem(itemId: string): Promise<PortfolioStat
 
     await itemRef.delete();
 
-    console.log(`✅ [deletePortfolioItem] Item ${itemId} deleted successfully`);
+    logger.debug(`✅ [deletePortfolioItem] Item ${itemId} deleted successfully`);
     revalidatePath('/dashboard/portfolio');
     return { success: true, message: 'Работа успешно удалена!' };
   } catch (error: any) {
@@ -727,6 +735,11 @@ export async function createProject(data: z.infer<typeof projectSchema> & { file
   
   if (!userId) {
     return { success: false, message: 'Ошибка: Необходима авторизация.' };
+  }
+
+  const rl = rateLimit(`createProject:${userId}`, RATE_LIMITS.createProject);
+  if (!rl.success) {
+    return { success: false, message: 'Слишком много запросов. Попробуйте через минуту.' };
   }
 
   const userDoc = await db.collection('users').doc(userId).get();
@@ -884,6 +897,11 @@ export async function submitProposal(
 
   if (!projectId) {
     return { success: false, message: 'Ошибка: ID проекта не найден.' };
+  }
+
+  const rl = rateLimit(`submitProposal:${userId}`, RATE_LIMITS.submitProposal);
+  if (!rl.success) {
+    return { success: false, message: 'Слишком много откликов. Попробуйте позже.' };
   }
 
   // ✅ Проверяем что пользователь — фрилансер
@@ -1055,7 +1073,7 @@ export async function getProposalsByFreelancer() {
   if (!userId) return [];
 
   try {
-    console.log(`🔍 [getProposalsByFreelancer] Fetching proposals for freelancer ${userId}`);
+    logger.debug(`🔍 [getProposalsByFreelancer] Fetching proposals for freelancer ${userId}`);
 
     const proposalsSnapshot = await db.collectionGroup('proposals')
       .where('freelancerId', '==', userId)
@@ -1101,7 +1119,7 @@ export async function getProposalsByClient() {
   if (!userId) return [];
 
   try {
-    console.log(`🔍 [getProposalsByClient] Fetching proposals for client ${userId}`);
+    logger.debug(`🔍 [getProposalsByClient] Fetching proposals for client ${userId}`);
 
     const projectsSnapshot = await db.collection('projects')
       .where('clientId', '==', userId)
@@ -1173,7 +1191,7 @@ export async function getDashboardStats(userType: 'freelancer' | 'client') {
   if (!userId) return null;
 
   try {
-    console.log(`📊 [getDashboardStats] Fetching stats for ${userType} ${userId}`);
+    logger.debug(`📊 [getDashboardStats] Fetching stats for ${userType} ${userId}`);
 
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
@@ -1386,7 +1404,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     return { success: false, message: 'Ошибка: Пользователь не найден.' };
   }
 
-  console.log(`🔍 setUserPassword called for userId: ${userId}`);
+  logger.debug(`🔍 setUserPassword called for userId: ${userId}`);
 
   const validatedFields = setPasswordSchema.safeParse({
     password,
@@ -1405,7 +1423,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
     let currentAuthUser;
     try {
       currentAuthUser = await auth.getUser(userId);
-      console.log(`👤 Current Auth User:`, {
+      logger.debug(`👤 Current Auth User:`, {
         uid: currentAuthUser.uid,
         email: currentAuthUser.email,
         providers: currentAuthUser.providerData.map(p => p.providerId)
@@ -1422,7 +1440,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       };
     }
 
-    console.log(`📧 Setting password for user ${userId} with email ${currentAuthUser.email}`);
+    logger.debug(`📧 Setting password for user ${userId} with email ${currentAuthUser.email}`);
 
     // ✅ Устанавливаем пароль
     await auth.updateUser(userId, {
@@ -1430,7 +1448,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
       emailVerified: false,
     });
 
-    console.log(`✅ Password set successfully for user ${userId}`);
+    logger.debug(`✅ Password set successfully for user ${userId}`);
 
     // Обновляем Firestore
     const userDoc = await db.collection('users').doc(userId).get();
@@ -1439,7 +1457,7 @@ export async function setUserPassword(password: string): Promise<SetPasswordStat
         passwordSet: true,
         updatedAt: FieldValue.serverTimestamp(),
       });
-      console.log(`✅ passwordSet flag updated in Firestore for user ${userId}`);
+      logger.debug(`✅ passwordSet flag updated in Firestore for user ${userId}`);
     }
 
     // ✅ Убрали requiresReauth — клиент сам выполнит автовход
@@ -1480,7 +1498,7 @@ export async function getProjectsByFreelancer() {
   if (!userId) return { active: [], completed: [] };
 
   try {
-    console.log(`📂 [getProjectsByFreelancer] Fetching projects for freelancer ${userId}`);
+    logger.debug(`📂 [getProjectsByFreelancer] Fetching projects for freelancer ${userId}`);
 
     // Получаем все accepted proposals фрилансера
     const proposalsSnapshot = await db.collectionGroup('proposals')
@@ -1489,11 +1507,11 @@ export async function getProjectsByFreelancer() {
       .get();
 
     if (proposalsSnapshot.empty) {
-      console.log(`ℹ️ [getProjectsByFreelancer] No accepted proposals for ${userId}`);
+      logger.debug(`ℹ️ [getProjectsByFreelancer] No accepted proposals for ${userId}`);
       return { active: [], completed: [] };
     }
 
-    console.log(`✅ [getProjectsByFreelancer] Found ${proposalsSnapshot.size} accepted proposals`);
+    logger.debug(`✅ [getProjectsByFreelancer] Found ${proposalsSnapshot.size} accepted proposals`);
 
     // Получаем данные проектов
     const projects = await Promise.all(
@@ -1549,7 +1567,7 @@ export async function getProjectsByFreelancer() {
       p.status === 'completed'
     );
 
-    console.log(`✅ [getProjectsByFreelancer] Active: ${active.length}, Completed: ${completed.length}`);
+    logger.debug(`✅ [getProjectsByFreelancer] Active: ${active.length}, Completed: ${completed.length}`);
 
     return { active, completed };
 
@@ -1595,7 +1613,7 @@ export async function deleteProject(projectId: string): Promise<{ success: boole
     
     await batch.commit();
 
-    console.log(`✅ [deleteProject] Project ${projectId} deleted by ${userId}`);
+    logger.debug(`✅ [deleteProject] Project ${projectId} deleted by ${userId}`);
     
     revalidatePath('/dashboard/projects');
     revalidatePath('/marketplace');
@@ -1606,4 +1624,170 @@ export async function deleteProject(projectId: string): Promise<{ success: boole
     console.error('❌ [deleteProject] Error:', error);
     return { success: false, message: 'Не удалось удалить проект.' };
   }
+}
+
+// ============================================================
+// PROPOSAL WORKFLOW: accept / reject / complete
+// ============================================================
+
+async function assertProjectOwner(projectId: string, userId: string) {
+  const projectRef = db.collection('projects').doc(projectId);
+  const projectDoc = await projectRef.get();
+  if (!projectDoc.exists) throw new Error('Проект не найден.');
+  const data = projectDoc.data();
+  if (data?.clientId !== userId) throw new Error('Нет прав на этот проект.');
+  return { projectRef, projectData: data! };
+}
+
+export async function acceptProposal(
+  projectId: string,
+  proposalId: string
+): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId();
+  if (!userId) return { success: false, message: 'Необходима авторизация.' };
+
+  try {
+    const { projectRef, projectData } = await assertProjectOwner(projectId, userId);
+    const proposalRef = projectRef.collection('proposals').doc(proposalId);
+    const proposalDoc = await proposalRef.get();
+    if (!proposalDoc.exists) {
+      return { success: false, message: 'Предложение не найдено.' };
+    }
+    const proposal = proposalDoc.data()!;
+
+    const batch = db.batch();
+    batch.update(proposalRef, {
+      status: 'accepted',
+      acceptedAt: FieldValue.serverTimestamp(),
+    });
+    batch.update(projectRef, {
+      status: 'in_progress',
+      freelancerId: proposal.freelancerId,
+      acceptedBidAmount: proposal.bidAmount,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Отклонить остальные proposals.
+    const others = await projectRef
+      .collection('proposals')
+      .where('status', '==', 'submitted')
+      .get();
+    others.docs.forEach((d) => {
+      if (d.id !== proposalId) {
+        batch.update(d.ref, { status: 'rejected', rejectedAt: FieldValue.serverTimestamp() });
+      }
+    });
+
+    await batch.commit();
+
+    // Уведомления.
+    await createNotification({
+      recipientId: proposal.freelancerId,
+      type: 'proposal_accepted',
+      message: `Ваш отклик на проект "${projectData.title}" принят!`,
+      entityId: projectId,
+      link: `/dashboard/projects`,
+    });
+    for (const d of others.docs) {
+      if (d.id !== proposalId) {
+        await createNotification({
+          recipientId: d.data().freelancerId,
+          type: 'proposal_rejected',
+          message: `Ваш отклик на проект "${projectData.title}" отклонён.`,
+          entityId: projectId,
+        });
+      }
+    }
+
+    revalidatePath('/dashboard/offers');
+    revalidatePath('/dashboard/projects');
+    revalidatePath(`/marketplace/jobs/${projectId}`);
+    return { success: true, message: 'Отклик принят.' };
+  } catch (e: any) {
+    logger.error('[acceptProposal]', e);
+    return { success: false, message: e.message || 'Не удалось принять отклик.' };
+  }
+}
+
+export async function rejectProposal(
+  projectId: string,
+  proposalId: string
+): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId();
+  if (!userId) return { success: false, message: 'Необходима авторизация.' };
+
+  try {
+    const { projectRef, projectData } = await assertProjectOwner(projectId, userId);
+    const proposalRef = projectRef.collection('proposals').doc(proposalId);
+    const proposalDoc = await proposalRef.get();
+    if (!proposalDoc.exists) return { success: false, message: 'Предложение не найдено.' };
+    const proposal = proposalDoc.data()!;
+
+    await proposalRef.update({
+      status: 'rejected',
+      rejectedAt: FieldValue.serverTimestamp(),
+    });
+
+    await createNotification({
+      recipientId: proposal.freelancerId,
+      type: 'proposal_rejected',
+      message: `Ваш отклик на проект "${projectData.title}" отклонён.`,
+      entityId: projectId,
+    });
+
+    revalidatePath('/dashboard/offers');
+    return { success: true, message: 'Отклик отклонён.' };
+  } catch (e: any) {
+    logger.error('[rejectProposal]', e);
+    return { success: false, message: e.message || 'Не удалось отклонить отклик.' };
+  }
+}
+
+export async function completeProject(
+  projectId: string
+): Promise<{ success: boolean; message: string }> {
+  const userId = await getUserId();
+  if (!userId) return { success: false, message: 'Необходима авторизация.' };
+
+  try {
+    const { projectRef, projectData } = await assertProjectOwner(projectId, userId);
+    if (projectData.status === 'completed') {
+      return { success: false, message: 'Проект уже завершён.' };
+    }
+
+    await projectRef.update({
+      status: 'completed',
+      completedAt: FieldValue.serverTimestamp(),
+    });
+
+    if (projectData.freelancerId) {
+      await db.collection('users').doc(projectData.freelancerId).update({
+        'freelancerProfile.completedProjects': FieldValue.increment(1),
+      });
+      await createNotification({
+        recipientId: projectData.freelancerId,
+        type: 'project_completed',
+        message: `Проект "${projectData.title}" отмечен как завершённый.`,
+        entityId: projectId,
+      });
+    }
+
+    revalidatePath('/dashboard/projects');
+    revalidatePath('/dashboard/finances');
+    return { success: true, message: 'Проект завершён.' };
+  } catch (e: any) {
+    logger.error('[completeProject]', e);
+    return { success: false, message: e.message || 'Не удалось завершить проект.' };
+  }
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+export async function markAllNotificationsAsRead(): Promise<{ success: boolean }> {
+  const userId = await getUserId();
+  if (!userId) return { success: false };
+  await markAllNotificationsRead(userId);
+  return { success: true };
 }

@@ -3,9 +3,23 @@ import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
+    const rl = rateLimit(`auth:${ip}`, RATE_LIMITS.auth);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429 }
+      );
+    }
+
     const adminApp = getAdminApp();
     if (!adminApp) {
       console.error('❌ [Session API] Firebase Admin SDK not initialized');
@@ -18,19 +32,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID token is required' }, { status: 400 });
     }
 
-    console.log('📥 [Session API] Received request to create session cookie');
+    logger.debug('📥 [Session API] Received request to create session cookie');
 
     // Проверяем idToken и получаем информацию о пользователе
     const auth = getAuth(adminApp);
     const decodedToken = await auth.verifyIdToken(idToken);
 
-    console.log('✅ [Session API] Verified idToken for user:', decodedToken.uid);
+    logger.debug('✅ [Session API] Verified idToken for user:', decodedToken.uid);
 
-    // Создаем session cookie (срок действия 5 дней)
-    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days in milliseconds
+    // Создаем session cookie (срок действия 2 дня)
+    const expiresIn = 60 * 60 * 24 * 2 * 1000; // 2 days in milliseconds
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
 
-    console.log('✅ [Session API] Session cookie created');
+    logger.debug('✅ [Session API] Session cookie created');
 
     // Устанавливаем cookie
     const cookieStore = await cookies();
@@ -42,7 +56,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
     });
 
-    console.log('✅ [Session API] Cookie set for user:', decodedToken.uid);
+    logger.debug('✅ [Session API] Cookie set for user:', decodedToken.uid);
 
     return NextResponse.json({
       status: 'success',

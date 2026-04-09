@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 export async function POST() {
   try {
@@ -8,7 +9,7 @@ export async function POST() {
     // ✅ Удаляем session cookie
     cookieStore.delete('session');
 
-    console.log('✅ Session cookie deleted');
+    logger.debug('✅ Session cookie deleted');
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

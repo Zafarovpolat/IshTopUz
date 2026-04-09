@@ -214,6 +214,111 @@ export type ProposalState = {
   success: boolean;
 };
 
+// ========== Settings ==========
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Введите текущий пароль.'),
+  newPassword: z.string()
+    .min(6, 'Пароль должен содержать минимум 6 символов')
+    .regex(/[A-Za-z]/, 'Пароль должен содержать хотя бы одну букву')
+    .regex(/[0-9]/, 'Пароль должен содержать хотя бы одну цифру'),
+  confirmPassword: z.string(),
+}).refine((d) => d.newPassword === d.confirmPassword, {
+  message: 'Пароли не совпадают',
+  path: ['confirmPassword'],
+});
+
+export const notificationSettingsSchema = z.object({
+  emailNews: z.boolean().default(true),
+  emailMessages: z.boolean().default(true),
+  telegramInvites: z.boolean().default(false),
+  telegramMessages: z.boolean().default(false),
+});
+
+export const privacySettingsSchema = z.object({
+  profileVisibility: z.enum(['visible', 'platform-only', 'hidden']),
+});
+
+export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
+export type PrivacySettings = z.infer<typeof privacySettingsSchema>;
+
+export type SettingsState = {
+  errors?: { [key: string]: string[] };
+  message?: string | null;
+  success: boolean;
+};
+
+// ========== Notifications ==========
+
+export type AppNotification = {
+  id: string;
+  type: 'proposal_received' | 'proposal_accepted' | 'proposal_rejected' | 'project_completed' | 'new_message' | 'invitation' | 'review_received' | 'system';
+  title: string;
+  message: string;
+  link?: string;
+  read: boolean;
+  createdAt: string;
+};
+
+// ========== Reviews ==========
+
+export const reviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().min(10, 'Комментарий должен быть не менее 10 символов.').max(1000),
+  projectId: z.string().min(1),
+  targetUserId: z.string().min(1),
+});
+
+export type Review = {
+  id: string;
+  projectId: string;
+  authorId: string;
+  targetUserId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  author?: {
+    name: string;
+    avatar: string;
+  };
+};
+
+export type ReviewState = {
+  errors?: { [key: string]: string[] };
+  message?: string | null;
+  success: boolean;
+};
+
+// ========== Chat ==========
+
+export type Conversation = {
+  id: string;
+  participants: string[];
+  participantsInfo: {
+    [uid: string]: {
+      name: string;
+      avatar: string;
+    };
+  };
+  lastMessage?: string;
+  lastMessageAt?: string;
+  lastSenderId?: string;
+  unreadCount?: { [uid: string]: number };
+  projectId?: string;
+};
+
+export type Message = {
+  id: string;
+  senderId: string;
+  text: string;
+  createdAt: string;
+  read: boolean;
+};
+
+export const sendMessageSchema = z.object({
+  text: z.string().min(1).max(2000),
+});
+
 
 export interface Project {
   id: string;
