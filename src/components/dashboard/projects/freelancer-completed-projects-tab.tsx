@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { ReviewDialog } from "@/components/dashboard/review-dialog";
 
 type FreelancerProject = {
   id: string;
@@ -87,10 +88,16 @@ export function FreelancerCompletedProjectsTab({
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">
-                <Star className="mr-2 h-4 w-4" />
-                Оставить отзыв
-              </Button>
+              <ReviewDialog
+                projectId={project.id}
+                targetUserId={project.clientId}
+                targetName={project.clientName}
+              >
+                <Button variant="outline" className="w-full">
+                  <Star className="mr-2 h-4 w-4" />
+                  Оставить отзыв
+                </Button>
+              </ReviewDialog>
             </CardFooter>
           </Card>
         );

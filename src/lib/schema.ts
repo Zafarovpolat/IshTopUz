@@ -332,6 +332,8 @@ export interface Project {
   status: 'open' | 'in_progress' | 'completed' | 'closed';
   proposalsCount?: number;
   freelancerId?: string;
+  freelancerName?: string;
+  freelancerAvatar?: string;
   deadline?: string;
   completedAt?: string;
   files?: { name: string; url: string; size: number }[];

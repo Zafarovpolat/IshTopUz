@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition, useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, ExternalLink } from "lucide-react";
+import { MessageSquare, ExternalLink, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getOrCreateConversation } from "@/app/dashboard/messages/actions";
 
 type FreelancerProject = {
   id: string;
@@ -32,6 +35,20 @@ export function FreelancerActiveProjectsTab({
 }: {
   projects: FreelancerProject[];
 }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [pendingChat, setPendingChat] = useState<string | null>(null);
+
+  function handleChat(clientId: string) {
+    setPendingChat(clientId);
+    startTransition(async () => {
+      const res = await getOrCreateConversation(clientId);
+      if (res.success && res.conversationId) {
+        router.push(`/dashboard/messages?id=${res.conversationId}`);
+      }
+      setPendingChat(null);
+    });
+  }
   if (projects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 p-12 text-center mt-4">
@@ -112,8 +129,17 @@ export function FreelancerActiveProjectsTab({
                   Перейти к проекту
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full">
-                <MessageSquare className="mr-2 h-4 w-4" />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => handleChat(project.clientId)}
+                disabled={isPending}
+              >
+                {pendingChat === project.clientId ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                )}
                 Чат с заказчиком
               </Button>
             </CardFooter>

@@ -861,6 +861,26 @@ export async function getProjectsByClientId(): Promise<Project[]> {
       return timeB - timeA;
     });
 
+    // Собираем уникальные freelancerIds для batch-загрузки.
+    const freelancerIds = [...new Set(
+      docsWithData.map(d => d.freelancerId).filter(Boolean) as string[]
+    )];
+    const freelancerMap: Record<string, { name: string; avatar: string }> = {};
+    if (freelancerIds.length > 0) {
+      const fDocs = await Promise.all(
+        freelancerIds.map(fId => db.collection('users').doc(fId).get())
+      );
+      for (const fd of fDocs) {
+        if (fd.exists) {
+          const fData = fd.data();
+          freelancerMap[fd.id] = {
+            name: `${fData?.profile?.firstName ?? ''} ${fData?.profile?.lastName ?? ''}`.trim() || 'Исполнитель',
+            avatar: fData?.profile?.avatar ?? '',
+          };
+        }
+      }
+    }
+
     const projects: Project[] = docsWithData.map(data => ({
       id: data.id,
       title: data.title,
@@ -873,6 +893,8 @@ export async function getProjectsByClientId(): Promise<Project[]> {
       status: data.status,
       proposalsCount: data.proposalsCount,
       freelancerId: data.freelancerId,
+      freelancerName: data.freelancerId ? freelancerMap[data.freelancerId]?.name : undefined,
+      freelancerAvatar: data.freelancerId ? freelancerMap[data.freelancerId]?.avatar : undefined,
       deadline: data.deadline?.toDate?.()?.toISOString(),
       completedAt: data.completedAt?.toDate?.()?.toISOString(),
     }));

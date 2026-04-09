@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Project } from "@/lib/schema";
 import Link from "next/link";
-import { Edit, Trash2, Loader2 } from "lucide-react";
+import { Edit, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { deleteProject } from "@/app/actions";
+import { deleteProject, completeProject } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
 export function ClientActiveProjectsTab({
@@ -39,6 +39,18 @@ export function ClientActiveProjectsTab({
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
+
+  const handleComplete = (projectId: string) => {
+    startTransition(async () => {
+      const result = await completeProject(projectId);
+      if (result.success) {
+        toast({ title: "Успешно!", description: result.message });
+        router.refresh();
+      } else {
+        toast({ variant: "destructive", title: "Ошибка", description: result.message });
+      }
+    });
+  };
 
   const handleDelete = (projectId: string) => {
     startTransition(async () => {
@@ -121,10 +133,34 @@ export function ClientActiveProjectsTab({
                 </span>
               </div>
             </CardContent>
-            <CardFooter className="flex gap-2">
+            <CardFooter className="flex gap-2 flex-wrap">
               <Button asChild variant="outline" className="flex-1">
                 <Link href={`/marketplace/jobs/${project.id}`}>Посмотреть</Link>
               </Button>
+              {project.status === "in_progress" && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" size="sm">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Завершить
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Завершить проект?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Проект будет отмечен как завершённый. После этого вы сможете оставить отзыв исполнителю.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleComplete(project.id)} disabled={isPending}>
+                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Завершить"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Button
                 onClick={() => onEdit(project)}
                 variant="outline"
