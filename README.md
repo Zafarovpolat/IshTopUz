@@ -7,6 +7,14 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+<div align="center">
+
+**[🌐 Live Demo](https://ishtopuz.vercel.app)**
+
+</div>
+
+![IshTop.Uz — Hero](docs/hero.png)
+
 ---
 
 ## ✨ Основные возможности
@@ -19,6 +27,8 @@
 | Отслеживание заработка (wallet) | История расходов                  |
 | Dashboard со статистикой        | Dashboard со статистикой          |
 | Уведомления о новых проектах    | Уведомления о новых откликах      |
+
+![IshTop.Uz — Features](docs/features.png)
 
 ---
 
