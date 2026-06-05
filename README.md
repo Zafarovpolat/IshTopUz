@@ -28,7 +28,6 @@
 | Dashboard со статистикой        | Dashboard со статистикой          |
 | Уведомления о новых проектах    | Уведомления о новых откликах      |
 
-![IshTop.Uz — Features](docs/features.png)
 
 ---
 
